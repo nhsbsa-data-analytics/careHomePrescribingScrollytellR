@@ -13,7 +13,7 @@ Authors@R:
       person(given = "Phil",
              family = "Godfrey",
              role = "ctb",
-             email = "phillip.godfrey@nhs.net"),
+             email = "philip.godfrey@nhs.net"),
 Description: This R package has been developed by NHS Business Services Authority Data Analytics Learning Lab to use a combination of analytics and user research to explore prescribing in care homes in England. 
 License: Apache License (>= 2)
 Imports: 
