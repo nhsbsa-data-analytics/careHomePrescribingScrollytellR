@@ -1,12 +1,20 @@
-Package: nhsbsaShinyR
-Title: An Amazing Shiny App
+Package: careHomePrescribingScrollytellR
+Title: Care home prescribing scrollytell
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "firstname",
-           family = "lastname",
-           role = c("aut", "cre"),
-           email = "your@email.com")
-Description: What the package does (one paragraph).
+    c(person(given = "DALL",
+             family = "",
+             role = c("aut", "cre"),
+             email = "nhsbsa.dall@nhs.net"),
+      person(given = "Adam",
+             family = "Ivison",
+             role = c("ctb"),
+             email = "adam.ivison@nhs.net"),
+      person(given = "Phil",
+             family = "Godfrey",
+             role = "ctb",
+             email = "philip.godfrey@nhs.net"),
+Description: This R package has been developed by NHS Business Services Authority Data Analytics Learning Lab to use a combination of analytics and user research to explore prescribing in care homes in England. 
 License: Apache License (>= 2)
 Imports: 
     config (>= 0.3.1),
@@ -18,6 +26,6 @@ Remotes:
     github::nhsbsa-data-analytics/nhsbsaR
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Depends: 
     R (>= 2.10)

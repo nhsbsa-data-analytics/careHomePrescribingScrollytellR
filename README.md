@@ -1,26 +1,23 @@
-# NHSBSA R Shiny template
+# Care home prescribing scrollytell
 
-This R package has been developed by NHS Business Services Authority Data Analytics Learning Lab to use as a template for building NHSBSA branded R `{shiny}` dashboards. 
+This R package has been developed by NHS Business Services Authority Data Analytics Learning Lab to use a combination of analytics and user research to explore prescribing in care homes in England. 
 
 ## Features
 
 We have used the `{golem}` framework to develop this taking inspiration from:
 
 * [Example `golem` apps](https://github.com/ThinkR-open/golem)
+* [ONS Exploring local income deprivation scrollytelling article](https://www.ons.gov.uk/visualisations/dvc1371/#/E07000223)
+* [`statistiekcbs/scrollytell` R package](https://github.com/statistiekcbs/scrollytell)
+* [Metropolitan Council scrollytelling dashboard](https://github.com/Metropolitan-Council/service.allocation.viz)
 * [Clinical Development Unit Data Science Team dashboards](https://github.com/CDU-data-science-team)
-
-It includes two dummy modules demonstrating using either markdown or `{highcharter}` with an NHSBSA theme applied. 
-
-Also included is a sample `data-raw/` script. Much of the data used in NHSBSA dashboards can be sensitive, so the `data/` directory is included in the `.gitignore` (you can change this if there is nothing sensitive) and this means you must run all the `data-raw/` scripts to produce the `data/` files after cloning.
-
-There is also a github action to check that code conforms to tidyverse linting.
 
 ## Structure
 
 The package is structured as follows:
 
 ```
-nhsbsaShinyR
+careHomePrescribingScrollytellR
 ├── .github                                 # Workflows for github actions
 ├── R                                       # R code for the dashboard
 │   ├── _disable_auotload.R                 # Golem file
@@ -33,7 +30,7 @@ nhsbsaShinyR
 │   ├── utils_helpers.R                     # Custom NHSBSA highcharter theme
 │   └── utils-pipe.R                        # %>% operator
 ├── data-raw                                # Various scripts to produce `data` files
-├── data                                    # Data for the dashboard (accessible via nhsbsaShinyR::{name})
+├── data                                    # Data for the dashboard (accessible via careHomePrescribingScrollytellR::{name})
 ├── dev                                     # Golem files
 │   ├── 01_start.R                          # Golem file (use to set up golem framework)
 │   ├── 02_dev.R                            # Golem file (use to develop package)
@@ -54,5 +51,5 @@ nhsbsaShinyR
 ├── NAMESPACE                               # Automatically generated documentation by roxygen2
 ├── README.md                               # Brief overview of the package
 ├── app.R                                   # Golem file
-├── nhsbsaShinyR.Rproj                      # R Project file
+├── careHomePrescribingScrollytellR.Rproj   # R Project file
 ```
