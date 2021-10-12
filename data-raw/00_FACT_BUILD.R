@@ -2,13 +2,8 @@
 library(magrittr)
 
 # Set up connection to the DB
-con <- DBI::dbConnect(
-  odbc::odbc(),
-  Driver = "Oracle in OraClient19Home1",
-  DBQ = Sys.getenv("DB_CONNECTION"),
-  UID = Sys.getenv("DB_USERNAME"),
-  PWD = Sys.getenv("DB_PASSWORD")
-)
+# database can be "DALP" or "DWCP"
+con <- nhsbsaR::con_nhsbsa(database = "DWCP")
 
 # Create a lazy table from the carehome pfid lookup
 care_home_df <- dplyr::tbl(
