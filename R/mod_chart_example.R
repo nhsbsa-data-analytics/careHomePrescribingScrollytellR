@@ -10,13 +10,6 @@
 mod_chart_example_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    sliderInput(
-      inputId = ns("bins"),
-      label = "Number of bins:",
-      min = 1,
-      max = 50,
-      value = 30
-    ),
     highcharter::highchartOutput(
       outputId = ns("chart")
     )
