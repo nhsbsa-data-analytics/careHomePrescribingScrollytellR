@@ -26,11 +26,13 @@ mod_items_per_patient_chart_server <- function(input, output, session) {
 
     # Create plot
     careHomePrescribingScrollytellR::items_per_patient_df %>%
-      dplyr::arrange(YEAR_MONTH) %>%
-      dplyr::mutate(YEAR_MONTH = lubridate::ym(YEAR_MONTH)) %>%
       highcharter::hchart(
         type = "line",
-        highcharter::hcaes(x = YEAR_MONTH, y = ITEMS_PER_PATIENT, group = CH_FLAG)
+        highcharter::hcaes(
+          x = YEAR_MONTH, 
+          y = ITEMS_PER_PATIENT, 
+          group = CH_FLAG
+        )
       )
   })
 }
