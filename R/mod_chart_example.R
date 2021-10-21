@@ -33,14 +33,13 @@ mod_chart_example_server <- function(input, output, session) {
 
     # Create plot
     careHomePrescribingScrollytellR::items_per_patient_df %>%
-      dplyr::arrange(YEAR_MONTH) %>% 
-      dplyr::mutate(YEAR_MONTH = lubridate::ym(YEAR_MONTH)) %>% 
+      dplyr::arrange(YEAR_MONTH) %>%
+      dplyr::mutate(YEAR_MONTH = lubridate::ym(YEAR_MONTH)) %>%
       highcharter::hchart(
         type = "line",
         highcharter::hcaes(x = YEAR_MONTH, y = ITEMS_PER_PATIENT, group = CH_FLAG)
       )
   })
-  
 }
 
 ## To be copied in the UI
