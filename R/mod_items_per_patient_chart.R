@@ -1,4 +1,4 @@
-#' chart_example UI Function
+#' items_per_patient_chart UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,22 +7,22 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_chart_example_ui <- function(id) {
+mod_items_per_patient_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
     highcharter::highchartOutput(
-      outputId = ns("chart")
+      outputId = ns("items_per_patient_chart")
     )
   )
 }
 
-#' chart_example Server Function
+#' items_per_patient_chart Server Function
 #'
 #' @noRd
-mod_chart_example_server <- function(input, output, session) {
+mod_items_per_patient_chart_server <- function(input, output, session) {
   ns <- session$ns
 
-  output$chart <- highcharter::renderHighchart({
+  output$items_per_patient_chart <- highcharter::renderHighchart({
 
     # Create plot
     careHomePrescribingScrollytellR::items_per_patient_df %>%
@@ -36,7 +36,7 @@ mod_chart_example_server <- function(input, output, session) {
 }
 
 ## To be copied in the UI
-# mod_chart_example_ui("chart_example_1")
+# mod_items_per_patient_chart_ui("items_per_patient_chart_1")
 
 ## To be copied in the server
-# callModule(mod_chart_example_server, "chart_example_1")
+# callModule(mod_items_per_patient_chart_server, "items_per_patient_chart_1")

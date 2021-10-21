@@ -1,12 +1,11 @@
 # Load library
 library(magrittr)
 
-# Set up connection to the DB
-# Database can be "DALP" or "DWCP"
+# Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Create a lazy table from the carehome and px item base table
-item_level_df <- dplyr::tbl(
+# Create a lazy table from the care home FACT table
+fact_df <- dplyr::tbl(
   src = con,
   from = dbplyr::sql("SELECT * FROM DALL_REF.INT615_ITEM_LEVEL_BASE")
 )
@@ -21,7 +20,8 @@ items_per_patient_df <- item_level_df %>%
     TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO),
     ITEMS_PER_PATIENT = dplyr::sum(ITEM_COUNT) / dplyr::n_distinct(NHS_NO)
   ) %>%
-  dplyr::collect()
+  dplyr::collect() %>%
+  
 
 # Add to data-raw/
 usethis::use_data(items_per_patient_df, overwrite = TRUE)
