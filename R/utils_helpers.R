@@ -31,5 +31,6 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
   # does not work to do this within the theme)
   hc %>%
     highcharter::hc_add_theme(hc_thm = theme_nhsbsa_hc) %>%
-    highcharter::hc_colors(colors = nhsbsaR::palette_nhsbsa(palette = palette))
+    highcharter::hc_credits(enabled = TRUE)
+    
 }
