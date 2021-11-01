@@ -20,12 +20,19 @@ patients_by_gender_df <- fact_db %>%
   dplyr::mutate(PCT = TOTAL_PATIENTS / sum(TOTAL_PATIENTS)) %>% 
   dplyr::ungroup() %>%
   dplyr::mutate(
-    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
+    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home"),
+    PDS_GENDER = dplyr::case_when(
+      PDS_GENDER == 1 ~ "Male",
+      PDS_GENDER == 2 ~ "Female",
+      PDS_GENDER %in% c(0,9) ~ "Unknown",
+      TRUE ~ "Error"
+    )
   ) %>%
   dplyr::arrange(CH_FLAG) %>%
   dplyr::collect() %>%
   # Format columns for highcharter
-  dplyr::mutate(CH_FLAG = forcats::fct_rev(CH_FLAG))
+  dplyr::mutate(CH_FLAG = forcats::fct_rev(CH_FLAG),
+                PDS_GENDER = forcats::fct_relevel(PDS_GENDER, "Male", "Female", "Unknown"))
 
 # Add to data-raw/
 usethis::use_data(patients_by_gender_df, overwrite = TRUE)

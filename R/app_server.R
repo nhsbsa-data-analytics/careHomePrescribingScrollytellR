@@ -9,5 +9,6 @@ app_server <- function(input, output, session) {
   moduleServer("00_header_1", mod_00_header_server)
   moduleServer("01_intro_1", mod_01_intro_server)
   moduleServer("items_per_patient_chart_1", mod_items_per_patient_chart_server)
+  moduleServer("patients_by_gender_chart_1", mod_patients_by_gender_chart_server)
   moduleServer("99_footer_1", mod_99_footer_server)
 }
