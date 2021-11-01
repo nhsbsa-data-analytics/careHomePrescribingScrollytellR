@@ -11,10 +11,8 @@ app_ui <- function(request) {
     # Your application UI logic
     mod_00_header_ui("00_header_1"),
     br(),
-    mod_01_intro_ui("01_intro_1"),
-    br(),
     fluidPage(
-      mod_markdown_example_ui("markdown_example_1"),
+      mod_01_intro_ui("01_intro_1"),
       mod_chart_example_ui("chart_example_1")
     ),
     br(),
