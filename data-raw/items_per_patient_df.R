@@ -16,11 +16,19 @@ items_per_patient_df <- fact_db %>%
   dplyr::summarise(
     TOTAL_ITEMS = dplyr::sum(ITEM_COUNT),
     TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO),
-    ITEMS_PER_PATIENT = dplyr::sum(ITEM_COUNT) / dplyr::n_distinct(NHS_NO)
+    ITEMS_PER_PATIENT = dplyr::sum(ITEM_COUNT) / dplyr::n_distinct(NHS_NO),
+    .groups = "drop"
   ) %>%
-  dplyr::arrange(YEAR_MONTH) %>%
+  dplyr::mutate(
+    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
+  ) %>%
+  dplyr::arrange(YEAR_MONTH, CH_FLAG) %>%
   dplyr::collect() %>%
-  dplyr::mutate(YEAR_MONTH = lubridate::ym(YEAR_MONTH))
+  # Format columns for highcharter
+  dplyr::mutate(
+    YEAR_MONTH = lubridate::ym(YEAR_MONTH),
+    CH_FLAG = forcats::fct_rev(CH_FLAG)
+  )
 
 # Add to data-raw/
 usethis::use_data(items_per_patient_df, overwrite = TRUE)
