@@ -34,5 +34,4 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
     highcharter::hc_xAxis(title = list(text = "")) %>%
     highcharter::hc_yAxis(title = list(text = "")) %>%
     highcharter::hc_credits(enabled = TRUE)
-    
 }

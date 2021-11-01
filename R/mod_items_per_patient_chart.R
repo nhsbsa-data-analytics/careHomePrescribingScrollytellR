@@ -32,24 +32,23 @@ mod_items_per_patient_chart_server <- function(input, output, session) {
           x = YEAR_MONTH,
           y = ITEMS_PER_PATIENT,
           group = CH_FLAG
-        ) 
-      ) %>% 
-      theme_nhsbsa(palette = "highlight", stack = NA) %>% 
+        )
+      ) %>%
+      theme_nhsbsa(palette = "highlight", stack = NA) %>%
       highcharter::hc_legend(reversed = TRUE) %>%
       highcharter::hc_title(
         text = "Average prescription items per patient (2020/21)"
-      ) %>% 
+      ) %>%
       highcharter::hc_tooltip(
         shared = FALSE,
         formatter = highcharter::JS(
-          "function () { 
+          "function () {
             return  '<b>Group: </b>' + this.series.name + '<br>' +
-                    '<b>Month: </b>' + Highcharts.dateFormat('%b \\'%y', new Date(this.x)) + '<br>' + 
+                    '<b>Month: </b>' + Highcharts.dateFormat('%b \\'%y', new Date(this.x)) + '<br>' +
                     '<b>Items per patient: </b>' + this.point.y.toFixed(2);
           }"
         )
       )
-
   })
 }
 
