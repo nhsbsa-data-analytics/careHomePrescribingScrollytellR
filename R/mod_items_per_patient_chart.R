@@ -38,8 +38,8 @@ mod_items_per_patient_chart_server <- function(input, output, session) {
       highcharter::hc_title(
         text = "Average prescription items per patient (2020/21)"
       ) %>% 
-      highcharter::hc_legend(reversed = TRUE) %>% 
-      highcharter::hc_credits(enabled = TRUE)
+      highcharter::hc_legend(reversed = TRUE)
+    
   })
 }
 

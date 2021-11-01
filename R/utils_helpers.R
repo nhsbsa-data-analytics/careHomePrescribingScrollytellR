@@ -31,6 +31,8 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
   # does not work to do this within the theme)
   hc %>%
     highcharter::hc_add_theme(hc_thm = theme_nhsbsa_hc) %>%
+    highcharter::hc_xAxis(title = list(text = "")) %>%
+    highcharter::hc_yAxis(title = list(text = "")) %>%
     highcharter::hc_credits(enabled = TRUE)
     
 }
