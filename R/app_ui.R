@@ -12,7 +12,7 @@ app_ui <- function(request) {
     mod_00_header_ui("00_header_1"),
     br(),
     fluidPage(
-      mod_markdown_example_ui("markdown_example_1"),
+      mod_01_intro_ui("01_intro_1"),
       mod_items_per_patient_chart_ui("items_per_patient_chart_1")
     ),
     br(),
