@@ -28,9 +28,9 @@ mod_patients_by_gender_chart_server <- function(input, output, session) {
     careHomePrescribingScrollytellR::patients_by_gender_df %>%
       highcharter::hchart(
         type = "column",
-        highcharter::hcaes(x = PDS_GENDER , y = PCT * 100, group = CH_FLAG)
-      )%>%
-      theme_nhsbsa(palette = "highlight") %>% 
+        highcharter::hcaes(x = PDS_GENDER, y = PCT * 100, group = CH_FLAG)
+      ) %>%
+      theme_nhsbsa(palette = "highlight") %>%
       highcharter::hc_title(
         text = "Percentage of patients by Gender (2020/21)"
       ) %>%
