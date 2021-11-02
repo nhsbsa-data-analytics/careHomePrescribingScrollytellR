@@ -12,6 +12,9 @@ fact_db <- dplyr::tbl(
 
 # Monthly number of items per patient by care home flag
 items_per_patient_df <- fact_db %>%
+  dplyr::mutate(
+    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
+  ) %>%
   dplyr::group_by(YEAR_MONTH, CH_FLAG) %>%
   dplyr::summarise(
     TOTAL_ITEMS = dplyr::sum(ITEM_COUNT),
@@ -19,10 +22,7 @@ items_per_patient_df <- fact_db %>%
     ITEMS_PER_PATIENT = dplyr::sum(ITEM_COUNT) / dplyr::n_distinct(NHS_NO),
     .groups = "drop"
   ) %>%
-  dplyr::mutate(
-    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
-  ) %>%
-  dplyr::arrange(YEAR_MONTH, CH_FLAG) %>%
+  dplyr::arrange(YEAR_MONTH) %>%
   dplyr::collect() %>%
   # Format columns for highcharter
   dplyr::mutate(
