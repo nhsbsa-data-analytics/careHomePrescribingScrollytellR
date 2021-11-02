@@ -11,25 +11,33 @@ fact_db <- dplyr::tbl(
 )
 
 # Number of patients of each gender by care home flag
-patients_by_gender_df <- fact_db %>%
+patients_by_gender_and_age_band_df <- fact_db %>%
   dplyr::mutate(
-    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home"),
     PDS_GENDER = dplyr::case_when(
       PDS_GENDER == 1 ~ "Male",
       PDS_GENDER == 2 ~ "Female",
       PDS_GENDER %in% c(0, 9) ~ "Unknown",
       TRUE ~ "Error"
+    ),
+    AGE_BAND = dplyr::case_when(
+      CALC_AGE < 70 ~ "65-69",
+      CALC_AGE < 75 ~ "70-74",
+      CALC_AGE < 80 ~ "75-79",
+      CALC_AGE < 85 ~ "80-84",
+      CALC_AGE < 90 ~ "85-89",
+      TRUE ~ "90+"
     )
   ) %>%
-  dplyr::group_by(PDS_GENDER, CH_FLAG) %>%
-  dplyr::summarise(TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO)) %>% 
-  dplyr::group_by(CH_FLAG) %>% 
+  dplyr::group_by(PDS_GENDER, AGE_BAND) %>%
+  dplyr::summarise(
+    TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO), 
+    .groups = "drop_last"
+  ) %>% 
   dplyr::mutate(PCT = TOTAL_PATIENTS / sum(TOTAL_PATIENTS)) %>% 
   dplyr::ungroup() %>%
   dplyr::collect() %>%
   # Format columns for highcharter
   dplyr::mutate(
-    CH_FLAG = forcats::fct_rev(CH_FLAG),
     PDS_GENDER = forcats::fct_relevel(PDS_GENDER, "Male", "Female", "Unknown")
   )
 
