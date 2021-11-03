@@ -37,29 +37,21 @@ patients_by_gender_and_age_band_df <-
     fact_db %>%
       dplyr::mutate(YEAR_MONTH = "Overall") %>%
       dplyr::group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
-      dplyr::summarise(
-        TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO),
-        .groups = "drop_last"
-      ) %>%
-      dplyr::mutate(PCT = TOTAL_PATIENTS / sum(TOTAL_PATIENTS)) %>%
+      dplyr::summarise(TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO)) %>%
       dplyr::ungroup() %>%
       dplyr::collect(),
 
     # By year month
     fact_db %>%
       dplyr::group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
-      dplyr::summarise(
-        TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO),
-        .groups = "drop_last"
-      ) %>%
-      dplyr::mutate(PCT = TOTAL_PATIENTS / sum(TOTAL_PATIENTS)) %>%
+      dplyr::summarise(TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO)) %>%
       dplyr::ungroup() %>%
       dplyr::arrange(YEAR_MONTH) %>%
       dplyr::collect()
   )
 
 # Add to data-raw/
-usethis::use_data(patients_by_gender_and_age_band, overwrite = TRUE)
+usethis::use_data(patients_by_gender_and_age_band_df, overwrite = TRUE)
 
 # Disconnect from database
 DBI::dbDisconnect(con)

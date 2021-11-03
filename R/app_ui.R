@@ -14,7 +14,7 @@ app_ui <- function(request) {
     fluidPage(
       mod_01_intro_ui("01_intro_1"),
       mod_items_per_patient_chart_ui("items_per_patient_chart_1"),
-      mod_patients_by_gender_chart_ui("patients_by_gender_chart_1")
+      mod_patients_by_gender_and_age_band_chart_ui("patients_by_gender_and_age_band_chart_1")
     ),
     br(),
     mod_99_footer_ui("99_footer_1")
