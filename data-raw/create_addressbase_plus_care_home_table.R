@@ -66,7 +66,9 @@ addressbase_plus_db <- addressbase_plus_db %>%
     names_to = c("ADDRESS_TYPE", ".value"),
     names_sep = "_" # Should use names_pattern but can't get it to work
   ) %>%
-  # Hack the names_sep result back to what it should be (ignore warning)
+  # Hack the names_sep result back to what it should be (ignore warning as 
+  # splits {DPA,GEO}_SINGLE_LINE_ADDRESS into {DPA,GEO} / SINGLE / LINE / 
+  # ADDRESS and drops LINE / ADDRESS as no data exists)
   dplyr::rename(SINGLE_LINE_ADDRESS = SINGLE)
 
 # Format the postcodes and single line addresses
