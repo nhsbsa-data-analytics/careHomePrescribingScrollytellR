@@ -28,9 +28,8 @@ addressbase_plus_db <- addressbase_plus_db %>%
 
 # Get postcodes where there is a care home present
 care_home_postcodes_db <- addressbase_plus_db %>%
-  
   dplyr::filter(CLASS == "RI01") %>%
-  dplyr::distinct(POSTCODE) %>%
+  dplyr::select(POSTCODE, POSTCODE_LOCATOR) %>%
   tidyr::pivot_longer(
     cols = dplyr::everything(),
     values_to = "POSTCODE",
