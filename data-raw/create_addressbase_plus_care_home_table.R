@@ -23,24 +23,15 @@ addressbase_plus_db <- addressbase_plus_db %>%
     RELEASE_DATE == to_date("2021-03-15", "YYYY:MM:DD")
   )
 
-# Get postcodes where there is a care home present
+# Get postcodes where there is a care home present. We use POSTCODE_LOCATOR as 
+# it is equal to POSTCODE (whenever one exists) but more complete
 care_home_postcodes_db <- addressbase_plus_db %>%
   dplyr::filter(CLASS == "RI01") %>%
-  dplyr::select(POSTCODE, POSTCODE_LOCATOR) %>%
-  tidyr::pivot_longer(
-    cols = dplyr::everything(),
-    values_to = "POSTCODE",
-    values_drop_na = TRUE
-  ) %>%
-  dplyr::distinct(POSTCODE)
+  dplyr::distinct(POSTCODE_LOCATOR)
 
 # Filter AddressBase Plus to postcodes where there is a care home present
 addressbase_plus_db <- addressbase_plus_db %>%
-  dplyr::left_join(
-    y = care_home_postcodes_db %>% dplyr::mutate(CH_IN_POSTCODE = 1),
-    by = c("POSTCODE" = "POSTCODE")
-  ) %>%
-  dplyr::filter(CH_IN_POSTCODE == 1)
+  dplyr::inner_join(y = care_home_postcodes_db)
 
 # Create a long table of single line addresses
 addressbase_plus_db <- addressbase_plus_db %>%
