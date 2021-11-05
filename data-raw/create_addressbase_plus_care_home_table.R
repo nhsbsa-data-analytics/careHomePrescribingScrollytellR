@@ -12,14 +12,8 @@ addressbase_plus_db <- dplyr::tbl(
 # Filter AddressBase Plus to English properties in at the end of 2021 FY
 addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::filter(
-
-    # England only
     COUNTRY == "E",
-
-    # Undesired classes
     CLASS %not like% "[LZ]%",
-
-    # Required periods
     RELEASE_DATE == to_date("2021-03-15", "YYYY:MM:DD")
   )
 
