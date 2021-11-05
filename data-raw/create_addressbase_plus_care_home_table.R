@@ -9,7 +9,7 @@ addressbase_plus_db <- dplyr::tbl(
   from = dbplyr::sql("SELECT * FROM DALL_REF.ADDRESSBASE_PLUS")
 )
 
-# Filter AddressBase Plus for English properties in 2020 / 2021
+# Filter AddressBase Plus to English properties in at the end of 2021 FY
 addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::filter(
 
@@ -17,12 +17,10 @@ addressbase_plus_db <- addressbase_plus_db %>%
     COUNTRY == "E",
 
     # Undesired classes
-    substr(CLASS, 1, 1) != "L",
-    substr(CLASS, 1, 1) != "Z",
+    CLASS %not like% "[LZ]%",
 
     # Required periods
-    RELEASE_DATE > to_date("2020-04-23", "YYYY:MM:DD"),
-    RELEASE_DATE <= to_date("2021-03-15", "YYYY:MM:DD")
+    RELEASE_DATE == to_date("2021-03-15", "YYYY:MM:DD")
   )
 
 # Get postcodes where there is a care home present
