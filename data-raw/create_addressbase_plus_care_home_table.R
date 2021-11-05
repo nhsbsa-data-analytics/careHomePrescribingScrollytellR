@@ -11,24 +11,22 @@ addressbase_plus_db <- dplyr::tbl(
 
 # Filter AddressBase Plus for English properties in 2020 / 2021
 addressbase_plus_db <- addressbase_plus_db %>%
-  
   dplyr::filter(
-    
+
     # England only
     COUNTRY == "E",
-    
+
     # Undesired classes
     substr(CLASS, 1, 1) != "L",
     substr(CLASS, 1, 1) != "Z",
-    
+
     # Required periods
-    RELEASE_DATE >= to_date("2020-04-23", "YYYY:MM:DD"),
+    RELEASE_DATE > to_date("2020-04-23", "YYYY:MM:DD"),
     RELEASE_DATE <= to_date("2021-03-15", "YYYY:MM:DD")
-  ) 
+  )
 
 # Get postcodes where there is a care home present
 care_home_postcodes_db <- addressbase_plus_db %>%
-  
   dplyr::filter(CLASS == "RI01") %>%
   dplyr::distinct(POSTCODE) %>%
   tidyr::pivot_longer(
@@ -41,14 +39,10 @@ care_home_postcodes_db <- addressbase_plus_db %>%
 # Filter AddressBase Plus to postcodes where there is a care home present
 addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::left_join(
-    y = care_home_postcodes_db %>% dplyr::mutate(CH_IN_POSTCODE = 1), 
+    y = care_home_postcodes_db %>% dplyr::mutate(CH_IN_POSTCODE = 1),
     by = c("POSTCODE" = "POSTCODE")
   ) %>%
-  dplyr::left_join(
-    y = care_home_postcodes_db %>% dplyr::mutate(CH_IN_POSTCODE_LOCATOR = 1), 
-    by = c("POSTCODE_LOCATOR" = "POSTCODE")
-  ) %>%
-  dplyr::filter(CH_IN_POSTCODE == 1 | CH_IN_POSTCODE_LOCATOR == 1)
+  dplyr::filter(CH_IN_POSTCODE == 1)
 
 # Create a long table of single line addresses
 addressbase_plus_db <- addressbase_plus_db %>%
@@ -59,7 +53,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
     CLASS,
     DPA_POSTCODE = POSTCODE,
     DPA_SINGLE_LINE_ADDRESS,
-    GEO_POSTCODE = POSTCODE_LOCATOR,
+    GEO_POSTCODE = POSTCODE,
     GEO_SINGLE_LINE_ADDRESS
   ) %>%
   tidyr::pivot_longer(
@@ -72,10 +66,8 @@ addressbase_plus_db <- addressbase_plus_db %>%
 
 # Format the postcodes and single line addresses
 addressbase_plus_db <- addressbase_plus_db %>%
-  
   # Remove whitespace from postcode
   dplyr::mutate(POSTCODE = REGEXP_REPLACE(POSTCODE, " ", "")) %>%
-  
   # Tidy single line address for tokenisation
   addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
 
