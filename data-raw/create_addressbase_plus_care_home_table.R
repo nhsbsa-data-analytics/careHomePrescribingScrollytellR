@@ -28,7 +28,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
 # Get postcodes where there is a care home present
 care_home_postcodes_db <- addressbase_plus_db %>%
   dplyr::filter(CLASS == "RI01") %>%
-  dplyr::distinct(POSTCODE) %>%
+  dplyr::select(POSTCODE, POSTCODE_LOCATOR) %>%
   tidyr::pivot_longer(
     cols = dplyr::everything(),
     values_to = "POSTCODE",
@@ -61,7 +61,9 @@ addressbase_plus_db <- addressbase_plus_db %>%
     names_to = c("ADDRESS_TYPE", ".value"),
     names_sep = "_" # Should use names_pattern but can't get it to work
   ) %>%
-  # Hack the names_sep result back to what it should be (ignore warning)
+  # Hack the names_sep result back to what it should be (ignore warning as 
+  # splits {DPA,GEO}_SINGLE_LINE_ADDRESS into {DPA,GEO} / SINGLE / LINE / 
+  # ADDRESS and drops LINE / ADDRESS as no data exists)
   dplyr::rename(SINGLE_LINE_ADDRESS = SINGLE)
 
 # Format the postcodes and single line addresses
