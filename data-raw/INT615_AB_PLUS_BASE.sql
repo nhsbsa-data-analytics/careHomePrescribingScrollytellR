@@ -3,39 +3,9 @@
 
 
 --drop table int615_ab_plus_base;
-create table int615_ab_plus_base compress for query high as
+--create table int615_ab_plus_base compress for query high as
 
 with
-
-ab_base as (
-select
-    /*+ materialize */
-    *
-from
-    dall_ref.addressbase_plus
-where
-    1=1
-    and release_date = '15-MAR-21'
-)
---select count(*) from abp_base;
-,
-
-ab_combine as (
-select
-    /*+ materialize */
-    *
-from
-    dall_ref.addressbase_plus
-where
-    1=1
-    and release_date = '23-APR-20'
-    and uprn not in (select uprn from ab_base)
-
-union all
-select * from ab_base
-)
---select count(*) from ab_combine;
-,
 
 ab_postcodes as (
 select
@@ -43,13 +13,15 @@ select
     distinct
     trim(replace(postcode_locator, ' ', ''))  as  ab_postcode
 from
-    ab_combine
+    dall_ref.addressbase_plus
 where
     1=1
     and class = 'RI01'
+    and release_date = '15-MAR-21'
 )
---select count(*) from abp_end;
+--select count(*) from ab_postcodes;
 ,
+
 
 -- NOTE: SOME FIELD NAME DIFFERENT TO PUBLISHED SQL CODE TO GENERATE SLA
 -- DEPENDENT_LOCALITY == DEP_LOCALITY
@@ -122,17 +94,18 @@ SELECT
         -- postcode
      || CASE WHEN postcode_locator   IS NOT NULL                                                         THEN postcode_locator                 ELSE '' END
     ) AS geo_single_line_address 
-FROM
-    ab_combine
+from
+    dall_ref.addressbase_plus
 where
     1=1
+    and release_date = '15-MAR-21'
     and trim(replace(postcode_locator, ' ', '')) in (select ab_postcode from ab_postcodes)
     and class not like 'L%'
     and class not like 'Z%'
     and country = 'E'
 )
 --select * from sla order by uprn;
---select count(*) from sla order by uprn;
+--select count(*) from sla;
 ,
 
 sla_edit as (
@@ -220,7 +193,7 @@ from
 order by
     dpa_row_num
 )
---select * from dpa_concat;
+--select * from dpa_concat order by uprn, dpa_row_num;
 ,
 
 dpa_geo as (
@@ -241,7 +214,7 @@ full outer join
     geo_concat  gt
     on gt.geo_token_count = dt.dpa_token_count
 )
---select * from dpa_geo order by uprn, dpa_row_num;
+select * from dpa_geo order by uprn, dpa_row_num;
 ,
 
 insert_tokens as (
@@ -269,7 +242,7 @@ from
 where
     dpa_token_count is null
 )
---select * from insert_tokens order by uprn;
+--select * from insert_tokens order by uprn, geo_row_num;
 ,
 
 final_tokens as (
@@ -291,7 +264,7 @@ where
 order by
     dpa_row_num, token_row
 )
---select * from complete_tokens order by uprn, dpa_row_num, token_row;
+--select * from final_tokens order by uprn, dpa_row_num, token_row;
 ,
 
 core as (
@@ -330,7 +303,7 @@ left join
     core
     on core.uprn  =  se.uprn
 )
---select * from core_edit;
+--select * from core_edit order by uprn;
 ,
 
 core_stack as (
@@ -355,6 +328,7 @@ from
     core_stack
 order by
     uprn_id;
+
 
 
 --select * from int615_ab_plus_base;
