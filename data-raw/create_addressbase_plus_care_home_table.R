@@ -118,3 +118,10 @@ addressbase_plus_db <- addressbase_plus_db %>%
       dplyr::mutate(ADDRESS_TYPE = "COMBINED")
   ) %>%
   dplyr::arrange(UPRN, ADDRESS_TYPE, TOKEN_NUMBER)
+
+# Write the table back to the DB
+addressbase_plus_db %>%
+  nhsbsaR::oracle_create_table(
+    schema_name = Sys.getenv("DB_DALP_USERNAME"),
+    table_name = "ADDRESSBASE_PLUS_CARE_HOME"
+  )
