@@ -108,7 +108,13 @@ addressbase_plus_db <- addressbase_plus_db %>%
 # a superset of all tokens
 different_addresses_combined_tokens_db <- addressbase_plus_db %>%
   dplyr::inner_join(y = different_addresses_db %>% dplyr::select(UPRN)) %>%
-  dplyr::distinct(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE)
+  dplyr::distinct(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE) %>%
+  # Make sure to filter occurances that are equal to an existing DPA or GEO set 
+  # of tokens (usually occurs when one is a subset of the other)
+  dplyr::anti_join(
+    y = addressbase_plus_db %>%
+      dplyr::select(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE)
+  )
 
 # Add the combined token rows to our data
 addressbase_plus_db <- addressbase_plus_db %>%
