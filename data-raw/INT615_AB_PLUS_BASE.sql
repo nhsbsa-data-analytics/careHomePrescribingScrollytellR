@@ -134,6 +134,7 @@ select
                                                                                                                     ) as dpa_single_line_address
 from
     sla
+--where uprn <= 1000000
 )
 --select * from sla_edit;
 ,
@@ -170,13 +171,10 @@ geo_concat as (
 select
     /*+ materialize */
     uprn,
-    geo_address_token,
     geo_address_token || '*' || rank() over (partition by uprn, geo_address_token order by geo_row_num) || '*' || uprn as geo_token_count,
     geo_row_num
 from
     geo_tokens
-order by
-    geo_row_num
 )
 --select * from geo_concat;
 ,
@@ -185,13 +183,10 @@ dpa_concat as (
 select
     /*+ materialize */
     uprn,
-    dpa_address_token,
     dpa_address_token || '*' || rank() over (partition by uprn, dpa_address_token order by dpa_row_num) || '*' || uprn as dpa_token_count,
     dpa_row_num
 from
     dpa_tokens
-order by
-    dpa_row_num
 )
 --select * from dpa_concat order by uprn, dpa_row_num;
 ,
@@ -200,13 +195,10 @@ dpa_geo as (
 select
     /*+ materialize */
     coalesce(dt.uprn, gt.uprn)  as  uprn,
-    dt.dpa_address_token,
     dt.dpa_row_num,
     dt.dpa_token_count,
-    coalesce(dt.dpa_token_count, gt.geo_token_count) as token_count,
     gt.geo_token_count,
     gt.geo_row_num,
-    gt.geo_address_token,
     lead(dt.dpa_token_count ignore nulls) over (partition by coalesce(dt.uprn, gt.uprn) order by geo_row_num) as lead_token
 from
     dpa_concat  dt
@@ -214,7 +206,7 @@ full outer join
     geo_concat  gt
     on gt.geo_token_count = dt.dpa_token_count
 )
-select * from dpa_geo order by uprn, dpa_row_num;
+--select * from dpa_geo order by uprn, dpa_row_num;
 ,
 
 insert_tokens as (
@@ -249,7 +241,6 @@ final_tokens as (
 select
     /*+ materialize */
     dg.uprn,
-    dg.dpa_token_count,
     dg.dpa_row_num,
     itk.geo_row_num as token_row,
     substr(coalesce(itk.token_two, dg.dpa_token_count), 1, instr(coalesce(itk.token_two, dg.dpa_token_count), '*') -1) as final_token
@@ -306,15 +297,28 @@ left join
 --select * from core_edit order by uprn;
 ,
 
-core_stack as (
-select uprn, class, ab_postcode, geo_single_line_address as ab_address from core_edit where geo_single_line_address is not null
-union all
-
-select uprn, class, ab_postcode, dpa_single_line_address as ab_address from core_edit where dpa_single_line_address is not null
-union all
-
-select uprn, class, ab_postcode, core_single_line_address as ab_address from core_edit where core_single_line_address is not null
+uprn_distinct as (
+select
+    ce.*,
+    dense_rank() over (partition by ab_postcode, geo_single_line_address order by uprn) as  geo_uprn_rank,
+    dense_rank() over (partition by ab_postcode, dpa_single_line_address order by uprn) as  dpa_uprn_rank,
+    dense_rank() over (partition by ab_postcode, core_single_line_address order by uprn) as  core_uprn_rank
+from
+    core_edit  ce
 )
+--select * from uprn_distinct order by geo_uprn_rank desc;
+,
+
+core_stack as (
+select uprn, class, ab_postcode, geo_single_line_address as ab_address from core_edit where geo_single_line_address is not null and geo_uprn_rank = 1
+union all
+
+select uprn, class, ab_postcode, dpa_single_line_address as ab_address from core_edit where dpa_single_line_address is not null and dpa_uprn_rank = 1
+union all
+
+select uprn, class, ab_postcode, core_single_line_address as ab_address from core_edit where core_single_line_address is not null and core_uprn_rank = 1
+)
+--select * from ore_stack;
 
 select
     distinct
@@ -328,7 +332,6 @@ from
     core_stack
 order by
     uprn_id;
-
 
 
 --select * from int615_ab_plus_base;

@@ -470,7 +470,6 @@ where
     ar.address_record_id in (select address_record_id from results);
 
 
--- 254k FORMS
 --select * from int615_non_postcode_kw;
 --select count(distinct pf_id) from int615_non_postcode_kw;
 --------------------------------------------------------------------------------
