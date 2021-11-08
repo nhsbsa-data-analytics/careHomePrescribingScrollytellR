@@ -9,7 +9,7 @@ addressbase_plus_db <- dplyr::tbl(
   from = dbplyr::sql("SELECT * FROM DALL_REF.ADDRESSBASE_PLUS")
 )
 
-# Filter AddressBase Plus to English properties in at the end of 2021 FY and 
+# Filter AddressBase Plus to English properties in at the end of 2021 FY and
 # create a care home flag
 addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::filter(
@@ -20,7 +20,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
   ) %>%
   dplyr::mutate(CH_FLAG = ifelse(CLASS == "RI01", 1, 0))
 
-# Get postcodes where there is a care home present. We use POSTCODE_LOCATOR as 
+# Get postcodes where there is a care home present. We use POSTCODE_LOCATOR as
 # it is equal to POSTCODE (whenever one exists) but more complete
 care_home_postcodes_db <- addressbase_plus_db %>%
   dplyr::filter(CH_FLAG == 1) %>%
@@ -47,21 +47,21 @@ addressbase_plus_db <- addressbase_plus_db %>%
     names_to = c("ADDRESS_TYPE", ".value"),
     names_sep = "_" # Should use names_pattern but can't get it to work
   ) %>%
-  # Hack the names_sep result back to what it should be (ignore warning as 
-  # splits {DPA,GEO}_SINGLE_LINE_ADDRESS into {DPA,GEO} / SINGLE / LINE / 
+  # Hack the names_sep result back to what it should be (ignore warning as
+  # splits {DPA,GEO}_SINGLE_LINE_ADDRESS into {DPA,GEO} / SINGLE / LINE /
   # ADDRESS and drops LINE / ADDRESS as no data exists)
   dplyr::rename(SINGLE_LINE_ADDRESS = SINGLE) %>%
   # Remove NA POSTCODE / SINGLE_LINE_ADDRESS (these are DPA)
   dplyr::filter(!is.na(POSTCODE) & !is.na(SINGLE_LINE_ADDRESS))
 
-# Remove whitespace from postcodes and format single line addresses for 
+# Remove whitespace from postcodes and format single line addresses for
 # tokenisation
 addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::mutate(POSTCODE = REGEXP_REPLACE(POSTCODE, " ", "")) %>%
   addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
 
 # Combine rows where there DPA and GEO single line addresses are equal into BOTH
-addressbase_plus_db <-addressbase_plus_db %>%
+addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::mutate(
     DPA = ifelse(ADDRESS_TYPE == "DPA", 1, 0),
     GEO = ifelse(ADDRESS_TYPE == "GEO", 1, 0)
@@ -98,7 +98,7 @@ different_addresses_db <- different_addresses_db %>%
   dplyr::mutate(SINGLE_LINE_ADDRESS = paste0(DPA, " / ", GEO)) %>%
   dplyr::select(UPRN, SINGLE_LINE_ADDRESS)
 
-# Tokenise the single line addresses and add token type ("D" = digit, 
+# Tokenise the single line addresses and add token type ("D" = digit,
 # "C" = character)
 addressbase_plus_db <- addressbase_plus_db %>%
   nhsbsaR::oracle_unnest_tokens(col = "SINGLE_LINE_ADDRESS", drop = FALSE) %>%
@@ -109,7 +109,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
 different_addresses_combined_tokens_db <- addressbase_plus_db %>%
   dplyr::inner_join(y = different_addresses_db %>% dplyr::select(UPRN)) %>%
   dplyr::distinct(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE) %>%
-  # Make sure to filter occurances that are equal to an existing DPA or GEO set 
+  # Make sure to filter occurrences that are equal to an existing DPA or GEO set
   # of tokens (usually occurs when one is a subset of the other)
   dplyr::anti_join(
     y = addressbase_plus_db %>%
@@ -131,3 +131,6 @@ addressbase_plus_db %>%
     schema_name = Sys.getenv("DB_DALP_USERNAME"),
     table_name = "ADDRESSBASE_PLUS_CARE_HOME"
   )
+
+# Disconnect from database
+DBI::dbDisconnect(con)
