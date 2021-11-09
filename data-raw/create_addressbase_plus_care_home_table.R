@@ -3,6 +3,14 @@ library(magrittr)
 # Set up connection to the DB
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
+# Check if the table exists
+exists <- DBI::dbExistsTable(conn = con, name = "ADDRESSBASE_PLUS_CARE_HOME")
+
+# Drop any existing table beforehand
+if (exists) {
+  DBI::dbRemoveTable(conn = con, name = "ADDRESSBASE_PLUS_CARE_HOME")
+}
+
 # Create a lazy table from the care home FACT table
 addressbase_plus_db <- dplyr::tbl(
   src = con,
@@ -14,8 +22,12 @@ addressbase_plus_db <- dplyr::tbl(
 addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::filter(
     COUNTRY == "E",
-    substr(CLASS, 1, 1) != "L",
-    substr(CLASS, 1, 1) != "Z",
+    substr(CLASS, 1, 1) != "L", # Land
+    substr(CLASS, 1, 1) != "O", # Other (Ordnance Survey only)
+    substr(CLASS, 1, 2) != "PS", # Street Record
+    substr(CLASS, 1, 2) != "RC", # Car Park Space
+    substr(CLASS, 1, 2) != "RG", # Lock-Up / Garage / Garage Court
+    substr(CLASS, 1, 1) != "Z", # Object of interest
     RELEASE_DATE == to_date("2021-03-15", "YYYY:MM:DD")
   ) %>%
   dplyr::mutate(CH_FLAG = ifelse(CLASS == "RI01", 1, 0))
@@ -98,23 +110,43 @@ different_addresses_db <- different_addresses_db %>%
   dplyr::mutate(SINGLE_LINE_ADDRESS = paste0(DPA, " / ", GEO)) %>%
   dplyr::select(UPRN, SINGLE_LINE_ADDRESS)
 
+# Compute query and save in temporary remote table
+different_addresses_db %>%
+  nhsbsaR::oracle_create_table(table_name = "TMP_DIFFERENT_ADDRESSES")
+
+# Pull the temporary remote table
+different_addresses_db <- dplyr::tbl(
+  src = con,
+  from = dbplyr::sql("SELECT * FROM TMP_DIFFERENT_ADDRESSES")
+)
+
 # Tokenise the single line addresses and add token type ("D" = digit,
 # "C" = character)
 addressbase_plus_db <- addressbase_plus_db %>%
   nhsbsaR::oracle_unnest_tokens(col = "SINGLE_LINE_ADDRESS", drop = FALSE) %>%
   dplyr::mutate(TOKEN_TYPE = ifelse(REGEXP_LIKE(TOKEN, "[0-9]"), "D", "C"))
 
+# Compute query and save in temporary remote table
+addressbase_plus_db %>%
+  nhsbsaR::oracle_create_table(table_name = "TMP_ADDRESSBASE_PLUS")
+
+# Pull the temporary remote table
+addressbase_plus_db <- dplyr::tbl(
+  src = con,
+  from = dbplyr::sql("SELECT * FROM TMP_ADDRESSBASE_PLUS")
+)
+
 # Where DPA and GEO have different single line addresses for the same UPRN, get
 # a superset of all tokens
 different_addresses_combined_tokens_db <- addressbase_plus_db %>%
   dplyr::inner_join(y = different_addresses_db %>% dplyr::select(UPRN)) %>%
   dplyr::distinct(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE) %>%
-  # Make sure to filter occurrences that are equal to an existing DPA or GEO set
-  # of tokens (usually occurs when one is a subset of the other)
-  dplyr::anti_join(
-    y = addressbase_plus_db %>%
-      dplyr::select(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE)
-  )
+  # Filter occurrences that are equal to an existing DPA or GEO set of tokens 
+  # (usually occurs when one is a subset of the other)
+    dplyr::anti_join(
+      y = addressbase_plus_db %>%
+        dplyr::select(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE)
+    )
 
 # Add the combined token rows to our data
 addressbase_plus_db <- addressbase_plus_db %>%
@@ -127,10 +159,11 @@ addressbase_plus_db <- addressbase_plus_db %>%
 
 # Write the table back to the DB
 addressbase_plus_db %>%
-  nhsbsaR::oracle_create_table(
-    schema_name = Sys.getenv("DB_DALP_USERNAME"),
-    table_name = "ADDRESSBASE_PLUS_CARE_HOME"
-  )
+  nhsbsaR::oracle_create_table(table_name = "ADDRESSBASE_PLUS_CARE_HOME")
+
+# Drop the temporary tables
+DBI::dbRemoveTable(conn = con, name = "TMP_DIFFERENT_ADDRESSES")
+DBI::dbRemoveTable(conn = con, name = "TMP_ADDRESSBASE_PLUS")
 
 # Disconnect from database
 DBI::dbDisconnect(con)
