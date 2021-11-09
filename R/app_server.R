@@ -6,8 +6,15 @@
 #' @noRd
 app_server <- function(input, output, session) {
   # Your application server logic
-  moduleServer("00_header_1", mod_00_header_server)
-  moduleServer("markdown_example_1", mod_markdown_example_server)
-  moduleServer("chart_example_1", mod_chart_example_server)
-  moduleServer("99_footer_1", mod_99_footer_server)
+  moduleServer(id = "00_header_1", module = mod_00_header_server)
+  moduleServer(id = "01_intro_1", module = mod_01_intro_server)
+  moduleServer(
+    id = "items_per_patient_chart_1",
+    module = mod_items_per_patient_chart_server
+  )
+  moduleServer(
+    id = "patients_by_gender_and_age_band_chart_1",
+    module = mod_patients_by_gender_and_age_band_chart_server
+  )
+  moduleServer(id = "99_footer_1", module = mod_99_footer_server)
 }
