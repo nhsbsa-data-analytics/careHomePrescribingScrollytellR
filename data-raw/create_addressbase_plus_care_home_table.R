@@ -136,9 +136,6 @@ addressbase_plus_db <- dplyr::tbl(
   from = dbplyr::sql("SELECT * FROM TMP_ADDRESSBASE_PLUS")
 )
 
-addressbase_plus_db <- addressbase_plus_db %>%
-  dplyr::filter(UPRN == 4355)
-
 # Where DPA and GEO have different single line addresses for the same UPRN, get
 # a superset of all tokens
 combined_addresses_db <- combined_addresses_db %>%
