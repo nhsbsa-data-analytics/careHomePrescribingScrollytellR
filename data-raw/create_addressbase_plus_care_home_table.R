@@ -92,7 +92,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::relocate(ADDRESS_TYPE, .after = CH_FLAG)
 
 # Pull the UPRNs that have two different addresses
-different_addresses_db <- addressbase_plus_db %>%
+combined_addresses_db <- addressbase_plus_db %>%
   dplyr::group_by(UPRN) %>%
   dplyr::summarise(NO_ADDRESS_TYPE = dplyr::n_distinct(ADDRESS_TYPE)) %>%
   dplyr::ungroup() %>%
@@ -101,23 +101,23 @@ different_addresses_db <- addressbase_plus_db %>%
   dplyr::inner_join(addressbase_plus_db)
 
 # Create a combined single line address for these of the form "{DPA} / {GEO}"
-different_addresses_db <- different_addresses_db %>%
+combined_addresses_db <- combined_addresses_db %>%
   tidyr::pivot_wider(
-    id_cols = UPRN,
+    id_cols = c(UPRN, CH_FLAG, POSTCODE),
     names_from = ADDRESS_TYPE,
     values_from = SINGLE_LINE_ADDRESS
   ) %>%
   dplyr::mutate(SINGLE_LINE_ADDRESS = paste0(DPA, " / ", GEO)) %>%
-  dplyr::select(UPRN, SINGLE_LINE_ADDRESS)
+  dplyr::select(-DPA, -GEO)
 
 # Compute query and save in temporary remote table
-different_addresses_db %>%
-  nhsbsaR::oracle_create_table(table_name = "TMP_DIFFERENT_ADDRESSES")
+combined_addresses_db %>%
+  nhsbsaR::oracle_create_table(table_name = "TMP_COMBINED_ADDRESSES")
 
 # Pull the temporary remote table
-different_addresses_db <- dplyr::tbl(
+combined_addresses_db <- dplyr::tbl(
   src = con,
-  from = dbplyr::sql("SELECT * FROM TMP_DIFFERENT_ADDRESSES")
+  from = dbplyr::sql("SELECT * FROM TMP_COMBINED_ADDRESSES")
 )
 
 # Tokenise the single line addresses and add token type ("D" = digit,
@@ -136,23 +136,53 @@ addressbase_plus_db <- dplyr::tbl(
   from = dbplyr::sql("SELECT * FROM TMP_ADDRESSBASE_PLUS")
 )
 
+addressbase_plus_db <- addressbase_plus_db %>%
+  dplyr::filter(UPRN == 4355)
+
 # Where DPA and GEO have different single line addresses for the same UPRN, get
 # a superset of all tokens
-different_addresses_combined_tokens_db <- addressbase_plus_db %>%
-  dplyr::inner_join(y = different_addresses_db %>% dplyr::select(UPRN)) %>%
-  dplyr::distinct(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE) %>%
-  # Filter occurrences that are equal to an existing DPA or GEO set of tokens 
-  # (usually occurs when one is a subset of the other)
-    dplyr::anti_join(
-      y = addressbase_plus_db %>%
-        dplyr::select(UPRN, CH_FLAG, POSTCODE, TOKEN, TOKEN_TYPE)
-    )
+combined_addresses_db <- combined_addresses_db %>%
+  dplyr::inner_join(
+    y = addressbase_plus_db %>% 
+      dplyr::select(UPRN, TOKEN, TOKEN_TYPE)
+  ) %>%
+  dplyr::distinct()
+
+# Indicate where each token has originated
+combined_addresses_db <- combined_addresses_db%>%
+  dplyr::left_join(
+    y = addressbase_plus_db %>%
+      dplyr::filter(ADDRESS_TYPE == "DPA") %>%
+      dplyr::mutate(DPA_TOKEN = 1) %>%
+      dplyr::select(-ADDRESS_TYPE, -SINGLE_LINE_ADDRESS, -TOKEN_NUMBER)
+  ) %>%
+  dplyr::left_join(
+    y = addressbase_plus_db %>%
+      dplyr::filter(ADDRESS_TYPE == "GEO") %>%
+      dplyr::mutate(GEO_TOKEN = 1) %>%
+      dplyr::select(-ADDRESS_TYPE, -SINGLE_LINE_ADDRESS, -TOKEN_NUMBER)
+  )
+
+# Filter combined addresses where the one DPA / GEO address is a subset of the 
+# other
+combined_addresses_db <- combined_addresses_db %>%
+  dplyr::inner_join(
+    y = combined_addresses_db %>%
+      dplyr::group_by(UPRN) %>%
+      dplyr::summarise(
+        MISSING_DPA_TOKENS = sum(ifelse(is.na(DPA_TOKEN), 1, 0)),
+        MISSING_GEO_TOKENS = sum(ifelse(is.na(GEO_TOKEN), 1, 0))
+      ) %>%
+      # If one address is missing 0 tokens then we don't need a combined address
+      dplyr::filter(MISSING_DPA_TOKENS > 0 & MISSING_GEO_TOKENS > 0) %>%
+      dplyr::select(UPRN)
+  ) %>%
+  dplyr::select(-DPA_TOKEN, -GEO_TOKEN)
 
 # Add the combined token rows to our data
 addressbase_plus_db <- addressbase_plus_db %>%
   dplyr::union_all(
-    y = different_addresses_combined_tokens_db %>%
-      dplyr::inner_join(different_addresses_db) %>%
+    y = combined_addresses_db %>%
       dplyr::mutate(ADDRESS_TYPE = "COMBINED")
   ) %>%
   dplyr::arrange(UPRN, ADDRESS_TYPE, TOKEN_NUMBER)
@@ -162,7 +192,7 @@ addressbase_plus_db %>%
   nhsbsaR::oracle_create_table(table_name = "ADDRESSBASE_PLUS_CARE_HOME")
 
 # Drop the temporary tables
-DBI::dbRemoveTable(conn = con, name = "TMP_DIFFERENT_ADDRESSES")
+DBI::dbRemoveTable(conn = con, name = "TMP_COMBINED_ADDRESSES")
 DBI::dbRemoveTable(conn = con, name = "TMP_ADDRESSBASE_PLUS")
 
 # Disconnect from database
