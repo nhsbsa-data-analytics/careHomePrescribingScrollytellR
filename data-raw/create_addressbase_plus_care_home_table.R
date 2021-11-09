@@ -11,7 +11,7 @@ if (exists) {
   DBI::dbRemoveTable(conn = con, name = "ADDRESSBASE_PLUS_CARE_HOME")
 }
 
-# Create a lazy table from the care home FACT table
+# Create a lazy table from the AddressBase Plus table
 addressbase_plus_db <- dplyr::tbl(
   src = con,
   from = dbplyr::sql("SELECT * FROM DALL_REF.ADDRESSBASE_PLUS")
