@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
--- PART ONE: RESULTS BASE TABLE --------------------------------------------------
+-- PART ONE: RESULTS BASE TABLE ------------------------------------------------
+-- NOTE: TAKES ~15 MINS
 
 
 --drop table int615_match;
@@ -49,6 +50,7 @@ from
 inner join
     int615_ab_plus_base  abc
     on abc.ab_address  =  rb.pat_address
+    and abc.ab_postcode = rb.pat_postcode
 )
 --select count(*) from exact_matches;
 ,
@@ -457,7 +459,7 @@ where
     1=1
     and address_rank = 1
     and regexp_instr(pat_address, 'NURSING|RESIDENTIAL HOME|RESPITE|ELDERLY|CONVALESCENT|REST HOME|CARE HOME') != 0
-    and regexp_instr(pat_address, 'CHILD|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
+    and regexp_instr(pat_address, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
 )
 
 select

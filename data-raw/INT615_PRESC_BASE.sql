@@ -1,8 +1,9 @@
 --------------------------------------------------------------------------------
 -- PART ONE: PRESC_BASE_TABLE --------------------------------------------------
--- NOTE: RUNS IN ~30 MINUTES ---------------------------------------------------
+-- NOTE: RUNS IN ~20 MINUTES ---------------------------------------------------
 
---drop table int615_presc_base
+
+--drop table int615_presc_base;
 create table int615_presc_base compress for query high as 
 
 with
@@ -164,9 +165,10 @@ from
 --select count(*) from int615_presc_base;
 --------------------------------------------------------------------------------
 -- PART TWO: PRESC TOKENS -----------------------------------------------------
+-- NOTE: TAKES ~1 MIN
 
 
---drop table int615_presc_records;
+--drop table int615_presc_tokens;
 create table int615_presc_tokens compress for query high as 
 
 with

@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------------
 -- PART ONE: PROCESS AND STACK MULTIPLE SLA PER UPRN ---------------------------
-
+-- NOTE: TAKES ~10 MINS
 
 --drop table int615_ab_plus_base;
---create table int615_ab_plus_base compress for query high as
+create table int615_ab_plus_base compress for query high as
 
 with
 
@@ -21,7 +21,6 @@ where
 )
 --select count(*) from ab_postcodes;
 ,
-
 
 -- NOTE: SOME FIELD NAME DIFFERENT TO PUBLISHED SQL CODE TO GENERATE SLA
 -- DEPENDENT_LOCALITY == DEP_LOCALITY
@@ -134,7 +133,6 @@ select
                                                                                                                     ) as dpa_single_line_address
 from
     sla
---where uprn <= 1000000
 )
 --select * from sla_edit;
 ,
@@ -171,6 +169,7 @@ geo_concat as (
 select
     /*+ materialize */
     uprn,
+    geo_address_token,
     geo_address_token || '*' || rank() over (partition by uprn, geo_address_token order by geo_row_num) || '*' || uprn as geo_token_count,
     geo_row_num
 from
@@ -183,6 +182,7 @@ dpa_concat as (
 select
     /*+ materialize */
     uprn,
+    dpa_address_token,
     dpa_address_token || '*' || rank() over (partition by uprn, dpa_address_token order by dpa_row_num) || '*' || uprn as dpa_token_count,
     dpa_row_num
 from
@@ -196,75 +196,25 @@ select
     /*+ materialize */
     coalesce(dt.uprn, gt.uprn)  as  uprn,
     dt.dpa_row_num,
-    dt.dpa_token_count,
-    gt.geo_token_count,
     gt.geo_row_num,
-    lead(dt.dpa_token_count ignore nulls) over (partition by coalesce(dt.uprn, gt.uprn) order by geo_row_num) as lead_token
+    coalesce(dpa_address_token, geo_address_token) as lead_token,
+    coalesce(dpa_row_num, lead(dt.dpa_row_num ignore nulls) over (partition by coalesce(dt.uprn, gt.uprn) order by geo_row_num)) as lead_row
 from
     dpa_concat  dt
 full outer join
     geo_concat  gt
     on gt.geo_token_count = dt.dpa_token_count
 )
---select * from dpa_geo order by uprn, dpa_row_num;
-,
-
-insert_tokens as (
-select
-    /*+ materialize */
-    distinct
-    uprn,
-    lead_token as token_one,
-    lead_token as token_two,
-    null as geo_row_num
-from
-    dpa_geo
-where
-    dpa_token_count is null
-
-union all
-
-select
-    uprn,
-    lead_token  as  token_one,
-    geo_token_count  as  token_two,
-    geo_row_num
-from
-    dpa_geo
-where
-    dpa_token_count is null
-)
---select * from insert_tokens order by uprn, geo_row_num;
-,
-
-final_tokens as (
-select
-    /*+ materialize */
-    dg.uprn,
-    dg.dpa_row_num,
-    itk.geo_row_num as token_row,
-    substr(coalesce(itk.token_two, dg.dpa_token_count), 1, instr(coalesce(itk.token_two, dg.dpa_token_count), '*') -1) as final_token
-from
-    dpa_geo  dg
-full outer join
-    insert_tokens  itk
-    on itk.token_one = dg.dpa_token_count
-where
-    1=1
-    and coalesce(itk.token_two, dg.dpa_token_count) is not null
-order by
-    dpa_row_num, token_row
-)
---select * from final_tokens order by uprn, dpa_row_num, token_row;
+--select * from dpa_geo order by uprn, dpa_row_num, geo_row_num;
 ,
 
 core as (
 select
     /*+ materialize */
     uprn,
-    LISTAGG(final_token, ', ') within group (order by dpa_row_num, token_row) as core_single_line_address
+    LISTAGG(lead_token, ', ') within group (order by lead_row, geo_row_num) as core_single_line_address
 from
-    final_tokens
+    dpa_geo
 group by
     uprn
 )
@@ -310,15 +260,15 @@ from
 ,
 
 core_stack as (
-select uprn, class, ab_postcode, geo_single_line_address as ab_address from core_edit where geo_single_line_address is not null and geo_uprn_rank = 1
+select uprn, class, ab_postcode, geo_single_line_address as ab_address from uprn_distinct where geo_single_line_address is not null and geo_uprn_rank = 1
 union all
 
-select uprn, class, ab_postcode, dpa_single_line_address as ab_address from core_edit where dpa_single_line_address is not null and dpa_uprn_rank = 1
+select uprn, class, ab_postcode, dpa_single_line_address as ab_address from uprn_distinct where dpa_single_line_address is not null and dpa_uprn_rank = 1
 union all
 
-select uprn, class, ab_postcode, core_single_line_address as ab_address from core_edit where core_single_line_address is not null and core_uprn_rank = 1
+select uprn, class, ab_postcode, core_single_line_address as ab_address from uprn_distinct where core_single_line_address is not null and core_uprn_rank = 1
 )
---select * from ore_stack;
+--select * from core_stack;
 
 select
     distinct
@@ -338,9 +288,9 @@ order by
 --select count(*) from int615_ab_plus_base;
 --------------------------------------------------------------------------------
 -- PART TWO: TOKENISE AB_PLUS DATA ---------------------------------------------
+-- NOT: TAKES ~1 MIN
 
-
---drop table int593_ab_core_tokens;
+--drop table int615_ab_plus_tokens;
 create table int615_ab_plus_tokens compress for query high as
 
 with
