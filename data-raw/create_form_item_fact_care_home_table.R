@@ -17,9 +17,9 @@ year_month_db <- dplyr::tbl(
   from = dbplyr::sql("SELECT * FROM DALL_REF.YEAR_MONTH_DIM")
 )
 
-# Filter to 2019/2020
+# Filter to 2020/2021
 year_month_db <- year_month_db %>%
-  dplyr::filter(FINANCIAL_YEAR == "2019/2020") %>%
+  dplyr::filter(FINANCIAL_YEAR == "2020/2021") %>%
   dplyr::select(YEAR_MONTH)
 
 # Create a lazy table from the item level FACT table
