@@ -120,13 +120,14 @@ fact_db <- dplyr::union_all(x = eps_fact_db, y = paper_fact_db)
 
 # Format single line addresses for tokenisation
 fact_db <- fact_db %>%
-  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
+  addressMatchR::tidy_single_line_address(
+    col = SINGLE_LINE_ADDRESS,
+    remove_postcode = FALSE
+  )
 
 # Write the table back to the DB
 fact_db %>%
-  nhsbsaR::oracle_create_table(
-    table_name = "FORM_ITEM_FACT_CARE_HOME"
-  )
+  nhsbsaR::oracle_create_table(table_name = "FORM_ITEM_FACT_CARE_HOME")
 
 # Disconnect from database
 DBI::dbDisconnect(con)
