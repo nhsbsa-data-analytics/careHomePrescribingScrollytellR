@@ -10,8 +10,9 @@ fact_db <- dplyr::tbl(
   from = dbplyr::sql("SELECT * FROM DALL_REF.INT615_ITEM_LEVEL_BASE")
 )
 
-# Add gender and age band groups to the FACT table
+# Filter to care home only and add gender and age band groups to the FACT table
 fact_db <- fact_db %>%
+  dplyr::filter(CH_FLAG == 1) %>%
   dplyr::mutate(
     PDS_GENDER = dplyr::case_when(
       PDS_GENDER == 1 ~ "Male",
