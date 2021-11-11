@@ -31,7 +31,7 @@ fact_db <- fact_db %>%
   )
 
 # Total patients by gender and age band
-patients_by_gender_and_age_band_df <- 
+patients_by_gender_and_age_band_df <-
   dplyr::union_all(
     # Overall
     x = fact_db %>%
@@ -45,7 +45,7 @@ patients_by_gender_and_age_band_df <-
       dplyr::ungroup()
   ) %>%
   dplyr::mutate(
-    YEAR_MONTH= ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH))
+    YEAR_MONTH = ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH))
   ) %>%
   dplyr::relocate(YEAR_MONTH) %>%
   dplyr::arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
