@@ -13,8 +13,30 @@ app_ui <- function(request) {
     br(),
     fluidPage(
       mod_01_intro_ui("01_intro_1"),
-      mod_items_per_patient_chart_ui("items_per_patient_chart_1"),
-      mod_patients_by_gender_and_age_band_chart_ui("patients_by_gender_and_age_band_chart_1")
+      scrollytell::scrolly_container(
+        outputId = "scrolly",
+        scrollytell::scrolly_graph(),
+        scrollytell::scrolly_sections(
+          scrollytell::scrolly_section(
+            id = "dummy"
+          ),
+          br(),
+          scrollytell::scrolly_section(
+            id = "items_per_patient",
+            mod_items_per_patient_chart_ui("items_per_patient_chart_1")
+          ),
+          br(),
+          scrollytell::scrolly_section(
+            id = "patients_by_gender_and_age_band",
+            mod_patients_by_gender_and_age_band_chart_ui("patients_by_gender_and_age_band_chart_1")
+          ),
+          br(),
+          scrollytell::scrolly_section(
+            id = "bnf_carehome_item",
+            mod_bnf_ch_item_treemap_ui("bnf_ch_item_treemap_1")
+          )
+        )
+      )
     ),
     br(),
     mod_99_footer_ui("99_footer_1")
