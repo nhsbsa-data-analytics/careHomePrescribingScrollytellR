@@ -30,25 +30,28 @@ fact_db <- fact_db %>%
   )
 
 # Total patients by gender and age band
-patients_by_gender_and_age_band_df <-
-  rbind(
-
+patients_by_gender_and_age_band_df <- 
+  dplyr::union_all(
     # Overall
-    fact_db %>%
-      dplyr::mutate(YEAR_MONTH = "Overall") %>%
-      dplyr::group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
+    x = fact_db %>%
+      dplyr::group_by(PDS_GENDER, AGE_BAND) %>%
       dplyr::summarise(TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO)) %>%
-      dplyr::ungroup() %>%
-      dplyr::collect(),
-
+      dplyr::ungroup(),
     # By year month
-    fact_db %>%
+    y = fact_db %>%
       dplyr::group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
       dplyr::summarise(TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO)) %>%
-      dplyr::ungroup() %>%
-      dplyr::arrange(YEAR_MONTH) %>%
-      dplyr::collect()
-  )
+      dplyr::ungroup()
+  ) %>%
+  dplyr::mutate(
+    YEAR_MONTH= ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH))
+  ) %>%
+  dplyr::relocate(YEAR_MONTH) %>%
+  dplyr::arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
+  dplyr::collect() %>%
+  # Format for highcharter
+  dplyr::mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
+  dplyr::arrange(YEAR_MONTH)
 
 # Add to data-raw/
 usethis::use_data(patients_by_gender_and_age_band_df, overwrite = TRUE)
