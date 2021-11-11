@@ -19,12 +19,19 @@ items_per_patient_df <- fact_db %>%
   dplyr::summarise(
     TOTAL_ITEMS = dplyr::sum(ITEM_COUNT),
     TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO),
-    ITEMS_PER_PATIENT = dplyr::sum(ITEM_COUNT) / dplyr::n_distinct(NHS_NO),
-    .groups = "drop"
+    ITEMS_PER_PATIENT = dplyr::sum(ITEM_COUNT) / dplyr::n_distinct(NHS_NO)
+  ) %>%
+  dplyr::ungroup()
+
+# Add overall mean and format for highcharter
+items_per_patient_df <- items_per_patient_df %>%
+  dplyr::union_all(
+    y = items_per_patient_df %>%
+      dplyr::group_by(CH_FLAG) %>%
+      dplyr::summarise(ITEMS_PER_PATIENT = mean(ITEMS_PER_PATIENT))
   ) %>%
   dplyr::arrange(YEAR_MONTH) %>%
   dplyr::collect() %>%
-  # Format columns for highcharter
   dplyr::mutate(
     YEAR_MONTH = lubridate::ym(YEAR_MONTH),
     CH_FLAG = forcats::fct_rev(CH_FLAG)
