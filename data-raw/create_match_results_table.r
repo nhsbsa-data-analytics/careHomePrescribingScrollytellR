@@ -1,21 +1,8 @@
-# RESULTS MATCHING--------------------------------------------------------------
-
-# Install Packages
-
-install.packages("odbc")
-install.packages("DBI")
-install.packages("dplyr")
-install.packages("dbplyr")
-install.packages("devtools")
-devtools::install_github("nhsbsa-data-analytics/nhsbsaR")
-
-# Set up connection to the DB
-
-con <- nhsbsaR::con_nhsbsa(database = "DALP")
-
-# Library
-
+# Load library
 library(magrittr)
+
+# Set up connection to DALP
+con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Load the 4 tables required for script
 
