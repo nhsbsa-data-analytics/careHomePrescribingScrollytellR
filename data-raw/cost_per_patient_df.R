@@ -10,21 +10,28 @@ fact_db <- dplyr::tbl(
   from = dbplyr::sql("SELECT * FROM DALL_REF.INT615_ITEM_LEVEL_BASE")
 )
 
-# Monthly number of items per patient by care home flag
+# Monthly cost per patient by care home flag
 cost_per_patient_df <- fact_db %>%
   dplyr::mutate(
     CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
   ) %>%
   dplyr::group_by(YEAR_MONTH, CH_FLAG) %>%
   dplyr::summarise(
-    TOTAL_COST = dplyr::sum(ITEM_PAY_DR_NIC * 0.01),
+    TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01),
     TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO),
-    COST_PER_PATIENT = dplyr::sum(ITEM_PAY_DR_NIC * 0.01) / dplyr::n_distinct(NHS_NO),
-    .groups = "drop"
+    COST_PER_PATIENT = sum(ITEM_PAY_DR_NIC * 0.01) / dplyr::n_distinct(NHS_NO)
   ) %>%
-  dplyr::arrange(CH_FLAG, YEAR_MONTH) %>%
+  dplyr::ungroup()
+
+# Add overall mean and format for highcharter
+cost_per_patient_df <- cost_per_patient_df %>%
+  dplyr::union_all(
+    y = cost_per_patient_df %>%
+      dplyr::group_by(CH_FLAG) %>%
+      dplyr::summarise(COST_PER_PATIENT = mean(COST_PER_PATIENT))
+  ) %>%
+  dplyr::arrange(YEAR_MONTH) %>%
   dplyr::collect() %>%
-  # Format columns for highcharter
   dplyr::mutate(
     YEAR_MONTH = lubridate::ym(YEAR_MONTH),
     CH_FLAG = forcats::fct_rev(CH_FLAG)
