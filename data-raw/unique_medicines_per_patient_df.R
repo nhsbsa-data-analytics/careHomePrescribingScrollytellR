@@ -43,14 +43,11 @@ fact_db <- fact_db %>%
     )
   )
 
-# Add care home flag to the FACT table
-fact_db <- fact_db %>%
-  dplyr::mutate(
-    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
-  )
-
 # Number of unique medicines per patient per month by care home flag
 unique_medicines_per_patient_df <- fact_db %>%
+  dplyr::mutate(
+    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
+  ) %>%
   dplyr::group_by(YEAR_MONTH, CH_FLAG, NHS_NO) %>%
   dplyr::summarise(
     UNIQUE_MEDICINES = dplyr::n_distinct(CHEMICAL_SUBSTANCE_BNF_DESCR)
