@@ -22,6 +22,11 @@ app_ui <- function(request) {
           ),
           br(),
           scrollytell::scrolly_section(
+            id = "overall_summary",
+            mod_overall_summary_ui(id = "overall_summary_1")
+          ),
+          br(),
+          scrollytell::scrolly_section(
             id = "items_per_patient",
             mod_items_per_patient_chart_ui("items_per_patient_chart_1")
           ),
