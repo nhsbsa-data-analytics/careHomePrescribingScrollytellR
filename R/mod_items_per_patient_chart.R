@@ -37,7 +37,7 @@ mod_items_per_patient_chart_server <- function(input, output, session) {
       theme_nhsbsa(palette = "highlight", stack = NA) %>%
       highcharter::hc_legend(reversed = TRUE) %>%
       highcharter::hc_title(
-        text = "Average prescription items per patient (2020/21)"
+        text = "Average prescription items for estimated care home residents in England (2020/21)"
       ) %>%
       highcharter::hc_tooltip(
         shared = FALSE,
