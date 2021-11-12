@@ -16,5 +16,9 @@ app_server <- function(input, output, session) {
     id = "patients_by_gender_and_age_band_chart_1",
     module = mod_patients_by_gender_and_age_band_chart_server
   )
+  moduleServer(
+    id = "overall_summary_1",
+    module = mod_overall_summary_server
+  )
   moduleServer(id = "99_footer_1", module = mod_99_footer_server)
 }
