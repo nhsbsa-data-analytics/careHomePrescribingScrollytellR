@@ -27,7 +27,11 @@ mod_value_box_ui <- function(id,
         class = "panel panel-primary",
         div(
           class = "panel-heading",
-          style = paste0("background-color:", color),
+          style = ("border-color: white;
+                   border-width: 0px; 
+                   border-bottom: 0px;
+                   border-left: 0px;"),
+          style = paste0("background-color:", color), 
           div(
             class = "row",
             div(
