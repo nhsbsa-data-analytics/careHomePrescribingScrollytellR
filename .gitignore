@@ -7,4 +7,4 @@
 /data/*
 !/data/.gitkeep
 .Renviron
-rsconnect
+rsconnect/
