@@ -9,17 +9,21 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    mod_00_header_ui("00_header_1"),
+    mod_00_header_ui(id = "00_header_1"),
     br(),
     fluidPage(
-      mod_01_intro_ui("01_intro_1"),
-      mod_items_per_patient_chart_ui("items_per_patient_chart_1"),
-      mod_patients_by_gender_and_age_band_chart_ui("patients_by_gender_and_age_band_chart_1")
+      mod_01_intro_ui(id = "01_intro_1"),
+      mod_items_per_patient_chart_ui(id = "items_per_patient_chart_1"),
+      mod_patients_by_gender_and_age_band_chart_ui(
+        id = "patients_by_gender_and_age_band_chart_1"
+      ),
+      mod_overall_summary_ui(id = "overall_summary_1")
     ),
     br(),
-    mod_99_footer_ui("99_footer_1")
+    mod_99_footer_ui(id = "99_footer_1")
   )
 }
+
 
 #' Add external Resources to the Application
 #'
