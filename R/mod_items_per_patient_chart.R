@@ -10,8 +10,13 @@
 mod_items_per_patient_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    highcharter::highchartOutput(
-      outputId = ns("items_per_patient_chart")
+    fluidRow(
+      style = "background-color: #FFFFFF;",
+      highcharter::highchartOutput(
+        outputId = ns("items_per_patient_chart"),
+        height = "500px",
+        width = "800px"
+      )
     )
   )
 }

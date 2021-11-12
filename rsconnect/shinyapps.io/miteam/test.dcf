@@ -1,0 +1,14 @@
+name: test
+title: test
+username:
+account: miteam
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5109754
+bundleId: 5244033
+url: https://miteam.shinyapps.io/test/
+when: 1636717421.45898
+lastSyncTime: 1636717421.45898
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .Rbuildignore|.Renviron

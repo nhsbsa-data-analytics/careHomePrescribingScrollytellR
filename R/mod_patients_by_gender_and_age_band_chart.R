@@ -10,8 +10,14 @@
 mod_patients_by_gender_and_age_band_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    highcharter::highchartOutput(
-      outputId = ns("patients_by_gender_and_age_band_chart")
+    fluidRow(
+      align = "center",
+      style = "background-color: #FFFFFF;",
+      highcharter::highchartOutput(
+        outputId = ns("patients_by_gender_and_age_band_chart"),
+        height = "500px",
+        width = "800px"
+      )
     )
   )
 }

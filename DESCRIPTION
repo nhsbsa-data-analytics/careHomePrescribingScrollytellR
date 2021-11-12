@@ -27,12 +27,26 @@ Imports:
     markdown,
     highcharter,
     nhsbsaR,
-    addressMatchR
+    addressMatchR,
+    magrittr,
+    pkgload,
+    purrr,
+    readr,
+    janitor,
+    dplyr,
+    shinyWidgets,
+    NHSRtheme,
+    tidyr,
+    scrollytell
 Remotes:
     nhsbsa-data-analytics/nhsbsaR
     nhsbsa-data-analytics/addressMatchR
+    statistiekcbs/scrollytell
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
 Depends: 
     R (>= 2.10)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

@@ -9,21 +9,44 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    mod_00_header_ui(id = "00_header_1"),
+    mod_00_header_ui("00_header_1"),
     br(),
     fluidPage(
-      mod_01_intro_ui(id = "01_intro_1"),
-      mod_items_per_patient_chart_ui(id = "items_per_patient_chart_1"),
-      mod_patients_by_gender_and_age_band_chart_ui(
-        id = "patients_by_gender_and_age_band_chart_1"
-      ),
-      mod_overall_summary_ui(id = "overall_summary_1")
+      mod_01_intro_ui("01_intro_1"),
+      scrollytell::scrolly_container(
+        outputId = "scrolly",
+        scrollytell::scrolly_graph(),
+        scrollytell::scrolly_sections(
+          scrollytell::scrolly_section(
+            id = "dummy"
+          ),
+          br(),
+          scrollytell::scrolly_section(
+            id = "overall_summary",
+            mod_overall_summary_ui(id = "overall_summary_1")
+          ),
+          br(),
+          scrollytell::scrolly_section(
+            id = "items_per_patient",
+            mod_items_per_patient_chart_ui("items_per_patient_chart_1")
+          ),
+          br(),
+          scrollytell::scrolly_section(
+            id = "patients_by_gender_and_age_band",
+            mod_patients_by_gender_and_age_band_chart_ui("patients_by_gender_and_age_band_chart_1")
+          ),
+          br(),
+          scrollytell::scrolly_section(
+            id = "bnf_carehome_item",
+            mod_bnf_ch_item_treemap_ui("bnf_ch_item_treemap_1")
+          )
+        )
+      )
     ),
     br(),
-    mod_99_footer_ui(id = "99_footer_1")
+    mod_99_footer_ui("99_footer_1")
   )
 }
-
 
 #' Add external Resources to the Application
 #'
@@ -42,7 +65,7 @@ golem_add_external_resources <- function() {
     favicon(),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "nhsbsaShinyR"
+      app_title = "careHomePrescribingScrollytellR"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
