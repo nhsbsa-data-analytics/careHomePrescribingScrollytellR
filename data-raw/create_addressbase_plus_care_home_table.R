@@ -66,10 +66,9 @@ addressbase_plus_db <- addressbase_plus_db %>%
   # Remove NA POSTCODE / SINGLE_LINE_ADDRESS (these are DPA)
   dplyr::filter(!is.na(POSTCODE) & !is.na(SINGLE_LINE_ADDRESS))
 
-# Remove whitespace from postcodes and format single line addresses for
-# tokenisation
+# Tidy postcode and format single line addresses for tokenisation
 addressbase_plus_db <- addressbase_plus_db %>%
-  dplyr::mutate(POSTCODE = REGEXP_REPLACE(POSTCODE, " ", "")) %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
   addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
 
 # Combine rows where there DPA and GEO single line addresses are equal into BOTH
@@ -98,7 +97,7 @@ combined_addresses_db <- addressbase_plus_db %>%
   dplyr::ungroup() %>%
   dplyr::filter(NO_ADDRESS_TYPE > 1) %>%
   dplyr::select(UPRN) %>%
-  dplyr::inner_join(addressbase_plus_db)
+  dplyr::inner_join(y = addressbase_plus_db)
 
 # Create a combined single line address for these of the form "{DPA} / {GEO}"
 combined_addresses_db <- combined_addresses_db %>%
