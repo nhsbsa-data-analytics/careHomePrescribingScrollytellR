@@ -28,7 +28,7 @@ mod_bnf_ch_item_treemap_ui <- function(id) {
 mod_bnf_ch_item_treemap_server <- function(input, output, session) {
   ns <- session$ns
 
-  cols <- NHSRtheme::get_nhs_colours(section = "highlights")
+  cols <- nhsbsaR::palette_nhsbsa()
 
   # df1 - BNF Chapter level
   df1 <- careHomePrescribingScrollytellR::bnf_ch_final %>%

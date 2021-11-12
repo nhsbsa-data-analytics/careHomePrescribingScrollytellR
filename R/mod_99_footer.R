@@ -33,7 +33,7 @@ mod_99_footer_ui <- function(id) {
             a(
               style = "color: #768692;",
               "GitHub",
-              href = "https://github.com/nhsbsa-data-analytics/nhsbsaShinyR",
+              href = "https://github.com/nhsbsa-data-analytics/careHomePrescribingScrollytellR",
               target = "_blank"
             ),
             "."

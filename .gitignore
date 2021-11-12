@@ -3,5 +3,9 @@
 .Rdata
 .httr-oauth
 .DS_Store
-data/*
+!/data
+/data/*
+!/data/.gitkeep
 .Renviron
+man
+rsconnect
