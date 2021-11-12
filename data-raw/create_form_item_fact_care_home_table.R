@@ -32,8 +32,7 @@ fact_db <- dplyr::tbl(
 fact_db <- fact_db %>%
   dplyr::inner_join(year_month_db) %>%
   dplyr::filter(
-    # Identified elderly patients
-    #PATIENT_IDENTIFIED == "Y",
+    # Elderly patients
     CALC_AGE >= 65,
     # Standard exclusions
     PAY_DA_END == "N", # excludes disallowed items
@@ -81,10 +80,8 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
     PART_DATE >= 20200401,
     PART_DATE <= 20210306
   ) %>%
+  # Concatenate fields together by a single space for the single line address
   dplyr::mutate(
-    # Strip whitespace from postcode
-    POSTCODE = REGEXP_REPLACE(PAT_ADDRESS_POSTCODE, " ", ""),
-    # Concatenate fields together by a single space for the single line address
     SINGLE_LINE_ADDRESS = paste(
       PAT_ADDRESS_LINE1,
       PAT_ADDRESS_LINE2,
@@ -106,9 +103,8 @@ paper_addresses_db <- dplyr::tbl(
   from = dbplyr::sql("SELECT * FROM DALL_REF.INT615_PAPER_PFID_ADDRESS_20_21")
 )
 
-# Strip whitespace from postcode and subset columns
+# Subset columns
 paper_addresses_db <- paper_addresses_db %>%
-  dplyr::mutate(POSTCODE = REGEXP_REPLACE(POSTCODE, " ", "")) %>%
   dplyr::select(YEAR_MONTH, PF_ID, POSTCODE, SINGLE_LINE_ADDRESS = ADDRESS)
 
 # Join back to the paper forms FACT subset
@@ -118,8 +114,9 @@ paper_fact_db <- paper_fact_db %>%
 # Stack EPS and paper back together
 fact_db <- dplyr::union_all(x = eps_fact_db, y = paper_fact_db)
 
-# Format single line addresses for tokenisation
+# Tidy postcode and format single line addresses for tokenisation
 fact_db <- fact_db %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
   addressMatchR::tidy_single_line_address(
     col = SINGLE_LINE_ADDRESS,
     remove_postcode = FALSE
