@@ -87,9 +87,7 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
       PAT_ADDRESS_LINE2,
       PAT_ADDRESS_LINE3,
       PAT_ADDRESS_LINE4
-    ),
-    SINGLE_LINE_ADDRESS = toupper(SINGLE_LINE_ADDRESS),
-    SINGLE_LINE_ADDRESS = TRIM(SINGLE_LINE_ADDRESS)
+    )
   ) %>%
   dplyr::select(PART_DATE, EPM_ID, POSTCODE, SINGLE_LINE_ADDRESS)
 
