@@ -214,7 +214,7 @@ non_matches = results_base %>%
   # Sort Column Order for later union_all
   dplyr::select(UPRN, UPRN_ID, CLASS, CAREHOME_FLAG, AB_ADDRESS, ADDRESS_RECORD_ID, JW_SCORE, TOTAL_SCORE, MATCH_SCORE, MATCH_TYPE)
 
-# Final Results
+# Matching Results
 
 results = exact_matches %>% 
   dplyr::union_all(jw_matches) %>% 
@@ -227,6 +227,8 @@ results = exact_matches %>%
     UPRN, UPRN_ID, CLASS, CAREHOME_FLAG, AB_ADDRESS, ADDRESS_RECORD_ID, JW_SCORE, TOTAL_SCORE, MATCH_SCORE, MATCH_TYPE
     )
 
+# Get PF_ID of matched records
+
 # Local Final Results
 
 results_df = results %>% 
@@ -234,7 +236,7 @@ results_df = results %>%
 
 # Disconnect
 
-DBI::dbDisconnect()
+DBI::dbDisconnect(con)
 rm(con)
 
 #-------------------------------------------------------------------------------
