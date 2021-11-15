@@ -1,206 +1,179 @@
---------------------------------------------------------------------------------
--- PART ONE: FINAL BASE TABLE --------------------------------------------------
--- NOTE: TAKES ~10 MINS --------------------------------------------------------
+/*
+INT615 - Care Home Insight
+Additional Matching and Results
+Version 1.0
+
+Created by Adnan Shroufi
+Created on 09-11-2021
+
+AMENDMENTS:
+	--DATE------:--NAME-------------:--DETAILS-------------------------------------------------------------------------------------
+    12-11-2021  :   Steven Buckley  :   Reviewed code base, adding some commentary
+                                    :   Added additional limitations to the "patient_count_match" section
+                                    :       only include properties that share a postcode with a care home location in AddressBase
+                                    :       T.B.C (currently not applied) limit to properties with 5+ patients aged 65+ in x months
+                                        
 
 
---drop table int615_results;
-create table int615_results compress for query high as
-
--- NOTE: CHILDREN RATHER THAN JUST 'CHILD' USED DUE TO CHILDWELL PLACE NAME ----
--- NOTE: REGEX_INSTR MUST BE >= 1 (DUE TO MULTIPLE OCCURENCES) -----------------
-
-with
-
-address_pf as (
-select
-    pb.pf_id,
-    1  as  ch_flag,
-    mt.uprn,
-    mt.match_type
-from
-    int615_presc_base  pb
-inner join
-    int615_match  mt
-    on mt.address_record_id  =  pb.address_record_id
-where
-    1=1
-    and carehome_flag = 1
-    and regexp_instr(pb.pat_address, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
-)
---select count(*) from address_match;
-,
-
-pat_match as (
-select
-    pb.year_month,
-    pb.pat_address,
-    count(distinct pb.nhs_no)  as  pat_count
-from
-    int615_presc_base  pb
-inner join
-    int615_match  mt
-    on mt.address_record_id  =  pb.address_record_id
-where
-    1=1
-    and pf_id not in (select pf_id from address_pf)
-    and regexp_instr(pb.pat_address, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
-group by
-    pb.year_month,
-    pb.pat_address
-having
-    count(distinct pb.nhs_no) >= 5
-)
---select count(*) from pat_match;
-,
-
-pat_pf as (
-select
-    pb.pf_id,
-    1  as  ch_flag,
-    null  as  uprn,
-    'PATIENT_COUNT'  as  match_type
-from
-    int615_presc_base  pb
-inner join
-    pat_match  pm
-    on pm.year_month  =  pb.year_month
-    and pm.pat_address  =  pb.pat_address
-)
---select count(*) from pat_pf;
-,
-
-word_pf as (
-select
-    pf_id,
-    1  as  ch_flag,
-    null  as  uprn,
-    'KEY_WORD'  as  match_type
-from
-    int615_presc_base
-where
-    1=1
-    and pf_id not in (select pf_id from address_pf)
-    and pf_id not in (select pf_id from pat_pf)
-    and regexp_instr(pat_address, 'NURSING|RESIDENTIAL HOME|RESPITE|ELDERLY|CONVALESCENT|REST HOME|CARE HOME') != 0
-    and regexp_instr(pat_address, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
-)
---select count(*) from word_pf;
-,
-
-non_pcd_word_pf as (
-select
-    pf_id,
-    1  as  ch_flag,
-    null  as  uprn,
-    'NON_PCD_KEY_WORD'  as  match_type
-from
-    int615_non_postcode_kw
-)
---select count(*) from non_pcd_word_pf;
-,
-
-all_pf as (
-select * from address_pf
-union all
-select * from pat_pf
-union all
-select * from word_pf
-union all
-select * from non_pcd_word_pf
-)
---select count(*) from all_pf;
-,
-
-ft as (
-select
-    year_month,
-    eps_part_date,
-    epm_id,
-    pf_id,
-    presc_type_prnt,
-    presc_id_prnt,
-    item_count,
-    item_pay_dr_nic,
-    item_calc_pay_qty,
-    pds_gender,
-    calc_age,
-    nhs_no,
-    patient_addr_postcode,
-    calc_prec_drug_record_id,
-    eps_flag
-from
-    SB_AML.PX_FORM_ITEM_ELEM_COMB_FACT  fact  
-where
-    1=1
-    and fact.year_month in (202004, 202005, 202006, 202007, 202008, 202009, 202010, 202011, 202012, 202101, 202102, 202103)
-    and fact.patient_identified = 'Y'
-	and fact.pay_da_end   = 'N' -- excludes disallowed items
-	and fact.pay_nd_end   = 'N' -- excludes not dispensed items
-	and fact.pay_rb_end   = 'N' -- excludes referred back items
-	and fact.cd_req       = 'N' -- excludes controlled drug requisitions 
-	and fact.oohc_ind     = 0   -- excludes out of hours dispensing
-	and fact.private_ind  = 0   -- excludes private dispensers
-	and fact.ignore_flag  = 'N' -- excludes LDP dummy forms
-    and fact.calc_age >= 65
-)
-
-select
-    ft.*,
-    pf.uprn,
-    nvl(pf.ch_flag, 0)  as  ch_flag,
-    pf.match_type
-from
-    ft
-left join
-    all_pf  pf
-    on pf.pf_id  =  ft.pf_id;
+DESCRIPTION:
+    NHS Prescription data does not identify whether or not the patient is a care home resident.
+    It is proposed to infer this based on whether or not the patient's addess information aligns with a care home property.
+    The care home properties are to be identified based on data stored in AddressBasePlus (maintained by Ordnance Survey).
+    
+    Following address matching some address will be able to be mapped to care home locations.
+    However, some care home addresses may have been missed, although they could be identified using additional checks:
+        +   Keyword matching can identify addresses containing words that would strongly suggest a care home property
+        +   Patient count matching can identify addresses supplied by multiple distinct elderly patients in a single month, suggesting a care home
+    
+    The results of each matching stage can be fed back to identify a single outcome for each address supplied by a patient
+    
+    These results can be linked back to the precsription item level data to flag, for each record, if the patient is inferred to be a care home patient or not
 
 
---------------------------------------------------------------------------------
--- PART TWO: MANUAL VALIDATION DATA --------------------------------------------
--- NOTE: TAKES ~5 MINS
+DEPENDENCIES:
+        INT615_MATCH                :   Address level match results for each unique patient address
+        INT615_PRESC_ADDRESS_BASE   :   unique patient address level dataset, including summary of token information
+        INT615_PRESC_BASE           :   prescription form level dataset including cleansed address information
+        
+
+OUTPUTS:
+        INT615_RESULTS  :   Final output dataset at individual prescription item level
+                        :   Each prescription item will be supplement with any care home flag information
+        
+*/
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+-- NOTE: TAKES ~10 MINS
 
 
---drop table int615_results_validation;
-create table int615_results_validation compress for query high as
+drop table INT615_RESULTS;
+create table INT615_RESULTS compress for query high as
 
 with
 
-pb as (
-select
-    pb.pat_postcode,
-    pb.pat_address,
-    pb.address_record_id,
-    pf.match_type,
-    count(distinct pb.pf_id)  as  form_count
-from
-    int615_presc_base  pb
-left join
-    int615_results  pf
-    on pf.pf_id  =  pb.pf_id
-where
-    pf.ch_flag = 1
-group by
-    pb.pat_postcode,
-    pb.pat_address,
-    pb.address_record_id,
-    pf.match_type
+-----SECTION START: Identify care home address matches------------------------------------------------------------------------------------------------
+--following the address matching processes identify which patient addresses can be matched to a care home property
+--exclude any addresses containing anything that may strongly suggest the property is not a care home for the elderly
+address_match as
+(
+select  /*+ materialize */
+            ADDRESS_RECORD_ID,
+            CAREHOME_FLAG,
+            UPRN,
+            MATCH_TYPE
+from        INT615_MATCH
+where       1=1
+    and     CAREHOME_FLAG = 1
+    and     regexp_instr(PAT_ADDRESS, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
 )
---select count(*) from pb;
+--select * from address_match;
+-----SECTION END: Identify care home address matches--------------------------------------------------------------------------------------------------
 
-select
-    pb.pat_address,
-    mt.ab_address,
-    pb.pat_postcode,
-    pb.address_record_id,
-    pb.match_type,
-    pb.form_count
-from
-    pb
-left join
-    (select distinct address_record_id, ab_address from int615_match)  mt
-    on mt.address_record_id  =  pb.address_record_id;
+,
 
+-----SECTION START: Address keyword match-------------------------------------------------------------------------------------------------------------
+--for any patient addresses that did not match based on address matching to AddressBase
+--identify if the patient address contains words that strongly suggest a care home property
+--exclude any addresses containing anything that may strongly suggest the property is not a care home for the elderly
+keyword_match as
+(
+select  /*+ materialize */
+            ADDRESS_RECORD_ID,
+            1           as CAREHOME_FLAG,
+            null        as UPRN,
+            'KEY_WORD'  as MATCH_TYPE
+from        INT615_MATCH
+where       1=1
+    and     CAREHOME_FLAG = 0
+    and     regexp_instr(PAT_ADDRESS, 'NURSING|RESIDENTIAL HOME|RESPITE|ELDERLY|CONVALESCENT|REST HOME|CARE HOME') != 0
+    and     regexp_instr(PAT_ADDRESS, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
+)
+--select * from keyword_match;
+-----SECTION END: Address keyword match---------------------------------------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+,
+
+-----SECTION START: Patient count match-------------------------------------------------------------------------------------------------------------
+--for any patient addresses that did not match based on address matching to AddressBase
+--identify if the address was used by 5 or more patients aged 65 plus in a single month
+--exclude any addresses containing words that strongly suggest a care home property (picked up in previous sub-query)
+--exclude any addresses containing anything that may strongly suggest the property is not a care home for the elderly
+patient_count_match as
+(
+select  /*+ materialize */
+            m.ADDRESS_RECORD_ID,
+            1           as CAREHOME_FLAG,
+            null        as UPRN,
+            'PATIENT_COUNT'  as MATCH_TYPE
+from        INT615_MATCH                m
+left join   INT615_PRESC_ADDRESS_BASE   pab     on  m.ADDRESS_RECORD_ID =   pab.ADDRESS_RECORD_ID
+where       1=1
+    and     m.CAREHOME_FLAG = 0
+    and     pab.MAX_MONTHLY_PATIENTS >= 5
+    --and     pab.MONTHS_5PLUS_PATIENTS >= 3  : to be confirmed
+    and     m.PAT_POSTCODE in (select AB_POSTCODE from INT615_AB_PLUS_BASE)
+    and     regexp_instr(m.PAT_ADDRESS, 'NURSING|RESIDENTIAL HOME|RESPITE|ELDERLY|CONVALESCENT|REST HOME|CARE HOME') = 0
+    and     regexp_instr(m.PAT_ADDRESS, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
+)
+--select * from patient_count_match;
+-----SECTION END: Address Keyword Match---------------------------------------------------------------------------------------------------------------
+
+,
+
+-----SECTION START: Link results back to prescription forms-------------------------------------------------------------------------------------------
+--link all the matching results back to the prescription form level table
+--for each form this will identify if a care home match was possible and the details of any match
+--use COALESCE to pick the first applicable match (although each ADDRESS_RECORD_ID will only appear one of the match result sets)
+form_match_results as
+(
+select      pb.PF_ID,
+            pb.ADDRESS_RECORD_ID,
+            coalesce(am.CAREHOME_FLAG, km.CAREHOME_FLAG, pcm.CAREHOME_FLAG, 0)  as CH_FLAG,
+            coalesce(am.UPRN, km.UPRN, pcm.UPRN)                                as UPRN,
+            coalesce(am.MATCH_TYPE, km.MATCH_TYPE, pcm.MATCH_TYPE, 'NO_MATCH')  as MATCH_TYPE
+from        INT615_PRESC_BASE   pb
+left join   address_match       am  on  pb.ADDRESS_RECORD_ID    =   am.ADDRESS_RECORD_ID
+left join   keyword_match       km  on  pb.ADDRESS_RECORD_ID    =   km.ADDRESS_RECORD_ID
+left join   patient_count_match pcm on  pb.ADDRESS_RECORD_ID    =   pcm.ADDRESS_RECORD_ID
+)
+--select * from form_match_results;
+-----SECTION END: Link results back to prescription forms---------------------------------------------------------------------------------------------
+
+-----OUTPUT-------------------------------------------------------------------------------------------------------------------------------------------
+select      fact.YEAR_MONTH,
+            fact.EPS_PART_DATE,
+            fact.EPM_ID,
+            fact.PF_ID,
+            fact.PRESC_TYPE_PRNT,
+            fact.PRESC_ID_PRNT,
+            fact.ITEM_COUNT,
+            fact.ITEM_PAY_DR_NIC,
+            fact.ITEM_CALC_PAY_QTY,
+            fact.PDS_GENDER,
+            fact.CALC_AGE,
+            fact.NHS_NO,
+            fact.PATIENT_ADDR_POSTCODE,
+            fact.CALC_PREC_DRUG_RECORD_ID,
+            fact.EPS_FLAG,
+            nvl(fmr.CH_FLAG,0) as CH_FLAG,
+            fmr.UPRN,
+            fmr.ADDRESS_RECORD_ID,
+            nvl(fmr.MATCH_TYPE, 'NO_MATCH') as MATCH_TYPE
+from        SB_AML.PX_FORM_ITEM_ELEM_COMB_FACT  fact  
+left join   form_match_results                  fmr     on  fact.PF_ID = fmr.PF_ID
+where       1=1
+    and     fact.YEAR_MONTH in (202004, 202005, 202006, 202007, 202008, 202009, 202010, 202011, 202012, 202101, 202102, 202103)
+    and     fact.PATIENT_IDENTIFIED = 'Y'
+	and     fact.CALC_AGE >= 65
+    and     fact.PAY_DA_END   = 'N' -- excludes disallowed items
+	and     fact.PAY_ND_END   = 'N' -- excludes not dispensed items
+	and     fact.PAY_RB_END   = 'N' -- excludes referred back items
+	and     fact.CD_REQ       = 'N' -- excludes controlled drug requisitions 
+	and     fact.OOHC_IND     = 0   -- excludes out of hours dispensing
+	and     fact.PRIVATE_IND  = 0   -- excludes private dispensers
+	and     fact.IGNORE_FLAG  = 'N' -- excludes LDP dummy forms
+;
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------

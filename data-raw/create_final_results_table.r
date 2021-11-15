@@ -111,13 +111,13 @@ pat_pf = presc_base %>%
   # 5+ monthly pats aged 65+ is a care home
   dplyr::filter(PAT_COUNT >= 5) %>% 
   # Counteract this with key word exclusions
-  key_word_exclusions(., PAT_ADDRESS) 
+  key_word_exclusions(., PAT_ADDRESS) %>% 
   # Get form info from base table
   dplyr::inner_join(
     presc_base %>% 
       dplyr::select(PF_ID, YEAR_MONTH, PAT_ADDRESS),
     by = c("YEAR_MONTH", "PAT_ADDRESS")
-  )
+  ) %>% 
   # Only PF_ID needed from above fields
   dplyr::select(PF_ID) 
   # Mutate extra fields for later union_all alignment
@@ -126,7 +126,7 @@ pat_pf = presc_base %>%
     UPRN = NA,
     UPRN = as.integer(UPRN),
     MATCH_TYPE = 'PATIENT_COUNT',
-  ) 
+  ) %>% 
   dplyr::select(PF_ID, CAREHOME_FLAG, UPRN, MATCH_TYPE)
 
 # Forms for non-matched records yet with care home-related keyword
