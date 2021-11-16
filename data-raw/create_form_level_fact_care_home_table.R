@@ -52,7 +52,7 @@ fact_db <- fact_db %>%
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
   ) %>%
-  select(
+  distinct(
     YEAR_MONTH,
     PART_DATE = EPS_PART_DATE,
     EPM_ID,
@@ -66,8 +66,7 @@ fact_db <- fact_db %>%
 
 # Subset the fact table for EPS
 eps_fact_db <- fact_db %>%
-  filter(EPS_FLAG == "Y") %>% 
-  distinct()
+  filter(EPS_FLAG == "Y")
 
 # Create the single line address and subset columns
 eps_payload_messages_db <- eps_payload_messages_db %>%
