@@ -24,7 +24,7 @@ mod_value_box_ui <- function(id,
     div(
       class = "col-lg-3 col-md-3",
       div(
-        class = "panel panel-primary",
+        class = "panel panel-white",
         div(
           class = "panel-heading",
           style = paste0("background-color:", color),
@@ -32,13 +32,15 @@ mod_value_box_ui <- function(id,
             class = "row",
             div(
               class = "col-md-3",
-              icon(icon_name, "fa-3x")
+              icon(icon_name, "fa-3x"),
+              style = "color: #FFFFFF"
             ),
             div(
               class = ("col-xs-9 text-right"),
               div(
                 style = ("font-size: 40px;
-                                     font-weight: bold;"), value
+                         font-weight: bold;
+                         color: #FFFFFF"), value
               )
             )
           )
