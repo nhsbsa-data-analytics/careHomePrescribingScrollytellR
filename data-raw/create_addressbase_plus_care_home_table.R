@@ -1,4 +1,6 @@
-library(magrittr)
+# Library
+library(dplyr)
+library(dbplyr)
 
 # Set up connection to the DB
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
@@ -12,15 +14,15 @@ if (exists) {
 }
 
 # Create a lazy table from the AddressBase Plus table
-addressbase_plus_db <- dplyr::tbl(
+addressbase_plus_db <- tbl(
   src = con,
-  from = dbplyr::sql("SELECT * FROM DALL_REF.ADDRESSBASE_PLUS")
+  from = sql("SELECT * FROM DALL_REF.ADDRESSBASE_PLUS")
 )
 
 # Filter AddressBase Plus to English properties in at the end of 2021 FY and
 # create a care home flag
 addressbase_plus_db <- addressbase_plus_db %>%
-  dplyr::filter(
+  filter(
     COUNTRY == "E",
     substr(CLASS, 1, 1) != "L", # Land
     substr(CLASS, 1, 1) != "O", # Other (Ordnance Survey only)
@@ -30,23 +32,23 @@ addressbase_plus_db <- addressbase_plus_db %>%
     substr(CLASS, 1, 1) != "Z", # Object of interest
     RELEASE_DATE == to_date("2021-03-15", "YYYY:MM:DD")
   ) %>%
-  dplyr::mutate(CH_FLAG = ifelse(CLASS == "RI01", 1, 0))
+  mutate(CH_FLAG = ifelse(CLASS == "RI01", 1, 0))
 
 # Get postcodes where there is a care home present. We use POSTCODE_LOCATOR as
 # it is equal to POSTCODE (whenever one exists) but more complete
 care_home_postcodes_db <- addressbase_plus_db %>%
-  dplyr::filter(CH_FLAG == 1) %>%
-  dplyr::distinct(POSTCODE_LOCATOR)
+  filter(CH_FLAG == 1) %>%
+  distinct(POSTCODE_LOCATOR)
 
 # Filter AddressBase Plus to postcodes where there is a care home present
 addressbase_plus_db <- addressbase_plus_db %>%
-  dplyr::inner_join(y = care_home_postcodes_db)
+  inner_join(y = care_home_postcodes_db)
 
 # Create a long table of single line addresses
 addressbase_plus_db <- addressbase_plus_db %>%
   addressMatchR::calc_addressbase_plus_dpa_single_line_address() %>%
   addressMatchR::calc_addressbase_plus_geo_single_line_address() %>%
-  dplyr::select(
+  select(
     UPRN,
     CH_FLAG,
     DPA_POSTCODE = POSTCODE,
@@ -62,9 +64,9 @@ addressbase_plus_db <- addressbase_plus_db %>%
   # Hack the names_sep result back to what it should be (ignore warning as
   # splits {DPA,GEO}_SINGLE_LINE_ADDRESS into {DPA,GEO} / SINGLE / LINE /
   # ADDRESS and drops LINE / ADDRESS as no data exists)
-  dplyr::rename(SINGLE_LINE_ADDRESS = SINGLE) %>%
+  rename(SINGLE_LINE_ADDRESS = SINGLE) %>%
   # Remove NA POSTCODE / SINGLE_LINE_ADDRESS (these are DPA)
-  dplyr::filter(!is.na(POSTCODE) & !is.na(SINGLE_LINE_ADDRESS))
+  filter(!is.na(POSTCODE) & !is.na(SINGLE_LINE_ADDRESS))
 
 # Tidy postcode and format single line addresses for tokenisation
 addressbase_plus_db <- addressbase_plus_db %>%
@@ -73,31 +75,31 @@ addressbase_plus_db <- addressbase_plus_db %>%
 
 # Combine rows where there DPA and GEO single line addresses are equal into BOTH
 addressbase_plus_db <- addressbase_plus_db %>%
-  dplyr::mutate(
+  mutate(
     DPA = ifelse(ADDRESS_TYPE == "DPA", 1, 0),
     GEO = ifelse(ADDRESS_TYPE == "GEO", 1, 0)
   ) %>%
-  dplyr::group_by(dplyr::across(c(-ADDRESS_TYPE, -DPA, -GEO))) %>%
-  dplyr::summarise(DPA = sum(DPA), GEO = sum(GEO), .groups = "drop") %>%
-  dplyr::mutate(
-    ADDRESS_TYPE = dplyr::case_when(
+  group_by(across(c(-ADDRESS_TYPE, -DPA, -GEO))) %>%
+  summarise(DPA = sum(DPA), GEO = sum(GEO), .groups = "drop") %>%
+  mutate(
+    ADDRESS_TYPE = case_when(
       DPA == 1 & GEO == 1 ~ "BOTH",
       DPA == 1 & GEO == 0 ~ "DPA",
       DPA == 0 & GEO == 1 ~ "GEO",
       TRUE ~ "ERROR"
     )
   ) %>%
-  dplyr::select(-DPA, -GEO) %>%
-  dplyr::relocate(ADDRESS_TYPE, .after = CH_FLAG)
+  select(-DPA, -GEO) %>%
+  relocate(ADDRESS_TYPE, .after = CH_FLAG)
 
 # Pull the UPRNs that have two different addresses
 combined_addresses_db <- addressbase_plus_db %>%
-  dplyr::group_by(UPRN) %>%
-  dplyr::summarise(NO_ADDRESS_TYPE = dplyr::n_distinct(ADDRESS_TYPE)) %>%
-  dplyr::ungroup() %>%
-  dplyr::filter(NO_ADDRESS_TYPE > 1) %>%
-  dplyr::select(UPRN) %>%
-  dplyr::inner_join(y = addressbase_plus_db)
+  group_by(UPRN) %>%
+  summarise(NO_ADDRESS_TYPE = n_distinct(ADDRESS_TYPE)) %>%
+  ungroup() %>%
+  filter(NO_ADDRESS_TYPE > 1) %>%
+  select(UPRN) %>%
+  inner_join(y = addressbase_plus_db)
 
 # Create a combined single line address for these of the form "{DPA} / {GEO}"
 combined_addresses_db <- combined_addresses_db %>%
@@ -106,114 +108,114 @@ combined_addresses_db <- combined_addresses_db %>%
     names_from = ADDRESS_TYPE,
     values_from = SINGLE_LINE_ADDRESS
   ) %>%
-  dplyr::mutate(SINGLE_LINE_ADDRESS = paste0(DPA, " / ", GEO)) %>%
-  dplyr::select(-DPA, -GEO)
+  mutate(SINGLE_LINE_ADDRESS = paste0(DPA, " / ", GEO)) %>%
+  select(-DPA, -GEO)
 
 # Compute query and save in temporary remote table
 combined_addresses_db %>%
   nhsbsaR::oracle_create_table(table_name = "TMP_COMBINED_ADDRESSES")
 
 # Pull the temporary remote table
-combined_addresses_db <- dplyr::tbl(
+combined_addresses_db <- tbl(
   src = con,
-  from = dbplyr::sql("SELECT * FROM TMP_COMBINED_ADDRESSES")
+  from = sql("SELECT * FROM TMP_COMBINED_ADDRESSES")
 )
 
 # Tokenise the single line addresses and add token type ("D" = digit,
 # "C" = character)
 addressbase_plus_db <- addressbase_plus_db %>%
   nhsbsaR::oracle_unnest_tokens(col = "SINGLE_LINE_ADDRESS", drop = FALSE) %>%
-  dplyr::mutate(TOKEN_TYPE = ifelse(REGEXP_LIKE(TOKEN, "[0-9]"), "D", "C"))
+  mutate(TOKEN_TYPE = ifelse(REGEXP_LIKE(TOKEN, "[0-9]"), "D", "C"))
 
 # Compute query and save in temporary remote table
 addressbase_plus_db %>%
   nhsbsaR::oracle_create_table(table_name = "TMP_ADDRESSBASE_PLUS")
 
 # Pull the temporary remote table
-addressbase_plus_db <- dplyr::tbl(
+addressbase_plus_db <- tbl(
   src = con,
-  from = dbplyr::sql("SELECT * FROM TMP_ADDRESSBASE_PLUS")
+  from = sql("SELECT * FROM TMP_ADDRESSBASE_PLUS")
 )
 
 # Where DPA and GEO have different single line addresses for the same UPRN, get
 # a superset of all tokens
 combined_addresses_db <- combined_addresses_db %>%
-  dplyr::inner_join(
+  inner_join(
     y = addressbase_plus_db %>% 
-      dplyr::select(UPRN, TOKEN, TOKEN_TYPE)
+      select(UPRN, TOKEN, TOKEN_TYPE)
   ) %>%
-  dplyr::distinct()
+  distinct()
 
 # Indicate where each token has originated
 combined_addresses_db <- combined_addresses_db%>%
-  dplyr::left_join(
+  left_join(
     y = addressbase_plus_db %>%
-      dplyr::filter(ADDRESS_TYPE == "DPA") %>%
-      dplyr::mutate(DPA_TOKEN = 1) %>%
-      dplyr::select(-ADDRESS_TYPE, -SINGLE_LINE_ADDRESS, -TOKEN_NUMBER)
+      filter(ADDRESS_TYPE == "DPA") %>%
+      mutate(DPA_TOKEN = 1) %>%
+      select(-ADDRESS_TYPE, -SINGLE_LINE_ADDRESS, -TOKEN_NUMBER)
   ) %>%
-  dplyr::left_join(
+  left_join(
     y = addressbase_plus_db %>%
-      dplyr::filter(ADDRESS_TYPE == "GEO") %>%
-      dplyr::mutate(GEO_TOKEN = 1) %>%
-      dplyr::select(-ADDRESS_TYPE, -SINGLE_LINE_ADDRESS, -TOKEN_NUMBER)
+      filter(ADDRESS_TYPE == "GEO") %>%
+      mutate(GEO_TOKEN = 1) %>%
+      select(-ADDRESS_TYPE, -SINGLE_LINE_ADDRESS, -TOKEN_NUMBER)
   )
 
 # Filter combined addresses where the one DPA / GEO address is a subset of the 
 # other
 combined_addresses_db <- combined_addresses_db %>%
-  dplyr::inner_join(
+  inner_join(
     y = combined_addresses_db %>%
-      dplyr::group_by(UPRN) %>%
-      dplyr::summarise(
+      group_by(UPRN) %>%
+      summarise(
         MISSING_DPA_TOKENS = sum(ifelse(is.na(DPA_TOKEN), 1, 0)),
         MISSING_GEO_TOKENS = sum(ifelse(is.na(GEO_TOKEN), 1, 0))
       ) %>%
       # If one address is missing 0 tokens then we don't need a combined address
-      dplyr::filter(MISSING_DPA_TOKENS > 0 & MISSING_GEO_TOKENS > 0) %>%
-      dplyr::select(UPRN)
+      filter(MISSING_DPA_TOKENS > 0 & MISSING_GEO_TOKENS > 0) %>%
+      select(UPRN)
   ) %>%
-  dplyr::select(-DPA_TOKEN, -GEO_TOKEN)
+  select(-DPA_TOKEN, -GEO_TOKEN)
 
 # Add the combined token rows to our data
 addressbase_plus_db <- addressbase_plus_db %>%
-  dplyr::union_all(
+  union_all(
     y = combined_addresses_db %>%
-      dplyr::mutate(ADDRESS_TYPE = "COMBINED")
+      mutate(ADDRESS_TYPE = "COMBINED")
   )
 
 # Pull non unique postcode and single line address combinations
 non_unique_postcode_address_combinations_db <- addressbase_plus_db %>%
-  dplyr::distinct(UPRN, POSTCODE, SINGLE_LINE_ADDRESS) %>%
-  dplyr::count(POSTCODE, SINGLE_LINE_ADDRESS) %>% 
-  dplyr::filter(n > 1) %>%
-  dplyr::select(-n)
+  distinct(UPRN, POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  count(POSTCODE, SINGLE_LINE_ADDRESS) %>% 
+  filter(n > 1) %>%
+  select(-n)
 
 # Add more of the address information
 non_unique_postcode_address_combinations_db <- addressbase_plus_db %>%
-  dplyr::select(-UPRN, TOKEN_NUMBER, -TOKEN, -TOKEN_NUMBER, -TOKEN_TYPE) %>%
-  dplyr::distinct() %>%
-  dplyr::inner_join(y = non_unique_postcode_address_combinations_db)
+  select(-UPRN, TOKEN_NUMBER, -TOKEN, -TOKEN_NUMBER, -TOKEN_TYPE) %>%
+  distinct() %>%
+  inner_join(y = non_unique_postcode_address_combinations_db)
 
 # Update the care home flag on the non unique postcode and single line address
 # combinations. See if they have differing care home flags, if so allocate them 
 # all NA
 non_unique_postcode_address_combinations_care_home_flag_db <- 
   non_unique_postcode_address_combinations_db %>%
-  dplyr::group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
-  dplyr::summarise(
+  group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  summarise(
     CH_FLAG_0 = sum(ifelse(CH_FLAG == 0, 1, 0)),
     CH_FLAG_1 = sum(ifelse(CH_FLAG == 1, 1, 0)),
   ) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(
-    CH_FLAG = dplyr::case_when(
+  ungroup() %>%
+  mutate(
+    CH_FLAG = case_when(
       CH_FLAG_0 > 0 & CH_FLAG_1 == 0 ~ 0,
       CH_FLAG_1 > 0 & CH_FLAG_0 == 0 ~ 1,
       TRUE ~ NA_integer_
     )
   ) %>%
-  dplyr::select(CH_FLAG, POSTCODE, SINGLE_LINE_ADDRESS)
+  select(CH_FLAG, POSTCODE, SINGLE_LINE_ADDRESS)
 
 # Update the address type on the non unique postcode and single line address
 # combinations. See if they have differing address types, if so allocate them 
@@ -221,49 +223,49 @@ non_unique_postcode_address_combinations_care_home_flag_db <-
 # NOTE: There are no COMBINED address types here
 non_unique_postcode_address_combinations_address_type_db <- 
   non_unique_postcode_address_combinations_db %>%
-  dplyr::group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
-  dplyr::summarise(
+  group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  summarise(
     DPA = sum(ifelse(ADDRESS_TYPE == "DPA", 1, 0)),
     GEO = sum(ifelse(ADDRESS_TYPE == "GEO", 1, 0)),
     BOTH = sum(ifelse(ADDRESS_TYPE == "BOTH", 1, 0))
   ) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(
-    ADDRESS_TYPE = dplyr::case_when(
+  ungroup() %>%
+  mutate(
+    ADDRESS_TYPE = case_when(
       BOTH > 0 ~ "BOTH",
       BOTH == 0 & DPA > 0 & GEO == 0 ~ "DPA",
       BOTH == 0 & GEO > 0 & DPA == 0 ~ "GEO",
       TRUE ~ NA_character_
     )
   ) %>%
-  dplyr::select(ADDRESS_TYPE, POSTCODE, SINGLE_LINE_ADDRESS)
+  select(ADDRESS_TYPE, POSTCODE, SINGLE_LINE_ADDRESS)
   
 # Add the updated care home flag and address type for the non unique postcode
 # and single line address combinations
 non_unique_postcode_address_combinations_db <- 
   non_unique_postcode_address_combinations_care_home_flag_db %>%
-  dplyr::inner_join(
+  inner_join(
     y = non_unique_postcode_address_combinations_address_type_db
   ) %>%
   # Mock NA UPRN as we can't ever choose between 2
-  dplyr::mutate(UPRN = NA_integer_) %>%
-  dplyr::select(UPRN, CH_FLAG, ADDRESS_TYPE, POSTCODE, SINGLE_LINE_ADDRESS)
+  mutate(UPRN = NA_integer_) %>%
+  select(UPRN, CH_FLAG, ADDRESS_TYPE, POSTCODE, SINGLE_LINE_ADDRESS)
 
 # Add the token information 
 non_unique_postcode_address_combinations_db <- 
   non_unique_postcode_address_combinations_db %>%
-  dplyr::inner_join(
+  inner_join(
     y = addressbase_plus_db %>%
-    dplyr::distinct(SINGLE_LINE_ADDRESS, TOKEN_NUMBER, TOKEN, TOKEN_TYPE)
+    distinct(SINGLE_LINE_ADDRESS, TOKEN_NUMBER, TOKEN, TOKEN_TYPE)
   )
 
 # Update the duplicate address rows in the AddressBase Plus care home table
 addressbase_plus_db  <- addressbase_plus_db  %>%
-  dplyr::anti_join(
+  anti_join(
     y = non_unique_postcode_address_combinations_db %>%
-      dplyr::distinct(POSTCODE, SINGLE_LINE_ADDRESS)
+      distinct(POSTCODE, SINGLE_LINE_ADDRESS)
   ) %>%
-  dplyr::union_all(y = non_unique_postcode_address_combinations_db)
+  union_all(y = non_unique_postcode_address_combinations_db)
 
 # Write the table back to the DB
 addressbase_plus_db %>%
