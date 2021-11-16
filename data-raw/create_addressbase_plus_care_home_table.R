@@ -9,15 +9,13 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 exists <- DBI::dbExistsTable(conn = con, name = "ADDRESSBASE_PLUS_CARE_HOME")
 
 # Drop any existing table beforehand
-if (exists) {
-  DBI::dbRemoveTable(conn = con, name = "ADDRESSBASE_PLUS_CARE_HOME")
-}
+if (exists) DBI::dbRemoveTable(conn = con, name = "ADDRESSBASE_PLUS_CARE_HOME")
+
+# Initial Lazy Tables from raw data
 
 # Create a lazy table from the AddressBase Plus table
-addressbase_plus_db <- tbl(
-  src = con,
-  from = sql("SELECT * FROM DALL_REF.ADDRESSBASE_PLUS")
-)
+addressbase_plus_db <- con %>%
+  tbl(from = in_schema("DALL_REF", "ADDRESSBASE_PLUS"))
 
 # Filter AddressBase Plus to English properties in at the end of 2021 FY and
 # create a care home flag
@@ -30,7 +28,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
     substr(CLASS, 1, 2) != "RC", # Car Park Space
     substr(CLASS, 1, 2) != "RG", # Lock-Up / Garage / Garage Court
     substr(CLASS, 1, 1) != "Z", # Object of interest
-    RELEASE_DATE == to_date("2021-03-15", "YYYY:MM:DD")
+    RELEASE_DATE == TO_DATE("2021-03-15", "YYYY:MM:DD")
   ) %>%
   mutate(CH_FLAG = ifelse(CLASS == "RI01", 1, 0))
 
