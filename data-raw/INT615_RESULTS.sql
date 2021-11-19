@@ -153,6 +153,9 @@ select      fact.YEAR_MONTH,
             fact.PDS_GENDER,
             fact.CALC_AGE,
             fact.NHS_NO,
+            -- Take PATIENT_ADDR_POSTCODE first and then the derived postcode
+            -- Some postcodes will still however remain as null 
+            replace(coalesce(fact.PATIENT_ADDR_POSTCODE, ppr.POSTCODE), ' ','') as PCD_NO_SPACES,
             fact.PATIENT_ADDR_POSTCODE,
             fact.CALC_PREC_DRUG_RECORD_ID,
             fact.EPS_FLAG,
@@ -162,6 +165,8 @@ select      fact.YEAR_MONTH,
             nvl(fmr.MATCH_TYPE, 'NO_MATCH') as MATCH_TYPE
 from        SB_AML.PX_FORM_ITEM_ELEM_COMB_FACT  fact  
 left join   form_match_results                  fmr     on  fact.PF_ID = fmr.PF_ID
+left join   DALL_REF.INT615_PAPER_PFID_ADDRESS_20_21 ppr on fact.YEAR_MONTH = ppr.YEAR_MONTH
+                                                            and fact.PF_ID = ppr.PF_ID
 where       1=1
     and     fact.YEAR_MONTH in (202004, 202005, 202006, 202007, 202008, 202009, 202010, 202011, 202012, 202101, 202102, 202103)
     and     fact.PATIENT_IDENTIFIED = 'Y'
