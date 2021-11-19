@@ -1,4 +1,4 @@
-#' overall_summary UI Function
+#' 02_overall_summary UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_overall_summary_ui <- function(id) {
+mod_02_overall_summary_ui <- function(id) {
   ns <- NS(id)
 
   # Pull dataframes for valueBox
@@ -94,7 +94,7 @@ mod_overall_summary_ui <- function(id) {
 #' slider Server Function
 #'
 #' @noRd
-mod_overall_summary_server <- function(input, output, session) {
+mod_02_overall_summary_server <- function(input, output, session) {
   ns <- session$ns
 }
 

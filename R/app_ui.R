@@ -22,18 +22,20 @@ app_ui <- function(request) {
           ),
           br(),
           scrollytell::scrolly_section(
-            id = "overall_summary",
-            mod_overall_summary_ui(id = "overall_summary_1")
+            id = "02_overall_summary",
+            mod_02_overall_summary_ui(id = "02_overall_summary_1")
           ),
           br(),
-          scrollytell::scrolly_section(
-            id = "items_per_patient",
-            mod_items_per_patient_chart_ui("items_per_patient_chart_1")
-          ),
+          # scrollytell::scrolly_section(
+          #   id = "items_per_patient",
+          #   mod_items_per_patient_chart_ui("items_per_patient_chart_1")
+          # ),
           br(),
           scrollytell::scrolly_section(
-            id = "patients_by_gender_and_age_band",
-            mod_patients_by_gender_and_age_band_chart_ui("patients_by_gender_and_age_band_chart_1")
+            id = "03_patients_by_gender_and_age_band",
+            mod_03_patients_by_gender_and_age_band_chart_ui(
+              id = "03_patients_by_gender_and_age_band_chart_1"
+            )
           ),
           br(),
           scrollytell::scrolly_section(
