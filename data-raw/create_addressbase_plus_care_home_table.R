@@ -1,3 +1,4 @@
+# Librrary
 library(dplyr)
 library(dbplyr)
 
@@ -10,9 +11,9 @@ exists <- DBI::dbExistsTable(conn = con, name = "ADDRESSBASE_PLUS_CARE_HOME")
 # Drop any existing table beforehand
 if (exists) {
   DBI::dbRemoveTable(conn = con, name = "ADDRESSBASE_PLUS_CARE_HOME")
-  }
+}
 
-# Part One: AddressBase Plus base table ----------------------------------------
+# Part One: AdddressBase plus base table ---------------------------------------
 
 # Create a lazy table from the AddressBase Plus table
 addressbase_plus_db <- con %>% 
@@ -61,7 +62,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
   merge_address_strings(
     col_one = DPA_SINGLE_LINE_ADDRESS,
     col_two = GEO_SINGLE_LINE_ADDRESS
-    ) %>% 
+  ) %>% 
   rename(CORE_SINGLE_LINE_ADDRESS = MERGE_STRING)
 
 # Convert to a long table of distinct stacked single line addresses
@@ -86,7 +87,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
 addressbase_plus_db %>%
   nhsbsaR::oracle_create_table(table_name = "ADDRESSBASE_PLUS_CARE_HOME")
 
-# Part Two: AddressBase plus base table tokens ---------------------------------
+# Part Two: AdddressBase plus tokens base table --------------------------------
 
 # Create a lazy table OF the above ADDRESSBASE_PLUS_CARE_HOME table
 addressbase_plus_tk <- con %>% 
@@ -117,7 +118,7 @@ addressbase_plus_tk <- addressbase_plus_tk %>%
     AB_CHAR_COUNT,
     AB_TOTAL,
     INT_FLAG
-    )
+  )
 
 # Write the table back to the DB
 addressbase_plus_tk %>%

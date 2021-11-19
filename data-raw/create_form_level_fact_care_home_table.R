@@ -1,8 +1,7 @@
-# Library
 library(dplyr)
 library(dbplyr)
 
-### Connections and Existing Table check
+# Connections and Existing Table check
 
 # Set up connection to the DB
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
@@ -13,7 +12,7 @@ exists <- DBI::dbExistsTable(conn = con, name = "INT615_PRESC_BASE")
 # Drop any existing table beforehand
 if (exists) DBI::dbRemoveTable(conn = con, name = "INT615_PRESC_BASE")
 
-### Initial Lazy Tables from raw data
+# Initial Lazy Tables from raw data
 
 # 1. Create a lazy table from the year month table
 year_month_db <- con %>%
@@ -32,7 +31,7 @@ eps_payload_messages_db <- con %>%
 paper_addresses_db <- con %>% 
   tbl(from = in_schema("DALL_REF", "INT615_PAPER_PFID_ADDRESS_20_21"))
 
-### Base Fact table
+# FACT table
 
 # Filter to 2020/2021
 year_month_db <- year_month_db %>%
@@ -53,7 +52,7 @@ fact_db <- fact_db %>%
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
   ) %>%
-  select(
+  distinct(
     YEAR_MONTH,
     PART_DATE = EPS_PART_DATE,
     EPM_ID,
@@ -63,12 +62,11 @@ fact_db <- fact_db %>%
   ) %>% 
   inner_join(y = year_month_db, by = "YEAR_MONTH") 
   
-### EPS Data
+# EPS payload message data
 
 # Subset the fact table for EPS
 eps_fact_db <- fact_db %>%
-  filter(EPS_FLAG == "Y") %>% 
-  distinct()
+  filter(EPS_FLAG == "Y")
 
 # Create the single line address and subset columns
 eps_payload_messages_db <- eps_payload_messages_db %>%
@@ -98,7 +96,7 @@ eps_fact_db <- eps_fact_db %>%
   left_join(y = eps_payload_messages_db, by = c("EPM_ID", "PART_DATE")) %>%
   select(YEAR_MONTH, NHS_NO, PF_ID, PAT_ADDRESS, PAT_POSTCODE)
 
-### Paper Data
+# Paper addresses data
 
 # Subset the fact table for Paper
 paper_fact_db <- fact_db %>%
@@ -113,7 +111,7 @@ paper_fact_db <- paper_fact_db %>%
   left_join(y = paper_addresses_db, by = "PF_ID") %>% 
   select(YEAR_MONTH, NHS_NO, PF_ID, PAT_ADDRESS, PAT_POSTCODE)
 
-### EPS and Paper
+# Combined EPS and paper data with the FACT
 
 # Stack EPS and paper back together
 fact_db <- union_all(x = eps_fact_db, y = paper_fact_db)
@@ -128,7 +126,7 @@ fact_db <- fact_db %>%
 fact_db %>%
   nhsbsaR::oracle_create_table(table_name = "INT615_PRESC_BASE")
 
-### Disconnect from database
+# Disconnect from database
 DBI::dbDisconnect(con)
 
 #-------------------------------------------------------------------------------
