@@ -1,3 +1,4 @@
+# Library
 library(dplyr)
 library(dbplyr)
 
@@ -7,10 +8,12 @@ library(dbplyr)
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Check if the table exists
-exists <- DBI::dbExistsTable(conn = con, name = "INT615_PRESC_BASE")
+exists <- DBI::dbExistsTable(conn = con, name = "FORM_LEVEL_CARE_HOME_FACT")
 
 # Drop any existing table beforehand
-if (exists) DBI::dbRemoveTable(conn = con, name = "INT615_PRESC_BASE")
+if (exists) DBI::dbRemoveTable(conn = con, name = "FORM_LEVEL_CARE_HOME_FACT")
+
+# Part One: Prescription base table --------------------------------------------
 
 # Initial Lazy Tables from raw data
 
@@ -19,7 +22,6 @@ year_month_db <- con %>%
   tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
 
 # 2. Create a lazy table from the item level FACT table
-
 fact_db <- con %>%
   tbl(from = in_schema("SB_AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
 
@@ -61,7 +63,7 @@ fact_db <- fact_db %>%
     EPS_FLAG
   ) %>% 
   inner_join(y = year_month_db, by = "YEAR_MONTH") 
-  
+
 # EPS payload message data
 
 # Subset the fact table for EPS
@@ -120,11 +122,11 @@ fact_db <- union_all(x = eps_fact_db, y = paper_fact_db)
 fact_db <- fact_db %>%
   addressMatchR::tidy_postcode(col = PAT_POSTCODE) %>%
   addressMatchR::tidy_single_line_address(col = PAT_ADDRESS) %>% 
-  mutate(ADDRESS_RECORD_ID = dense_rank(x = c("PAT_POSTCODE", "PAT_ADDRESS")))
+  mutate(ADDRESS_RECORD_ID = dense_rank(c(PAT_POSTCODE, PAT_ADDRESS)))
 
 # Write the table back to the DB
 fact_db %>%
-  nhsbsaR::oracle_create_table(table_name = "INT615_PRESC_BASE")
+  nhsbsaR::oracle_create_table(table_name = "FORM_LEVEL_CARE_HOME_FACT")
 
 # Disconnect from database
 DBI::dbDisconnect(con)

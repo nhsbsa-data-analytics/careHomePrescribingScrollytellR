@@ -1,242 +1,284 @@
 # Load library
-library(magrittr)
+library(dplyr)
+library(dbplyr)
 
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Load the 4 tables required for script
+# Load the 5 tables required for script
 
 # AddressBase base table
+ab_base <- con %>%
+  tbl(from = in_schema("ADNSH", "ADDRESSBASE_PLUS_CARE_HOME"))
 
-ab_base <- dplyr::tbl(
-  src = con,
-  from = dplyr::sql(
-    "SELECT * FROM INT615_AB_PLUS_BASE")
-  )
+# Results base table
+results_base <- con %>%
+  tbl(from = in_schema("ADNSH", "PATIENT_ADDRESS_RECORD_BASE"))
 
-# AddressBase tokens
-
-ab_tokens <- dplyr::tbl(
-  src = con,
-  from = dplyr::sql(
-    "SELECT * FROM INT615_AB_PLUS_TOKENS")
-  )
-
-# Prescribing base table
-
-presc_base <- dplyr::tbl(
-  src = con,
-  from = dplyr::sql(
-    "SELECT * FROM INT615_PRESC_BASE")
-  )
-
-# Prescribing tokens
-
-presc_tokens <- dplyr::tbl(
-  src = con,
-  from = dplyr::sql(
-    "SELECT * FROM INT615_PRESC_TOKENS")
-  )
-
-# Generate results base table
-
-results_base <- presc_base %>% 
-  # Distinct ADDRESS_RECORD_ID-level to rejoin to later
-  dplyr::select(ADDRESS_RECORD_ID, PAT_POSTCODE, PAT_ADDRESS) %>% 
-  dplyr::distinct() %>% 
-  # All token-level information per ADDRESS_RECORD_ID
-  dplyr::left_join(
-    presc_tokens %>% 
-      dplyr::select(ADDRESS_RECORD_ID, PAT_INT_COUNT, PAT_CHAR_COUNT, PAT_TOTAL) %>% 
-      # Distinct tokens sufficient as single token can be matched multiple times
-      dplyr::distinct(),
-    by = "ADDRESS_RECORD_ID"
-  )
-
-# Process
-# 1. Determine Exact Matches
-# 2. Calculate JW Matches
-# 3. Determine non-Matches
-# 4. Union all results and rejoin back to results base table
-
-# Exact Matches
-
-exact_matches <- results_base %>% 
-  dplyr::inner_join(ab_base, by = c("PAT_ADDRESS" = "AB_ADDRESS", "PAT_POSTCODE" = "AB_POSTCODE")) %>% 
-  # Exact match on complete address string (tokkens required for JW match)
-  dplyr::mutate(MATCH_SCORE = 1) %>% 
-  dplyr::mutate(MATCH_TYPE = 'EXACT') %>% 
-  # NumericAL token score is *4 (to promote correct numbered address, when number present, to have higher scores)
-  dplyr::mutate(JW_SCORE = (PAT_INT_COUNT * 4) + PAT_CHAR_COUNT) %>% 
-  dplyr::mutate(TOTAL_SCORE = (PAT_INT_COUNT * 4) + PAT_CHAR_COUNT) %>% 
-  # Sort Column Order for later union_all
-  dplyr::select(UPRN, UPRN_ID, CLASS, CAREHOME_FLAG, AB_ADDRESS = PAT_ADDRESS, ADDRESS_RECORD_ID, JW_SCORE, TOTAL_SCORE, MATCH_SCORE, MATCH_TYPE)
-
-# Remaining Presc Tokens to carry forward into JW Matching
-
-pat_tokens <- presc_tokens %>% 
-  dplyr::distinct() %>% 
-  # Tokens from Exact match records not needed to be considered
-  dplyr::anti_join(exact_matches, by = "ADDRESS_RECORD_ID")
-
-# Remaining Plus Tokens to carry forward into JW Matching
-
-plus_tokens <- ab_tokens %>% 
-  dplyr::select(UPRN, UPRN_ID, AB_POSTCODE, AB_ADDRESS, INT_FLAG) %>% 
-  # AddressBase and Presc tokens joined, in order to be compared and scored against each other
-  dplyr::inner_join(
-    pat_tokens %>% 
-      dplyr::select(PAT_POSTCODE) %>% 
-      dplyr::distinct(),
-    # Postcode level join, as records only matched against AB addresses within same postcode
-    by = c("AB_POSTCODE" = "PAT_POSTCODE")
-  )
-
-# Get Token-level exact matches (thus avoiding JW as score = 1)
-
-cross_join_exact = pat_tokens %>% 
-  dplyr::select(ADDRESS_RECORD_ID, PAT_POSTCODE, PAT_ADDRESS, INT_FLAG) %>% 
-  # Exact numerical token match = 1 * 4 = 4 (thus no JW required) - char token match = 1
-  dplyr::mutate(JW = ifelse(INT_FLAG == 1, 4, 1)) %>% 
-  dplyr::inner_join(
-    # Rejoin to get accompanying token information
-    plus_tokens %>% 
-      dplyr::select(UPRN, UPRN_ID, AB_ADDRESS, INT_FLAG, AB_POSTCODE),
-    by = c("PAT_POSTCODE" = "AB_POSTCODE", "PAT_ADDRESS" = "AB_ADDRESS", "INT_FLAG" = "INT_FLAG")
-  ) %>% 
-  dplyr::mutate(AB_ADDRESS = PAT_ADDRESS) %>% 
-  dplyr::select(UPRN, UPRN_ID, ADDRESS_RECORD_ID, PAT_POSTCODE, AB_ADDRESS, PAT_ADDRESS, INT_FLAG, JW)
-
-# Retrieve non exact token-level matches to be considered for JW
-
-jw_union <- pat_tokens %>% 
-  dplyr::select(ADDRESS_RECORD_ID, PAT_POSTCODE, PAT_ADDRESS, INT_FLAG) %>% 
-  dplyr::inner_join(
-    plus_tokens %>% 
-      dplyr::select(UPRN, UPRN_ID, AB_ADDRESS, INT_FLAG, AB_POSTCODE),
-    by = c("PAT_POSTCODE" = "AB_POSTCODE", "INT_FLAG" = "INT_FLAG")
-  ) %>% 
-  # As exact tokens already matched, JW only need to be applied where AB-token != Pat-token
-  dplyr::filter(AB_ADDRESS != PAT_ADDRESS) %>% 
-  # Numerical tokens can only have exact match, so not required non-exact token matches
-  dplyr::filter(INT_FLAG == 0) %>% 
-  # The goal here is to limit the JW calculation (consumes resource) to only potential matches
-  dplyr::filter(
-    # Tokens share same first letter
-    SUBSTR(AB_ADDRESS, 1, 1) == SUBSTR(PAT_ADDRESS, 1, 1) |
-      #Tokens share same second letter
-      SUBSTR(AB_ADDRESS, 2, 1) == SUBSTR(PAT_ADDRESS, 2, 1) |
-      # Tokens share same last letter
-      SUBSTR(AB_ADDRESS, LENGTH(AB_ADDRESS), 1)  ==  SUBSTR(PAT_ADDRESS, LENGTH(PAT_ADDRESS), 1) |
-      # One token is a substring of the other
-      INSTR(AB_ADDRESS, PAT_ADDRESS) > 1 |
-      INSTR(PAT_ADDRESS, AB_ADDRESS) > 1
-  ) %>% 
-  # JW For Remaining Matches
-  dplyr::mutate(JW = UTL_MATCH.JARO_WINKLER(PAT_ADDRESS, AB_ADDRESS)) %>% 
-  # Only JW scores >= 0.8 are kept, which means strings must be fairly similar to meet threshold (hence above stipulations)
-  dplyr::filter(JW >= 0.8) %>% 
-  dplyr::select(UPRN, UPRN_ID, ADDRESS_RECORD_ID, PAT_POSTCODE, AB_ADDRESS, PAT_ADDRESS, INT_FLAG, JW) %>% 
-  # Merge JW token scores with exact matches (with score of either 1 or 4)
-  dplyr::union_all(cross_join_exact) %>% 
-  # Max token-level Score
-  dplyr::group_by(UPRN, UPRN_ID, ADDRESS_RECORD_ID, PAT_ADDRESS) %>% 
-  # Maximum AB-token match score, per Pat-token within address
-  dplyr::summarise(MAX_VAL = max(JW, na.rm = T)) %>% 
-  dplyr::ungroup() %>% 
-  # Sum of max-token-level scores for overall Address Score
-  dplyr::group_by(UPRN, UPRN_ID, ADDRESS_RECORD_ID) %>% 
-  dplyr::summarise(JW_SCORE = sum(MAX_VAL, na.rm = T)) %>% 
-  dplyr::ungroup() %>% 
-  # Join Token-level Info
-  dplyr::inner_join(
-    pat_tokens %>% 
-      dplyr::select(ADDRESS_RECORD_ID, PAT_POSTCODE, PAT_CHAR_COUNT, PAT_INT_COUNT, PAT_TOTAL) %>% 
-      dplyr::distinct(),
-    by = "ADDRESS_RECORD_ID"
-  ) %>% 
-  # Calculate Score from token char/int Info
-  dplyr::mutate(TOTAL_SCORE = (PAT_INT_COUNT * 4) + PAT_CHAR_COUNT) %>% 
-  # Match score is actual score / maximum potential score
-  dplyr::mutate(MATCH_SCORE = JW_SCORE / TOTAL_SCORE)
-
-# Final aggregations for JW Match Info
-
-jw_matches = jw_union %>% 
-  # Then Max Score out of all Match Scores
-  dplyr::group_by(ADDRESS_RECORD_ID) %>% 
-  dplyr::summarise(MATCH_SCORE = max(MATCH_SCORE, na.rm = T)) %>% 
-  dplyr::ungroup() %>% 
-  # Rejoin back to table with all ADDRESS_RECORD_ID and UPRN info
-  dplyr::inner_join(
-    jw_union,
-    by = c("ADDRESS_RECORD_ID", "MATCH_SCORE")
-  ) %>% 
-  # Count UPRN per ADDRESS_RECORD_ID-match and UPRN_ID_RANK (to filter single UPRN_ID)
-  dplyr::group_by(ADDRESS_RECORD_ID) %>% 
-  dplyr::mutate(
-    UPRN_ID_RANK = rank(UPRN_ID),
-    UPRN_COUNT = n_distinct(UPRN)
+# Determine Exact Matches function
+exact_match_data = function(primary_df, lookup_df){
+  
+  exact_matches <- primary_df %>% 
+    inner_join(
+      y = lookup_df,
+      by = c("PRIMARY_ADDRESS" = "LOOKUP_ADDRESS", "POSTCODE")
     ) %>% 
-  dplyr::ungroup() %>% 
-  # This means single record is chosen, where 1 UPRN yet 2-3 UPRN_ID are joint best match
-  dplyr::filter(UPRN_COUNT == 1 & UPRN_ID_RANK == 1) %>% 
-  # Manually add in Match Type info
-  dplyr::mutate(MATCH_TYPE = 'JW') %>% 
-  # Rejoin for some additional AB Data
-  dplyr::inner_join(
-    ab_base %>% 
-      dplyr::select(CLASS, CAREHOME_FLAG, AB_ADDRESS, UPRN_ID),
-    by = "UPRN_ID"
-  ) %>% 
-  # Sort Column Order for later union_all
-  dplyr::select(UPRN, UPRN_ID, CLASS, CAREHOME_FLAG, AB_ADDRESS, ADDRESS_RECORD_ID, JW_SCORE, TOTAL_SCORE, MATCH_SCORE, MATCH_TYPE)
-
-# Non-Matches
-
-non_matches = results_base %>% 
-  # If record is not JW or exact match, is therefore a non-match
-  dplyr::anti_join(exact_matches, by = "ADDRESS_RECORD_ID") %>% 
-  dplyr::anti_join(jw_matches, by = "ADDRESS_RECORD_ID") %>% 
-  # Generate NULL for empty fields
-  dplyr::mutate(UPRN = NA) %>% 
-  dplyr::mutate(UPRN_ID = NA) %>% 
-  dplyr::mutate(CLASS = NA) %>% 
-  dplyr::mutate(CAREHOME_FLAG = NA) %>% 
-  dplyr::mutate(AB_ADDRESS = NA) %>% 
-  dplyr::mutate(JW_SCORE = 0) %>% 
-  dplyr::mutate(TOTAL_SCORE = 0) %>% 
-  dplyr::mutate(MATCH_SCORE = 0) %>% 
-  dplyr::mutate(MATCH_TYPE = 'NONE') %>% 
-  # Sort Column TYpes for generated empty fields - Important otherwise data types affect union_all later on
-  dplyr::mutate(across(c("UPRN", "UPRN_ID", "CAREHOME_FLAG"), as.integer)) %>% 
-  dplyr::mutate(across(c("CLASS", "AB_ADDRESS"), as.character)) %>% 
-  # Sort Column Order for later union_all
-  dplyr::select(UPRN, UPRN_ID, CLASS, CAREHOME_FLAG, AB_ADDRESS, ADDRESS_RECORD_ID, JW_SCORE, TOTAL_SCORE, MATCH_SCORE, MATCH_TYPE)
-
-# Matching Results
-
-results = exact_matches %>% 
-  dplyr::union_all(jw_matches) %>% 
-  dplyr::union_all(non_matches) %>% 
-  # After union_all 3 datasets, join back to results_base
-  dplyr::inner_join(results_base, by = "ADDRESS_RECORD_ID") %>% 
-  # Sort Column Order for later union_all
-  dplyr::select(
-    ADDRESS_RECORD_ID, PAT_POSTCODE, PAT_ADDRESS, PAT_INT_COUNT, PAT_CHAR_COUNT, PAT_TOTAL,
-    UPRN, UPRN_ID, CLASS, CAREHOME_FLAG, AB_ADDRESS, ADDRESS_RECORD_ID, JW_SCORE, TOTAL_SCORE, MATCH_SCORE, MATCH_TYPE
+    # Exact match on complete address string (tokkens required for JW match)
+    # NumericaL token score is *4 (to promote correct numbered address scoring)
+    mutate(
+      MATCH_SCORE = 1,
+      MATCH_TYPE = 'EXACT',
+      LOOKUP_ADDRESS = PRIMARY_ADDRESS
+    ) %>% 
+    # Sort Column Order for later union_all
+    select(
+      POSTCODE,
+      PRIMARY_ID,
+      PRIMARY_ADDRESS,
+      LOOKUP_ID,
+      LOOKUP_ADDRESS,
+      MATCH_SCORE,
+      MATCH_TYPE
     )
+  return(exact_matches)
+}
 
-# Get PF_ID of matched records
+# Determine non-matches
+non_match_data = function(primary_df, lookup_df){
+  
+  # Filter primary_df by postcodes within lookup_df
+  lookup_postcodes <- lookup_df %>% 
+    filter(!is.na(POSTCODE)) %>% 
+    select(POSTCODE) %>% 
+    distinct()
+  
+  # Filter primary_df by above postcodes
+  non_matches <- primary_df %>% 
+    anti_join(y = lookup_postcodes, by = "POSTCODE") %>% 
+    mutate(
+      LOOKUP_ID = NA,
+      LOOKUP_ID = as.integer(LOOKUP_ID),
+      LOOKUP_ADDRESS = NA,
+      LOOKUP_ADDRESS = as.character(LOOKUP_ADDRESS),
+      MATCH_SCORE = NA,
+      MATCH_SCORE = as.integer(MATCH_SCORE),
+      MATCH_TYPE = 'NONE'
+    )
+  return(non_matches)
+}
 
-# Local Final Results
+# Determine JW Matches 
+address_match_data = function(primary_df, lookup_df){
+  
+  # Filter primary_df by postcodes within lookup_df
+  lookup_postcodes <- lookup_df %>% 
+    filter(!is.na(POSTCODE)) %>% 
+    select(POSTCODE) %>% 
+    distinct()
+  
+  # Filter primary_df by above postcodes
+  primary_df <- primary_df %>% 
+    inner_join(y = lookup_postcodes, by = "POSTCODE")
+  
+  # Remove exact postcode-address matches
+  primary_df <- primary_df %>% 
+    anti_join(
+      y = lookup_df,
+      by = c("PRIMARY_ADDRESS" = "LOOKUP_ADDRESS", "POSTCODE")
+      )
+  
+  # Unnest tokens of remaining primary_df records
+  primary_tokens <- primary_df %>% 
+    nhsbsaR::oracle_unnest_tokens(col = "PRIMARY_ADDRESS") %>% 
+    rename(PRIMARY_ADDRESS = TOKEN) %>% 
+    # Generate INT_FLAG and TOTAL to calculate later JW score
+    mutate(
+      INT_FLAG = ifelse(REGEXP_LIKE(PRIMARY_ADDRESS, '[0-9]'), 1, 0),
+      CHAR_FLAG = ifelse(INT_FLAG == 1, 0, 1)
+    ) %>% 
+    group_by(PRIMARY_ID) %>% 
+    mutate(
+      TOTAL = (sum(INT_FLAG) * 4) + sum(CHAR_FLAG)
+    ) %>% 
+    ungroup() %>% 
+    select(-CHAR_FLAG)
+  
+  # Unnest tokens from lookup_df
+  lookup_tokens <- lookup_df %>% 
+    nhsbsaR::oracle_unnest_tokens(col = "LOOKUP_ADDRESS") %>% 
+    rename(LOOKUP_ADDRESS = TOKEN) %>% 
+    # Lookup tokens can be distinct
+    distinct() %>% 
+    # Just INT_FLAG required for loookup_df
+    mutate(INT_FLAG = ifelse(REGEXP_LIKE(LOOKUP_ADDRESS, '[0-9]'), 1, 0))
+  
+  # Get Token-level exact matches (thus avoiding JW as score = 1)
+  cross_join_exact = primary_tokens %>% 
+    dplyr::inner_join(
+      y = lookup_tokens,
+      by = c("POSTCODE", "PRIMARY_ADDRESS" = "LOOKUP_ADDRESS", "INT_FLAG"
+      )
+    ) %>% 
+    # Exact numerical token match = 1 * 4 = 4 (thus no JW required)
+    # Exact char token match = 1
+    dplyr::mutate(
+      JW = ifelse(INT_FLAG == 1, 4, 1),
+      LOOKUP_ADDRESS = PRIMARY_ADDRESS
+    ) %>% 
+    select(
+      PRIMARY_ID,
+      LOOKUP_ID,
+      POSTCODE,
+      PRIMARY_ADDRESS,
+      LOOKUP_ADDRESS,
+      INT_FLAG,
+      JW,
+      TOTAL
+    )
+  
+  # Retrieve non exact token-level matches to be considered for JW
+  cross_join_diff <- primary_tokens %>%
+    dplyr::inner_join(y = lookup_tokens, by = c("POSTCODE", "INT_FLAG")) %>% 
+    filter(
+      # As exact tokens matched, JW only applied where AB-token != Pat-token
+      PRIMARY_ADDRESS != LOOKUP_ADDRESS,
+      # Numerical tokens can only have exact match
+      # So not required non-exact token matches
+      INT_FLAG == 0,
+      SUBSTR(LOOKUP_ADDRESS, 1, 1) == SUBSTR(PRIMARY_ADDRESS, 1, 1) |
+        #Tokens share same second letter
+        SUBSTR(LOOKUP_ADDRESS, 2, 1) == SUBSTR(PRIMARY_ADDRESS, 2, 1) |
+        # Tokens share same last letter
+        SUBSTR(LOOKUP_ADDRESS, LENGTH(LOOKUP_ADDRESS), 1)  ==  SUBSTR(PRIMARY_ADDRESS, LENGTH(PRIMARY_ADDRESS), 1) |
+        # One token is a substring of the other
+        INSTR(LOOKUP_ADDRESS, PRIMARY_ADDRESS) > 1 |
+        INSTR(PRIMARY_ADDRESS, LOOKUP_ADDRESS) > 1
+    ) %>% 
+    # JW For Remaining Matches
+    mutate(JW = UTL_MATCH.JARO_WINKLER(PRIMARY_ADDRESS, LOOKUP_ADDRESS)) %>% 
+    # Only JW scores >= 0.8 are kept, which means
+    # Strings must be fairly similar to meet threshold (hence above stipulations)
+    filter(JW >= 0.8) %>% 
+    select(
+      PRIMARY_ID,
+      LOOKUP_ID,
+      POSTCODE,
+      PRIMARY_ADDRESS,
+      LOOKUP_ADDRESS,
+      INT_FLAG,
+      JW,
+      TOTAL
+    )
+  
+  # Calculate address-to-address match score using token scores 
+  jw_matches <- cross_join_exact %>% 
+    # Merge JW token scores with exact matches (with score of either 1 or 4)
+    dplyr::union_all(cross_join_diff) %>% 
+    # Max token-level Score
+    # Maximum AB-token match score, per Pat-token within address
+    dplyr::group_by(TOTAL, POSTCODE, PRIMARY_ID, LOOKUP_ID, PRIMARY_ADDRESS) %>% 
+    dplyr::summarise(MAX_VAL = max(JW, na.rm = T)) %>% 
+    dplyr::ungroup() %>% 
+    # Sum of max-token-level scores for overall Address Score
+    group_by(TOTAL, POSTCODE, PRIMARY_ID, LOOKUP_ID) %>% 
+    summarise(JW_SCORE = sum(MAX_VAL, na.rm = T)) %>% 
+    ungroup() %>% 
+    mutate(
+      MATCH_SCORE = JW_SCORE / TOTAL,
+      MATCH_TYPE = 'JW'
+    ) %>% 
+    # Get rank of scores against record Ids
+    group_by(PRIMARY_ID) %>% 
+    mutate(SCORE_RANK = dense_rank(desc(MATCH_SCORE))) %>% 
+    ungroup() %>% 
+    # Filter top (or joint top) ranked scores
+    filter(SCORE_RANK == 1) %>% 
+    select(
+      PRIMARY_ID,
+      LOOKUP_ID,
+      POSTCODE,
+      MATCH_SCORE,
+      MATCH_TYPE
+    )
+  
+  output <- jw_matches %>% 
+    left_join(
+      primary_df %>% 
+        select(PRIMARY_ID, PRIMARY_ADDRESS),
+      by = "PRIMARY_ID"
+    ) %>% 
+    left_join(
+      lookup_df %>% 
+        select(LOOKUP_ID, LOOKUP_ADDRESS),
+      by = "LOOKUP_ID"
+    ) %>% 
+    select(
+      POSTCODE,
+      PRIMARY_ID,
+      PRIMARY_ADDRESS,
+      LOOKUP_ID,
+      LOOKUP_ADDRESS,
+      MATCH_SCORE,
+      MATCH_TYPE
+    )
+  return(output)
+}
 
-results_df = results %>% 
-  dplyr::collect()
+# Overall function to combine all steps
+total_match = function(df_one, df_two){
+  
+  output = exact_match_data(df_one, df_two) %>% 
+    union_all(address_match_data(df_one, df_two)) %>% 
+    union_all(non_match_data(df_one, df_two))
+  return(output)
+}
 
-# Disconnect
+# Format primary_df for function input
+df_one <- results_base %>% 
+  select(ADDRESS_RECORD_ID, POSTCODE, PAT_ADDRESS) %>% 
+  rename_at(c(1:3), ~c("PRIMARY_ID", "POSTCODE", "PRIMARY_ADDRESS"))
 
+# Format lookup_df for function input
+df_two <- ab_base %>% 
+  select(UPRN_ID, AB_POSTCODE, AB_ADDRESS) %>% 
+  rename_at(c(1:3), ~c("LOOKUP_ID", "POSTCODE", "LOOKUP_ADDRESS"))
+
+# Generate outputs
+total_data = total_match(df_one, df_two)
+
+# Write the table back to the DB (~1h 20m)
+total_data %>%
+  nhsbsaR::oracle_create_table(table_name = "CARE_HOME_MATCH")
+
+# Disconnect from database
 DBI::dbDisconnect(con)
-rm(con)
+
+#-------------------------------------------------------------------------------
+
+# Get distinct address record id
+# distinct_records <- ch_fact_db %>% 
+#   filter(!is.na(PAT_ADDRESS)) %>% 
+#   group_by(ADDRESS_RECORD_ID, PAT_POSTCODE, PAT_ADDRESS) %>% 
+#   summarise(PATIENT_COUNT = n_distinct(NHS_NO)) %>% 
+#   ungroup() %>% 
+#   distinct() %>% 
+#   rename(POSTCODE = PAT_POSTCODE)
+# 
+# # Get max monthly patients
+# max_monthly_patients <- ch_fact_db %>% 
+#   filter(!is.na(PAT_ADDRESS)) %>% 
+#   group_by(YEAR_MONTH, ADDRESS_RECORD_ID) %>% 
+#   summarise(PATIENT_COUNT = n_distinct(NHS_NO)) %>% 
+#   ungroup() %>% 
+#   mutate(FIVE_PLUS = ifelse(PATIENT_COUNT >= 5, 1, 0)) %>% 
+#   group_by(ADDRESS_RECORD_ID) %>% 
+#   mutate(MONTHS_5PLUS_PATIENTS = n_distinct(YEAR_MONTH)) %>% 
+#   ungroup() %>% 
+#   select(ADDRESS_RECORD_ID, MONTHS_5PLUS_PATIENTS) %>% 
+#   distinct()
+# 
+# # Final Output
+# output <- distinct_records %>% 
+#   left_join(y = max_monthly_patients, by = "ADDRESS_RECORD_ID")
 
 #-------------------------------------------------------------------------------

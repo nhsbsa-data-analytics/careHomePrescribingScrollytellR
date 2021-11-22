@@ -1,0 +1,135 @@
+# Library
+library(magrittr)
+
+# Set up connection to the DB
+con <- nhsbsaR::con_nhsbsa(database = "DALP")
+
+# Check if the table exists
+exists <- DBI::dbExistsTable(conn = con, name = "FORM_ITEM_FACT_CARE_HOME")
+
+# Drop any existing table beforehand
+if (exists) {
+  DBI::dbRemoveTable(conn = con, name = "FORM_ITEM_FACT_CARE_HOME")
+}
+
+# Part One: Prescription base table --------------------------------------------
+
+# Create a lazy table from the year month table
+year_month_db <- dplyr::tbl(
+  src = con,
+  from = dbplyr::sql("SELECT * FROM DALL_REF.YEAR_MONTH_DIM")
+)
+
+# Filter to 2020/2021
+year_month_db <- year_month_db %>%
+  dplyr::filter(FINANCIAL_YEAR == "2020/2021") %>%
+  dplyr::select(YEAR_MONTH)
+
+# Create a lazy table from the item level FACT table
+fact_db <- dplyr::tbl(
+  src = con,
+  from = dbplyr::sql("SELECT * FROM SB_AML.PX_FORM_ITEM_ELEM_COMB_FACT")
+)
+
+# Filter to elderly patients in 2019/2020 and required columns
+fact_db <- fact_db %>%
+  dplyr::inner_join(year_month_db) %>%
+  dplyr::filter(
+    # Elderly patients
+    CALC_AGE >= 65,
+    # Standard exclusions
+    PAY_DA_END == "N", # excludes disallowed items
+    PAY_ND_END == "N", # excludes not dispensed items
+    PAY_RB_END == "N", # excludes referred back items
+    CD_REQ == "N", # excludes controlled drug requisitions 
+    OOHC_IND == 0, # excludes out of hours dispensing
+    PRIVATE_IND == 0, # excludes private dispensers
+    IGNORE_FLAG == "N" # excludes LDP dummy forms
+  ) %>%
+  dplyr::select(
+    YEAR_MONTH,
+    PART_DATE = EPS_PART_DATE,
+    EPM_ID,
+    PF_ID,
+    PRESC_TYPE_PRNT,
+    PRESC_ID_PRNT,
+    ITEM_COUNT,
+    ITEM_PAY_DR_NIC,
+    ITEM_CALC_PAY_QTY,
+    PATIENT_IDENTIFIED,
+    PDS_GENDER,
+    CALC_AGE,
+    NHS_NO,
+    CALC_PREC_DRUG_RECORD_ID,
+    EPS_FLAG
+  )
+
+# Subset the fact table for EPS / paper
+eps_fact_db <- fact_db %>%
+  dplyr::filter(EPS_FLAG == "Y")
+paper_fact_db <- fact_db %>%
+  dplyr::filter(EPS_FLAG == "N")
+
+# Create a lazy table from SCD2 payload message table 
+eps_payload_messages_db <- dplyr::tbl(
+  src = con,
+  from = dbplyr::sql("SELECT * FROM SCD2.SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")
+)
+
+# Create the single line address and subset columns
+eps_payload_messages_db <- eps_payload_messages_db %>%
+  # Buffer the end of part date by 6 days
+  dplyr::filter(
+    PART_DATE >= 20200401,
+    PART_DATE <= 20210306
+  ) %>%
+  # Concatenate fields together by a single space for the single line address
+  dplyr::mutate(
+    SINGLE_LINE_ADDRESS = paste(
+      PAT_ADDRESS_LINE1,
+      PAT_ADDRESS_LINE2,
+      PAT_ADDRESS_LINE3,
+      PAT_ADDRESS_LINE4
+    )
+  ) %>%
+  dplyr::select(PART_DATE, EPM_ID, POSTCODE, SINGLE_LINE_ADDRESS)
+
+# Join back to the EPS forms FACT subset
+eps_fact_db <- eps_fact_db %>%
+  dplyr::left_join(eps_payload_messages_db)
+
+# Create a lazy table from the paper addresses table
+paper_addresses_db <- dplyr::tbl(
+  src = con,
+  from = dbplyr::sql("SELECT * FROM DALL_REF.INT615_PAPER_PFID_ADDRESS_20_21")
+)
+
+# Subset columns
+paper_addresses_db <- paper_addresses_db %>%
+  dplyr::select(YEAR_MONTH, PF_ID, POSTCODE, SINGLE_LINE_ADDRESS = ADDRESS)
+
+# Join back to the paper forms FACT subset
+paper_fact_db <- paper_fact_db %>%
+  dplyr::left_join(paper_addresses_db)
+
+# Stack EPS and paper back together
+fact_db <- dplyr::union_all(x = eps_fact_db, y = paper_fact_db)
+
+# Tidy postcode and format single line addresses for tokenisation
+fact_db <- fact_db %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
+  addressMatchR::tidy_single_line_address(
+    col = SINGLE_LINE_ADDRESS,
+    remove_postcode = FALSE
+  )
+
+# Write the table back to the DB
+fact_db %>%
+  nhsbsaR::oracle_create_table(table_name = "FORM_ITEM_FACT_CARE_HOME")
+
+# Part Two: Prescription base table tokens -------------------------------------
+
+# Disconnect from database
+DBI::dbDisconnect(con)
+
+#

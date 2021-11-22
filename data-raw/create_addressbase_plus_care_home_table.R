@@ -87,43 +87,6 @@ addressbase_plus_db <- addressbase_plus_db %>%
 addressbase_plus_db %>%
   nhsbsaR::oracle_create_table(table_name = "ADDRESSBASE_PLUS_CARE_HOME")
 
-# Part Two: AdddressBase plus tokens base table --------------------------------
-
-# Create a lazy table OF the above ADDRESSBASE_PLUS_CARE_HOME table
-addressbase_plus_tk <- con %>% 
-  tbl(from = in_schema("ADNSH", "ADDRESSBASE_PLUS_CARE_HOME"))
-
-# Tokenise and generate UPRN-level count of int and char tokens
-addressbase_plus_tk <- addressbase_plus_tk %>% 
-  nhsbsaR::oracle_unnest_tokens(col = "AB_ADDRESS") %>% 
-  mutate(
-    INT_FLAG = ifelse(REGEXP_LIKE(TOKEN, '[0-9]'), 1, 0),
-    AB_CHAR_COUNT = ifelse(REGEXP_LIKE(TOKEN, '[0-9]'), 0, 1),
-    AB_TOTAL = 1
-  ) %>% 
-  group_by(UPRN_ID) %>% 
-  mutate(
-    AB_INT_COUNT = sum(INT_FLAG),
-    AB_CHAR_COUNT = sum(AB_CHAR_COUNT),
-    AB_TOTAL = sum(AB_TOTAL)
-  ) %>% 
-  ungroup() %>% 
-  select(
-    UPRN,
-    UPRN_ID,
-    AB_POSTCODE,
-    AB_ADDRESS = TOKEN,
-    CH_FLAG,
-    AB_INT_COUNT,
-    AB_CHAR_COUNT,
-    AB_TOTAL,
-    INT_FLAG
-  )
-
-# Write the table back to the DB
-addressbase_plus_tk %>%
-  nhsbsaR::oracle_create_table(table_name = "ADDRESSBASE_PLUS_CARE_HOME_TOKENS")
-
 # Disconnect from database
 DBI::dbDisconnect(con)
 
