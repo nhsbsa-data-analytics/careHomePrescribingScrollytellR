@@ -1,0 +1,17 @@
+---
+title: "Validation"
+author: "Name"
+date: "22/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Validation
+```{r add r chuck etc}
+
+```
+
+We found published data for time period X which shows there are N care home patients of group Y (age / gender / location / care home type / etc). Our best estimate of group Y for period X is N_hat.
