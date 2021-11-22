@@ -11,9 +11,9 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 ab_base <- con %>%
   tbl(from = in_schema("ADNSH", "ADDRESSBASE_PLUS_CARE_HOME"))
 
-# Results base table
-results_base <- con %>%
-  tbl(from = in_schema("ADNSH", "PATIENT_ADDRESS_RECORD_BASE"))
+# Prescription base table
+presc_base <- con %>%
+  tbl(from = in_schema("ADNSH", "FORM_LEVEL_CARE_HOME_FACT"))
 
 # Determine Exact Matches function
 exact_match_data = function(primary_df, lookup_df){
@@ -232,6 +232,11 @@ total_match = function(df_one, df_two){
     union_all(non_match_data(df_one, df_two))
   return(output)
 }
+
+# Generate results base table
+results_base <- presc_base %>% 
+  select(ADDRESS_RECORD_ID, POSTCODE, PAT_ADDRESS) %>% 
+  distinct()
 
 # Format primary_df for function input
 df_one <- results_base %>% 
