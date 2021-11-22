@@ -38,6 +38,8 @@ app_ui <- function(request) {
             )
           ),
           br(),
+          
+          
           scrollytell::scrolly_section(
             id = "bnf_carehome_item",
             mod_bnf_ch_item_treemap_ui("bnf_ch_item_treemap_1")
