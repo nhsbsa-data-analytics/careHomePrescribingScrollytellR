@@ -16,7 +16,13 @@ mod_03_patients_by_gender_and_age_band_chart_ui <- function(id) {
       "half (53%) in those aged 65+ years receiving prescriptions in general."
     ),
     p(
-      tags$b("One quarter"), " of care home residents in 2020/21 are", tags$b("female aged 90.")
+      tags$b("One quarter"), " of care home residents in 2020/21 are", tags$b("female aged 90."),
+      "The age and gender profile is broadly comparable to", 
+      a(
+        "ONS Estimates of care home residents from April 2020.",
+        href = "",
+        target = "_blank"
+        ),
     ),
     br(),
     fluidRow(
@@ -117,7 +123,7 @@ mod_03_patients_by_gender_and_age_band_chart_server <- function(input, output, s
         ) %>%
         theme_nhsbsa(palette = "gender") %>%
         highcharter::hc_title(
-          text = "Age band and gender of estimated care home residents in England (2020/21) (%)"
+          text = "Age band and gender of estimated care home residents receiving prescriptions in England (2020/21) (%)"
         ) %>%
         highcharter::hc_subtitle(
           text = "Note: This excludes individuals without either an age band or gender."
@@ -147,7 +153,7 @@ mod_03_patients_by_gender_and_age_band_chart_server <- function(input, output, s
         ) %>%
         theme_nhsbsa(palette = "gender") %>%
         highcharter::hc_title(
-          text = "Age band and gender of estimated care home residents in England (2020/21) (Count)"
+          text = "Age band and gender of estimated care home residents receiving prescriptions in England (2020/21) (Count)"
         ) %>%
         highcharter::hc_subtitle(
           text = "Note: This excludes individuals without either an age band or gender."
