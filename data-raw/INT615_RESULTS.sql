@@ -34,6 +34,8 @@ DEPENDENCIES:
         INT615_MATCH                :   Address level match results for each unique patient address
         INT615_PRESC_ADDRESS_BASE   :   unique patient address level dataset, including summary of token information
         INT615_PRESC_BASE           :   prescription form level dataset including cleansed address information
+        INT615_CQC_CAREHOMES        :   Dataset of CQC location data pulled from the CQC API
+        
         
 
 OUTPUTS:
@@ -51,6 +53,67 @@ drop table INT615_RESULTS;
 create table INT615_RESULTS compress for query high as
 
 with
+
+-----SECTION START: CQC UPRN CLASSIFICATION: ACTIVE LOCATIONS-----------------------------------------------------------------------------------------
+--for any UPRNs that are linked to active care home locations (REGISTRATIONSTATUS = 'Registered') take the max of the classifications
+--if there is only one location this will reflect that locations classification
+--if there are multiple active locations this will flag as Y if any of them had a Y
+active_uprn_classification as
+(
+select      UPRN,
+            max(NURSINGHOME)        as NURSING_HOME_FLAG,
+            max(RESIDENTIALHOME)    as RESIDENTIAL_HOME_FLAG
+from        DALL_REF.INT615_CQC_CAREHOMES
+where       1=1
+    and     CAREHOME = 'Y'
+    and     REGISTRATIONSTATUS = 'Registered'
+group by    UPRN
+)
+--select * from active_uprn_classification;
+-----SECTION END: CQC UPRN CLASSIFICATION: ACTIVE LOCATIONS-------------------------------------------------------------------------------------------
+,
+-----SECTION START: CQC UPRN CLASSIFICATION: DEACTIVED LOCATIONS--------------------------------------------------------------------------------------
+--for any UPRNs that have no active care home locations (do not exist in active_uprn_classification)
+--look for the latest data for any deactivated locations (REGISTRATIONSTATUS = 'Deregistered')
+--rank by DEREGISTRATIONDATE and take the classifications from the latest
+deactived_uprn_classification as
+(
+select      UPRN,
+            ID,
+            NURSINGHOME     as NURSING_HOME_FLAG,
+            RESIDENTIALHOME as RESIDENTIAL_HOME_FLAG,
+            --rank to show the latest deactived care home first, include the most recent registration and finally ID as tie-breaksers
+            rank() over (partition by UPRN order by to_date(DEREGISTRATIONDATE, 'YYYY-MM-DD') desc, to_date(REGISTRATIONDATE, 'YYYY-MM-DD') asc, ID asc) as RNK
+from        DALL_REF.INT615_CQC_CAREHOMES
+where       1=1
+    and     UPRN not in (select UPRN from active_uprn_classification)
+    and     CAREHOME = 'Y'
+    and     REGISTRATIONSTATUS = 'Deregistered'
+)
+--select * from deactived_uprn_classification;
+-----SECTION END: CQC UPRN CLASSIFICATION: DEACTIVED LOCATIONS----------------------------------------------------------------------------------------
+,
+-----SECTION START: CQC UPRN CLASSIFICATION: COMBINED-------------------------------------------------------------------------------------------------
+--combine the results for the active carehomes (active_uprn_classification) and deactived carehomes (deactived_uprn_classification)
+--this will leave a single result per UPRN with the latest "best fit" classifications for nursing/residential homes
+combined_uprn_classification as
+(
+select      UPRN,
+            NURSING_HOME_FLAG,
+            RESIDENTIAL_HOME_FLAG
+from        active_uprn_classification
+union all
+select      UPRN,
+            NURSING_HOME_FLAG,
+            RESIDENTIAL_HOME_FLAG
+from        deactived_uprn_classification
+where       1=1
+    and     RNK = 1 --only take the top ranked (latest entry)
+)
+--select * from combined_uprn_classification;
+-----SECTION END: CQC UPRN CLASSIFICATION: COMBINED-------
+
+,
 
 -----SECTION START: Identify care home address matches------------------------------------------------------------------------------------------------
 --following the address matching processes identify which patient addresses can be matched to a care home property
@@ -162,11 +225,14 @@ select      fact.YEAR_MONTH,
             nvl(fmr.CH_FLAG,0) as CH_FLAG,
             fmr.UPRN,
             fmr.ADDRESS_RECORD_ID,
-            nvl(fmr.MATCH_TYPE, 'NO_MATCH') as MATCH_TYPE
+            nvl(fmr.MATCH_TYPE, 'NO_MATCH') as MATCH_TYPE,
+            cuc.NURSING_HOME_FLAG,
+            cuc.RESIDENTIAL_HOME_FLAG
 from        SB_AML.PX_FORM_ITEM_ELEM_COMB_FACT  fact  
 left join   form_match_results                  fmr     on  fact.PF_ID = fmr.PF_ID
 left join   DALL_REF.INT615_PAPER_PFID_ADDRESS_20_21 ppr on fact.YEAR_MONTH = ppr.YEAR_MONTH
                                                             and fact.PF_ID = ppr.PF_ID
+left join   COMBINED_UPRN_CLASSIFICATION    cuc         on  cuc.UPRN  =  fmr.UPRN
 where       1=1
     and     fact.YEAR_MONTH in (202004, 202005, 202006, 202007, 202008, 202009, 202010, 202011, 202012, 202101, 202102, 202103)
     and     fact.PATIENT_IDENTIFIED = 'Y'
