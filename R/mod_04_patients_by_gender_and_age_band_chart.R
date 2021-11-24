@@ -28,8 +28,7 @@ mod_04_patients_by_gender_and_age_band_chart_ui <- function(id) {
     fluidRow(
       # style = "background-color: #FFFFFF;", # will rearrange the button location
       # selectInput("geography", label = h4("List of geographies"), choices = NULL, selected = "Overall", multiple = FALSE),
-      uiOutput(ns("geo_level2")),
-      p("Uiiput")
+      # uiOutput(ns("geo_level2"))
     ),
     fluidRow(
       align = "center",
@@ -53,19 +52,19 @@ mod_04_patients_by_gender_and_age_band_chart_server <- function(input, output, s
 
 
 
-  output$geo_level2 <- renderUI({
-    if (input_view() == "STP") {
-      selectInput("geo",
-        "Choose sub geography",
-        choices = stp_list, selected = "Overall"
-      )
-    } else if (input_view() == "Local Authority") {
-      selectInput("geo",
-        "Choose sub geography",
-        choices = la_list, selected = "Overall"
-      )
-    }
-  })
+  # output$geo_level2 <- renderUI({
+  #   if (input_view() == "STP") {
+  #     selectInput("geo",
+  #       "Choose sub geography",
+  #       choices = stp_list, selected = "Overall"
+  #     )
+  #   } else if (input_view() == "Local Authority") {
+  #     selectInput("geo",
+  #       "Choose sub geography",
+  #       choices = la_list, selected = "Overall"
+  #     )
+  #   }
+  # })
 
 
 
@@ -74,6 +73,7 @@ mod_04_patients_by_gender_and_age_band_chart_server <- function(input, output, s
   plot_df <-
     careHomePrescribingScrollytellR::patients_by_gender_and_age_band_df %>%
     dplyr::filter(!(PDS_GENDER %in% ("Unknown"))) %>%
+    dplyr::filter(LEVEL == "Overall") %>%
     dplyr::group_by(YEAR_MONTH) %>%
     dplyr::mutate(p = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
     dplyr::ungroup() %>%

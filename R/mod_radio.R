@@ -12,7 +12,7 @@ mod_radio_ui <- function(id) {
   tagList(
     shinyWidgets::prettyRadioButtons(
       inputId = ns("input_view"),
-      label = h4("Select geography:"),
+      label = h5("Select geography:"),
       choices = c("STP", "Local Authority"),
       shape = "curve",
       selected = "STP",
@@ -29,7 +29,7 @@ mod_radio_server <- function(id) {
     ns <- session$ns
 
     return(
-      selected_geo <- reactive({
+      reactive({
         input$input_view
       })
     )

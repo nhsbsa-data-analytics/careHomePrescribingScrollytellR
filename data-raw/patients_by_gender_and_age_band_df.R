@@ -40,7 +40,7 @@ geography_lookup <- tbl(
 )
 
 geography_lookup <- geography_lookup %>%
-  select(POSTCODE, PCD_STP_NAME, PCD_LAD_NAME) # keep only three geography of interest for the age/gender breakdown
+  select(POSTCODE, PCD_STP_NAME, PCD_LAD_NAME, PCD_REGION_NAME) # keep only three geography of interest for the age/gender breakdown
 
 
 fact_db <- fact_db %>%
@@ -114,39 +114,67 @@ patients_by_gender_and_age_band_la_df <-
   # Format for highcharter
   rename(GEOGRAPHY = PCD_LAD_NAME)
 
+# Process for Region
+
+patients_by_gender_and_age_band_region_df <-
+  fact_db %>%
+  group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_REGION_NAME) %>%
+  summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+  ungroup() %>%
+  arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_REGION_NAME) %>%
+  collect() %>%
+  mutate(
+    YEAR_MONTH = as.character(YEAR_MONTH),
+    LEVEL = "REGION"
+  ) %>%
+  # Format for highcharter
+  rename(GEOGRAPHY = PCD_REGION_NAME)
+
+
 
 # rbind
 
 patients_by_gender_and_age_band_df <- bind_rows(
   patients_by_gender_and_age_band_df,
   patients_by_gender_and_age_band_stp_df,
-  patients_by_gender_and_age_band_la_df
+  patients_by_gender_and_age_band_la_df,
+  patients_by_gender_and_age_band_region_df
 )
 
 # Also keep geography_lookup for the inputselect
 
-stp_la_lookup <- geography_lookup %>%
-  distinct(PCD_STP_NAME, PCD_LAD_NAME) %>%
+stp_la_region_lookup <- geography_lookup %>%
+  distinct(PCD_STP_NAME, PCD_LAD_NAME, PCD_REGION_NAME) %>%
   collect() %>%
   rename(
     STP = PCD_STP_NAME,
-    LA = PCD_LAD_NAME
-  ) %>%
-  add_row(STP = "Overall", LA = "Overall")
-
+    LA = PCD_LAD_NAME,
+    REGION = PCD_REGION_NAME
+  ) 
 
 # keep list of STP and LA
-stp_list <- stp_la_lookup %>%
-  distinct(STP)
+stp_list <- stp_la_region_lookup %>%
+  distinct(STP) %>% 
+  arrange(STP) %>% 
+  tibble::add_row(STP = 'Overall', .before = 1)
+  
 
-la_list <- stp_la_lookup %>%
-  distinct(LA)
+la_list <- stp_la_region_lookup %>%
+  distinct(LA) %>% 
+  arrange(LA) %>% 
+  tibble::add_row(LA = 'Overall', .before = 1)
+
+region_list <- stp_la_region_lookup %>%
+  distinct(REGION) %>% 
+  arrange(REGION) %>% 
+  tibble::add_row(REGION = 'Overall', .before = 1)
 
 
 # Add to data-raw/
 usethis::use_data(patients_by_gender_and_age_band_df, overwrite = TRUE)
 usethis::use_data(stp_list, overwrite = TRUE)
 usethis::use_data(la_list, overwrite = TRUE)
+usethis::use_data(region_list, overwrite = TRUE)
 
 
 

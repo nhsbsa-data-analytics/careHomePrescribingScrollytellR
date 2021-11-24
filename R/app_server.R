@@ -30,10 +30,45 @@ app_server <- function(input, output, session) {
   #                                  "util_data_ui_1",
   #                                  radio_input = radio_input)
   #
-  radio_input <- mod_radio_server("radio_ui_1")
-  mod_drop_down_server("drop_down_ui_1")
+  # radio_input <- mod_radio_server("radio_ui_1")
+  # mod_drop_down_server("drop_down_ui_1")
 
-  mod_03_select_geography_server("03_select_geogrphy_ui_1")
+
+  # mod_03_select_geography_server("03_select_geogrphy_ui_1")
+
+  r <- reactiveValues()
+
+  observe({
+    r$dataset <- input$input_view
+    print(r$dataset)
+  })
+
+  g <- reactiveValues()
+  observe({
+    g$geo_list <-
+      if (r$dataset == "STP") {
+        stp_list
+      } else if (r$dataset == "Region") {
+        region_list
+      } else if (r$dataset == "Local Authority") {
+        la_list
+      }
+    print(g$geo_list)
+  })
+
+
+
+  output$geo_level2 <- renderUI({
+    selectInput("geo", h5("Choose sub geography"),
+      choices = g$geo_list,
+      selected = "Overall",
+      width = '400px'
+    )
+  })
+
+
+
+  # print(r$dataset())
 
   callModule(
     id = "04_patients_by_gender_and_age_band_chart_1",

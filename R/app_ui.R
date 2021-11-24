@@ -46,8 +46,20 @@ app_ui <- function(request) {
           ),
           br(),
           scrollytell::scrolly_section(
-              id = "geography_selection",
-              mod_03_select_geography_ui("03_select_geography_ui_1")
+            id = "geography_selection",
+            # mod_03_select_geography_ui("03_select_geography_ui_1")
+            p(
+              "Select a sustainability and transofmration plan (STP) geography, Regionor or local authority for a personalised look at care home profile.",
+              "Individual STP, Region or local authority can be selected in each chart."
+            ),
+            selectInput(
+              inputId = "input_view",
+              label = h5("Select geography:"),
+              choices = c("STP", "Region", "Local Authority"),
+              selected = "STP"
+            ),
+            uiOutput(outputId = "geo_level2")
+            # mod_geography_list_ui(id = "geography_list_1")
           ),
           br(),
           scrollytell::scrolly_section(

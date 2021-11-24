@@ -23,7 +23,7 @@ mod_02_overall_summary_ui <- function(id) {
   cost_per_patient_df <-
     careHomePrescribingScrollytellR::cost_per_patient_df %>%
     dplyr::filter(is.na(YEAR_MONTH)) %>%
-    dplyr::mutate(COST_PER_PATIENT = round(COST_PER_PATIENT, 1)) %>%
+    dplyr::mutate(COST_PER_PATIENT = round(COST_PER_PATIENT, 0)) %>%
     tidyr::pivot_wider(names_from = CH_FLAG, values_from = COST_PER_PATIENT) %>%
     dplyr::mutate(ICON = "coins")
 
@@ -50,53 +50,134 @@ mod_02_overall_summary_ui <- function(id) {
     ),
     p("Correspondingly the estimated volumne and number of medicines per patient per month is higher."),
     # h6(em("All metrics are calculated per patient, per month")),
-    h6(em("Values are shown 65+ care home residents receiving prescription, and 65+ patients receiving prescriptions")),
+    # h6(em("Values are shown 65+ care home residents receiving prescription, and 65+ patients receiving prescriptions")),
     br(),
     fluidRow(
-      h6("Items"),
-      mod_value_box_ui(
-        id = "1",
-        care_home = TRUE,
-        value = items_per_patient_df$`Care home`,
-        icon = items_per_patient_df$ICON
+      column(
+        width = 6,
+        h6("65+ care home residents receiving prescriptions")
       ),
-      mod_value_box_ui(
-        id = "2",
-        care_home = FALSE,
-        value = items_per_patient_df$`Non care home`,
-        icon = items_per_patient_df$ICON
+      column(
+        width = 6,
+        h6("65+ patients receiving prescriptions")
       )
     ),
     fluidRow(
-      h6("Drug Cost (£)"),
-      mod_value_box_ui(
-        id = "3",
-        care_home = TRUE,
-        value = cost_per_patient_df$`Care home`,
-        icon = cost_per_patient_df$ICON
+      column(
+        width = 6,
+        p("Average number of prescription items per patient per month in care home"),
+        mod_value_box_ui(
+          id = "1",
+          care_home = TRUE,
+          value = items_per_patient_df$`Care home`,
+          icon = items_per_patient_df$ICON
+        ),
       ),
-      mod_value_box_ui(
-        id = "4",
-        care_home = FALSE,
-        value = cost_per_patient_df$`Non care home`,
-        icon = cost_per_patient_df$ICON
+      column(
+        width = 6,
+        p("Average number of prescription items per patient per month"),
+        mod_value_box_ui(
+          id = "2",
+          care_home = FALSE,
+          value = items_per_patient_df$`Non care home`,
+          icon = items_per_patient_df$ICON
+        )
       )
     ),
     fluidRow(
-      h6("Unique Medicines"),
-      mod_value_box_ui(
-        id = "5",
-        care_home = TRUE,
-        value = unique_medicines_per_patient_df$`Care home`,
-        icon = unique_medicines_per_patient_df$ICON
+      column(
+        width = 6,
+        p("Average drug cost per patient in care home"),
+        mod_value_box_ui(
+          id = "3",
+          care_home = TRUE,
+          value = cost_per_patient_df$`Care home`,
+          icon = cost_per_patient_df$ICON
+        )
       ),
-      mod_value_box_ui(
-        id = "6",
-        care_home = FALSE,
-        value = unique_medicines_per_patient_df$`Non care home`,
-        icon = unique_medicines_per_patient_df$ICON
+      column(
+        width = 6,
+        p("Average drug cost per patient"),
+        mod_value_box_ui(
+          id = "4",
+          care_home = FALSE,
+          value = cost_per_patient_df$`Non care home`,
+          icon = cost_per_patient_df$ICON
+        )
+      )
+    ),
+    fluidRow(
+      column(
+        width = 6,
+        p("Average number of unique medicines per patient per month in care home"),
+        mod_value_box_ui(
+          id = "5",
+          care_home = TRUE,
+          value = unique_medicines_per_patient_df$`Care home`,
+          icon = unique_medicines_per_patient_df$ICON
+        )
+      ),
+      column(
+        width = 6,
+        p("Average number of unique medicines per patient"),
+        mod_value_box_ui(
+          id = "6",
+          care_home = FALSE,
+          value = unique_medicines_per_patient_df$`Non care home`,
+          icon = unique_medicines_per_patient_df$ICON
+        )
       )
     )
+
+
+
+
+    #
+    # fluidRow(
+    #   h6("Items"),
+    #   mod_value_box_ui(
+    #     id = "1",
+    #     care_home = TRUE,
+    #     value = items_per_patient_df$`Care home`,
+    #     icon = items_per_patient_df$ICON
+    #   ),
+    #   mod_value_box_ui(
+    #     id = "2",
+    #     care_home = FALSE,
+    #     value = items_per_patient_df$`Non care home`,
+    #     icon = items_per_patient_df$ICON
+    #   )
+    # ),
+    # fluidRow(
+    #   h6("Drug Cost (£)"),
+    #   mod_value_box_ui(
+    #     id = "3",
+    #     care_home = TRUE,
+    #     value = cost_per_patient_df$`Care home`,
+    #     icon = cost_per_patient_df$ICON
+    #   ),
+    #   mod_value_box_ui(
+    #     id = "4",
+    #     care_home = FALSE,
+    #     value = cost_per_patient_df$`Non care home`,
+    #     icon = cost_per_patient_df$ICON
+    #   )
+    # ),
+    # fluidRow(
+    #   h6("Unique Medicines"),
+    #   mod_value_box_ui(
+    #     id = "5",
+    #     care_home = TRUE,
+    #     value = unique_medicines_per_patient_df$`Care home`,
+    #     icon = unique_medicines_per_patient_df$ICON
+    #   ),
+    #   mod_value_box_ui(
+    #     id = "6",
+    #     care_home = FALSE,
+    #     value = unique_medicines_per_patient_df$`Non care home`,
+    #     icon = unique_medicines_per_patient_df$ICON
+    #   )
+    # )
   )
 }
 

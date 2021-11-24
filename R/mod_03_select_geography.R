@@ -13,21 +13,16 @@ mod_03_select_geography_ui <- function(id) {
     fluidPage(
       fluidRow(
         column(
-          width = 12,
-          style = "background-color: #FFFFFF;",
-        ),
-        fluidRow(
-          column(
-            width = 6,
-            p(
-              "Select a sustainability and transofmration plan (STP) geography or local authority for a personalised look at care home profile.",
-              "Individual STP or local authority can be selected in each chart."
-            )
-          ),
-          column(
-            width = 6,
-            mod_radio_ui(id = "radio_ui_1")
+          width = 6,
+          p(
+            "Select a sustainability and transofmration plan (STP) geography, Regionor or local authority for a personalised look at care home profile.",
+            "Individual STP, Region or local authority can be selected in each chart."
           )
+        ),
+        column(
+          width = 6,
+          mod_radio_ui(id = "radio_ui_1"),
+          mod_geography_list_ui(id = "geography_list_1")
         )
       )
     )
