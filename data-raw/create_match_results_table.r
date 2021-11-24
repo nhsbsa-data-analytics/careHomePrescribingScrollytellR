@@ -259,31 +259,3 @@ total_data %>%
 DBI::dbDisconnect(con)
 
 #-------------------------------------------------------------------------------
-
-# Get distinct address record id
-# distinct_records <- ch_fact_db %>% 
-#   filter(!is.na(PAT_ADDRESS)) %>% 
-#   group_by(ADDRESS_RECORD_ID, PAT_POSTCODE, PAT_ADDRESS) %>% 
-#   summarise(PATIENT_COUNT = n_distinct(NHS_NO)) %>% 
-#   ungroup() %>% 
-#   distinct() %>% 
-#   rename(POSTCODE = PAT_POSTCODE)
-# 
-# # Get max monthly patients
-# max_monthly_patients <- ch_fact_db %>% 
-#   filter(!is.na(PAT_ADDRESS)) %>% 
-#   group_by(YEAR_MONTH, ADDRESS_RECORD_ID) %>% 
-#   summarise(PATIENT_COUNT = n_distinct(NHS_NO)) %>% 
-#   ungroup() %>% 
-#   mutate(FIVE_PLUS = ifelse(PATIENT_COUNT >= 5, 1, 0)) %>% 
-#   group_by(ADDRESS_RECORD_ID) %>% 
-#   mutate(MONTHS_5PLUS_PATIENTS = n_distinct(YEAR_MONTH)) %>% 
-#   ungroup() %>% 
-#   select(ADDRESS_RECORD_ID, MONTHS_5PLUS_PATIENTS) %>% 
-#   distinct()
-# 
-# # Final Output
-# output <- distinct_records %>% 
-#   left_join(y = max_monthly_patients, by = "ADDRESS_RECORD_ID")
-
-#-------------------------------------------------------------------------------
