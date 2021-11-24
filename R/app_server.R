@@ -62,7 +62,7 @@ app_server <- function(input, output, session) {
     selectInput("geo", h5("Choose sub geography"),
       choices = g$geo_list,
       selected = "Overall",
-      width = '400px'
+      width = "400px"
     )
   })
 

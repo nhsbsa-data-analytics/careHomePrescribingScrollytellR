@@ -150,24 +150,24 @@ stp_la_region_lookup <- geography_lookup %>%
     STP = PCD_STP_NAME,
     LA = PCD_LAD_NAME,
     REGION = PCD_REGION_NAME
-  ) 
+  )
 
 # keep list of STP and LA
 stp_list <- stp_la_region_lookup %>%
-  distinct(STP) %>% 
-  arrange(STP) %>% 
-  tibble::add_row(STP = 'Overall', .before = 1)
-  
+  distinct(STP) %>%
+  arrange(STP) %>%
+  tibble::add_row(STP = "Overall", .before = 1)
+
 
 la_list <- stp_la_region_lookup %>%
-  distinct(LA) %>% 
-  arrange(LA) %>% 
-  tibble::add_row(LA = 'Overall', .before = 1)
+  distinct(LA) %>%
+  arrange(LA) %>%
+  tibble::add_row(LA = "Overall", .before = 1)
 
 region_list <- stp_la_region_lookup %>%
-  distinct(REGION) %>% 
-  arrange(REGION) %>% 
-  tibble::add_row(REGION = 'Overall', .before = 1)
+  distinct(REGION) %>%
+  arrange(REGION) %>%
+  tibble::add_row(REGION = "Overall", .before = 1)
 
 
 # Add to data-raw/
