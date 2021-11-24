@@ -159,7 +159,8 @@ match <- jw_matches %>%
     MATCH_TYPE = ifelse(KW_CHECK == 1, 'NONE', MATCH_TYPE),
     CH_FLAG = ifelse(KW_CHECK == 1, 0, CH_FLAG)
   ) %>% 
-  left_join(y = form_count, by = "ADDRESS_RECORD_ID")
+  left_join(y = form_count, by = "ADDRESS_RECORD_ID") %>% 
+  select(-c(KW_EXCLUSIONS, KW_INCLUSIONS, KW_CHECK))
 
 # Write the table back to the DB (~30m)
 match %>%

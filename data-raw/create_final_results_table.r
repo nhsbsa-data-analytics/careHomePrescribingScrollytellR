@@ -39,11 +39,11 @@ results <- results %>%
 
 # Get CH PF_ID
 presc_base <- presc_base %>% 
-  select(PF_ID, ADDRESSS_RECORD_ID) %>% 
+  select(PF_ID, ADDRESS_RECORD_ID) %>% 
   inner_join(y = results, by = "ADDRESS_RECORD_ID")
 
 # Filter to elderly patients in 2019/2020 and required columns
-fact_db <- fact_db %>%
+final_results <- fact_db %>%
   filter(
     # Elderly patients
     CALC_AGE >= 65L,
@@ -74,13 +74,12 @@ fact_db <- fact_db %>%
     CALC_PREC_DRUG_RECORD_ID,
     EPS_FLAG
   ) %>% 
-  dplyr::left_join(all_pf, by = "PF_ID") %>% 
-  dplyr::mutate(CH_FLAG = ifelse(is.na(CH_FLAG) == T, 0, 1))
+  left_join(y = presc_base, by = "PF_ID") 
 
-# Write the table back to the DB (~30m)
-fact_db %>%
+# Write the table back to the DB (~50m)
+final_results %>%
   nhsbsaR::oracle_create_table(table_name = "CARE_HOME_FINAL")
-  
+
 # Disconnect from database
 DBI::dbDisconnect(con)
 
