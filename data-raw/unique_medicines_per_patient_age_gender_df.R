@@ -53,8 +53,7 @@ fact_db <- fact_db %>%
 unique_medicines_age_and_gender <- fact_db %>%
   dplyr::filter(CH_FLAG == 1) %>%
   dplyr::mutate(
-    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home"
-    ),
+    CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home"),
     PDS_GENDER = dplyr::case_when(
       PDS_GENDER == 1 ~ "Male",
       PDS_GENDER == 2 ~ "Female",

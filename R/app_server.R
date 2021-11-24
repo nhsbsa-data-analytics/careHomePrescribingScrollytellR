@@ -18,13 +18,27 @@ app_server <- function(input, output, session) {
     id = "02_overall_summary_1",
     module = mod_02_overall_summary_server
   )
+
+
   # moduleServer(
   #   id = "03_items_per_patient_chart_1",
   #   module = mod_03_items_per_patient_chart_server
   # )
-  moduleServer(
-    id = "03_patients_by_gender_and_age_band_chart_1",
-    module = mod_03_patients_by_gender_and_age_band_chart_server
+
+
+  # selected_geography <- callModule(mod_util_data_server,
+  #                                  "util_data_ui_1",
+  #                                  radio_input = radio_input)
+  #
+  radio_input <- mod_radio_server("radio_ui_1")
+  mod_drop_down_server("drop_down_ui_1")
+
+  mod_03_select_geography_server("03_select_geogrphy_ui_1")
+
+  callModule(
+    id = "04_patients_by_gender_and_age_band_chart_1",
+    module = mod_04_patients_by_gender_and_age_band_chart_server,
+    input_view = radio_input
   )
   moduleServer(
     id = "bnf_ch_item_treemap_1",

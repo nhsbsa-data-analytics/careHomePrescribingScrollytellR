@@ -13,9 +13,28 @@ app_ui <- function(request) {
     br(),
     fluidPage(
       mod_01_intro_ui("01_intro_1"),
+      br(),
+      # scrollytell::scrolly_container(
+      #   outputId = "scrolly1",
+      #   scrollytell::scrolly_graph(),
+      #   scrollytell::scrolly_sections(
+      #     scrollytell::scrolly_section(
+      #       id = "dummy"
+      #     ),
+      #     br(),
+      #     scrollytell::scrolly_section(
+      #       id = "02_overall_summary",
+      #       mod_02_overall_summary_ui(id = "02_overall_summary_1")
+      #     )
+      #   )
+      # ),
+      # mod_02_overall_summary_ui(id = "02_overall_summary_1"),
       scrollytell::scrolly_container(
         outputId = "scrolly",
-        scrollytell::scrolly_graph(),
+        scrollytell::scrolly_graph(
+          # mod_radio_ui(id = "radio_ui_1")
+          # mod_drop_down_ui("drop_down_ui_1")
+        ),
         scrollytell::scrolly_sections(
           scrollytell::scrolly_section(
             id = "dummy"
@@ -26,20 +45,18 @@ app_ui <- function(request) {
             mod_02_overall_summary_ui(id = "02_overall_summary_1")
           ),
           br(),
-          # scrollytell::scrolly_section(
-          #   id = "items_per_patient",
-          #   mod_items_per_patient_chart_ui("items_per_patient_chart_1")
-          # ),
+          scrollytell::scrolly_section(
+              id = "geography_selection",
+              mod_03_select_geography_ui("03_select_geography_ui_1")
+          ),
           br(),
           scrollytell::scrolly_section(
-            id = "03_patients_by_gender_and_age_band",
-            mod_03_patients_by_gender_and_age_band_chart_ui(
-              id = "03_patients_by_gender_and_age_band_chart_1"
+            id = "04_patients_by_gender_and_age_band",
+            mod_04_patients_by_gender_and_age_band_chart_ui(
+              id = "04_patients_by_gender_and_age_band_chart_1"
             )
           ),
           br(),
-          
-          
           scrollytell::scrolly_section(
             id = "bnf_carehome_item",
             mod_bnf_ch_item_treemap_ui("bnf_ch_item_treemap_1")

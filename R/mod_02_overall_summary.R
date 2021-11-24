@@ -39,9 +39,18 @@ mod_02_overall_summary_ui <- function(id) {
     ) %>%
     dplyr::mutate(ICON = "tablets")
 
+
   tagList(
-    h3("Estimated prescribing patterns of care home residents and older population"),
-    h6(em("All metrics are calculated per patient, per month")),
+    h3("Estimated prescribing patterns of care home residents and older care home residents"),
+    p(
+      "As might be expected care home residents receive more prescription items than",
+      "those aged 65+ receiving prescriptions in general. We estimate",
+      tags$b("10 prescription items"), " per patient per month at an estimated cost of £90 per patient per month.",
+      "This compares to 6 items per patient per month at a cost of £47 per patient per month in those aged 65+ receiving prescriptions in general."
+    ),
+    p("Correspondingly the estimated volumne and number of medicines per patient per month is higher."),
+    # h6(em("All metrics are calculated per patient, per month")),
+    h6(em("Values are shown 65+ care home residents receiving prescription, and 65+ patients receiving prescriptions")),
     br(),
     fluidRow(
       h6("Items"),
