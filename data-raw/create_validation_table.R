@@ -25,23 +25,35 @@ ab_base <- con %>%
 postcodes <- ab_base %>% 
   filter(CH_FLAG == 1) %>% 
   select(AB_POSTCODE) %>% 
-  distinct()
+  distinct() %>% 
+  mutate(CH_POSTCODE = 1)
 
 # Get records with a single month with 5+ patients (in turn who are 65+)
 five_plus <- presc_base %>%
-  inner_join(y = postcodes, by = c("PAT_POSTCODE" = "AB_POSTCODE")) %>% 
-  group_by(YEAR_MONTH, ADDRESS_RECORD_ID) %>%
+  group_by(YEAR_MONTH, ADDRESS_RECORD_ID, PAT_POSTCODE) %>%
   summarise(PATIENT_COUNT = n_distinct(NHS_NO)) %>%
   ungroup() %>%
-  mutate(FIVE_PLUS = ifelse(PATIENT_COUNT >= 5, 1, 0)) %>%
-  group_by(ADDRESS_RECORD_ID) %>%
-  summarise(FIVE_PLUS = max(FIVE_PLUS)) %>%
+  left_join(y = postcodes, by = c("PAT_POSTCODE" = "AB_POSTCODE")) %>% 
+  mutate(
+    FIVE_PLUS_MONTHS = ifelse(PATIENT_COUNT >= 5, 1, 0),
+    CH_POSTCODE = ifelse(is.na(CH_POSTCODE), 0, 1)
+    ) %>%
+  group_by(ADDRESS_RECORD_ID, CH_POSTCODE) %>%
+  summarise(
+    FIVE_PLUS_MONTHS = sum(FIVE_PLUS_MONTHS),
+    FIVE_PLUS = max(FIVE_PLUS_MONTHS)
+    ) %>%
   ungroup()
 
 # Calculate key word columns
-key_words <- presc_base %>% 
-  select(ADDRESS_RECORD_ID, PAT_ADDRESS) %>% 
-  distinct() %>% 
+total_record_info <- presc_base %>% 
+  group_by(ADDRESS_RECORD_ID, PAT_ADDRESS) %>% 
+  summarise(
+    PATIENT_COUNT = n_distinct(NHS_NO),
+    FORM_COUNT = n_distinct(PF_ID)
+  ) %>% 
+  ungroup() %>% 
+  left_join(y = five_plus, by = "ADDRESS_RECORD_ID") %>%
   mutate(
     KW_EXCLSUIONS = case_when(
       INSTR(PAT_ADDRESS, 'CHILDREN') != 0 |
@@ -78,12 +90,6 @@ key_words <- presc_base %>%
   ) %>% 
   select(-PAT_ADDRESS)
 
-# Get PF_ID count
-form_count <- presc_base %>% 
-  group_by(ADDRESS_RECORD_ID) %>% 
-  summarise(FORM_COUNT = n_distinct(PF_ID)) %>% 
-  ungroup()
-
 # Part Three: Resolve Matched with tied best score -----------------------------
 
 # Get distinct UPRN and UPRN_ID combinations
@@ -115,11 +121,9 @@ jw_matches <- match %>%
     UPRN = ifelse(UPRN_COUNT >= 2, NA, UPRN),
     MATCH_TYPE = ifelse(UPRN_COUNT >= 2, 'NONE', MATCH_TYPE),
     MATCH_SCORE = ifelse(UPRN_COUNT >= 2, NA, MATCH_SCORE),
-    CH_FLAG = ifelse(UPRN_COUNT >= 2, 0, CH_FLAG),
-    MATCH_TYPE = ifelse(CH_FLAG == 0 & FIVE_PLUS == 1, 'FIVE_PLUS', MATCH_TYPE),
-    CH_FLAG = ifelse(FIVE_PLUS == 1, 1, CH_FLAG)
+    CH_FLAG = ifelse(UPRN_COUNT >= 2, 0, CH_FLAG)
   ) %>% 
-  select(-c(UPRN_COUNT, FIVE_PLUS))
+  select(-c(UPRN_COUNT))
 
 # Process exact matches
 exact_matches <- match %>% 
@@ -152,20 +156,21 @@ non_matches <- match %>%
 match <- jw_matches %>% 
   union_all(y = exact_matches) %>% 
   union_all(y = non_matches) %>% 
-  left_join(y = key_words, by = "ADDRESS_RECORD_ID") %>% 
+  left_join(y = total_record_info, by = "ADDRESS_RECORD_ID") 
   mutate(
-    MATCH_TYPE = ifelse(CH_FLAG == 0 & KW_INCLUSIONS == 1 & KW_EXCLSUIONS == 0, 'KEY_WORD', MATCH_TYPE),
-    CH_FLAG = ifelse(CH_FLAG == 0 & KW_INCLUSIONS == 1 & KW_EXCLSUIONS == 0, 1, CH_FLAG),
+    MATCH_TYPE = ifelse(CH_FLAG == 0 & CH_POSTCODE == 1 & FIVE_PLUS  == 1, 'FIVE_PLUS', MATCH_TYPE),
+    CH_FLAG = ifelse(CH_FLAG == 0 & CH_POSTCODE == 1 & FIVE_PLUS == 1, 1, CH_FLAG),
+    MATCH_TYPE = ifelse(CH_FLAG == 0 & KW_INCLUSIONS == 1, 'KEY_WORD', MATCH_TYPE),
+    CH_FLAG = ifelse(CH_FLAG == 0 & KW_INCLUSIONS == 1, 1, CH_FLAG),
     MATCH_TYPE = ifelse(KW_CHECK == 1, 'NONE', MATCH_TYPE),
     CH_FLAG = ifelse(KW_CHECK == 1, 0, CH_FLAG)
-  ) %>% 
-  left_join(y = form_count, by = "ADDRESS_RECORD_ID") %>% 
-  select(-c(KW_EXCLUSIONS, KW_INCLUSIONS, KW_CHECK))
+  )
 
 # Write the table back to the DB (~30m)
+  Sys.time()
 match %>%
   nhsbsaR::oracle_create_table(table_name = "CARE_HOME_VALIDATION")
-
+Sys.time()
 # Disconnect from database
 DBI::dbDisconnect(con)
 

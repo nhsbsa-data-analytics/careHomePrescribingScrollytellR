@@ -75,7 +75,7 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
   # Buffer the end of part date by 6 days
   filter(
     PART_DATE >= 20200401L,
-    PART_DATE <= 20210406L
+    PART_DATE <= 20210410L
   ) %>%
   # Concatenate fields together by a single space for the single line address
   mutate(

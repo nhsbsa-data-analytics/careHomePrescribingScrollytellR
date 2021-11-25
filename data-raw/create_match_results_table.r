@@ -233,20 +233,22 @@ total_match = function(df_one, df_two){
   return(output)
 }
 
-# Generate results base table
-results_base <- presc_base %>% 
-  select(ADDRESS_RECORD_ID, POSTCODE, PAT_ADDRESS) %>% 
-  distinct()
-
 # Format primary_df for function input
-df_one <- results_base %>% 
-  select(ADDRESS_RECORD_ID, POSTCODE, PAT_ADDRESS) %>% 
-  rename_at(c(1:3), ~c("PRIMARY_ID", "POSTCODE", "PRIMARY_ADDRESS"))
+df_one <- presc_base %>% 
+  select(
+    PRIMARY_ID = ADDRESS_RECORD_ID,
+    POSTCODE = PAT_POSTCODE,
+    PRIMARY_ADDRESS = PAT_ADDRESS
+    ) %>% 
+  distinct()
 
 # Format lookup_df for function input
 df_two <- ab_base %>% 
-  select(UPRN_ID, AB_POSTCODE, AB_ADDRESS) %>% 
-  rename_at(c(1:3), ~c("LOOKUP_ID", "POSTCODE", "LOOKUP_ADDRESS"))
+  select(
+    LOOKUP_ID = UPRN_ID,
+    POSTCODE =  AB_POSTCODE,
+    LOOKUP_ADDRESS = AB_ADDRESS
+    )
 
 # Generate outputs
 total_data = total_match(df_one, df_two)
