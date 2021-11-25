@@ -55,8 +55,8 @@ app_ui <- function(request) {
             selectInput(
               inputId = "input_view",
               label = h5("Select geography:"),
-              choices = c("STP", "Region", "Local Authority"),
-              selected = "STP"
+              choices = c("Overall", "STP", "Region", "Local Authority"),
+              selected = "Overall"
             ),
             uiOutput(outputId = "geo_level2")
             # mod_geography_list_ui(id = "geography_list_1")

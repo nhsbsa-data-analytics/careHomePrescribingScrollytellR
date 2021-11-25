@@ -85,50 +85,93 @@ patients_by_gender_and_age_band_df <-
 # Process for STP (union all didn't work so bit messy)
 
 patients_by_gender_and_age_band_stp_df <-
-  fact_db %>%
-  group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_STP_NAME) %>%
-  summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-  ungroup() %>%
-  arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_STP_NAME) %>%
-  collect() %>%
+  union_all(
+    # Overall
+    x = fact_db %>%
+      group_by(PDS_GENDER, AGE_BAND, PCD_STP_NAME) %>%
+      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+      ungroup(),
+    # By year month
+    y = fact_db %>%
+      group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_STP_NAME) %>%
+      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+      ungroup()
+  ) %>%
   mutate(
-    YEAR_MONTH = as.character(YEAR_MONTH),
+    YEAR_MONTH = ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH))
+  ) %>%
+  relocate(YEAR_MONTH) %>%
+  arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
+  collect() %>%
+  # Format for highcharter
+  mutate(
+    YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall"),
     LEVEL = "STP"
   ) %>%
-  # Format for highcharter
-  rename(GEOGRAPHY = PCD_STP_NAME)
+  rename(GEOGRAPHY = PCD_STP_NAME) %>%
+  arrange(YEAR_MONTH)
 
 # Process for LA
 
 patients_by_gender_and_age_band_la_df <-
-  fact_db %>%
-  group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_LAD_NAME) %>%
-  summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-  ungroup() %>%
-  arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_LAD_NAME) %>%
-  collect() %>%
+  union_all(
+    # Overall
+    x = fact_db %>%
+      group_by(PDS_GENDER, AGE_BAND, PCD_LAD_NAME) %>%
+      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+      ungroup(),
+    # By year month
+    y = fact_db %>%
+      group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_LAD_NAME) %>%
+      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+      ungroup()
+  ) %>%
   mutate(
-    YEAR_MONTH = as.character(YEAR_MONTH),
+    YEAR_MONTH = ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH))
+  ) %>%
+  relocate(YEAR_MONTH) %>%
+  arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
+  collect() %>%
+  # Format for highcharter
+  mutate(
+    YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall"),
     LEVEL = "LA"
   ) %>%
-  # Format for highcharter
-  rename(GEOGRAPHY = PCD_LAD_NAME)
+  rename(GEOGRAPHY = PCD_LAD_NAME) %>%
+  arrange(YEAR_MONTH)
+
 
 # Process for Region
+# 48,608 records could not match with region
 
 patients_by_gender_and_age_band_region_df <-
-  fact_db %>%
-  group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_REGION_NAME) %>%
-  summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-  ungroup() %>%
-  arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_REGION_NAME) %>%
-  collect() %>%
-  mutate(
-    YEAR_MONTH = as.character(YEAR_MONTH),
-    LEVEL = "REGION"
+  union_all(
+    # Overall
+    x = fact_db %>%
+      group_by(PDS_GENDER, AGE_BAND, PCD_REGION_NAME) %>%
+      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+      ungroup(),
+    # By year month
+    y = fact_db %>%
+      group_by(YEAR_MONTH, PDS_GENDER, AGE_BAND, PCD_REGION_NAME) %>%
+      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+      ungroup()
   ) %>%
+  mutate(
+    YEAR_MONTH = ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH)),
+    PCD_REGION_NAME = ifelse(is.na(PCD_REGION_NAME), "INVALID POSTCODE", as.character(PCD_REGION_NAME))
+  ) %>%
+  relocate(YEAR_MONTH) %>%
+  arrange(YEAR_MONTH, PDS_GENDER, AGE_BAND) %>%
+  collect() %>%
   # Format for highcharter
-  rename(GEOGRAPHY = PCD_REGION_NAME)
+  mutate(
+    YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall"),
+    LEVEL = "Region"
+  ) %>%
+  rename(GEOGRAPHY = PCD_REGION_NAME) %>%
+  arrange(YEAR_MONTH)
+
 
 
 
@@ -149,25 +192,23 @@ stp_la_region_lookup <- geography_lookup %>%
   rename(
     STP = PCD_STP_NAME,
     LA = PCD_LAD_NAME,
-    REGION = PCD_REGION_NAME
+    Region = PCD_REGION_NAME
   )
 
 # keep list of STP and LA
 stp_list <- stp_la_region_lookup %>%
   distinct(STP) %>%
-  arrange(STP) %>%
-  tibble::add_row(STP = "Overall", .before = 1)
-
+  arrange(STP)
 
 la_list <- stp_la_region_lookup %>%
   distinct(LA) %>%
-  arrange(LA) %>%
-  tibble::add_row(LA = "Overall", .before = 1)
+  arrange(LA)
 
 region_list <- stp_la_region_lookup %>%
-  distinct(REGION) %>%
-  arrange(REGION) %>%
-  tibble::add_row(REGION = "Overall", .before = 1)
+  distinct(Region) %>%
+  arrange(Region)
+
+
 
 
 # Add to data-raw/

@@ -48,7 +48,9 @@ app_server <- function(input, output, session) {
 
   observe({
     g$geo_list <-
-      if (r$dataset == "STP") {
+      if (r$dataset == "Overall") {
+        "Overall"
+      } else if (r$dataset == "STP") {
         stp_list
       } else if (r$dataset == "Region") {
         region_list
@@ -67,9 +69,11 @@ app_server <- function(input, output, session) {
   })
 
   geo_selection <- reactiveValues()
+
   # take selected geo_level2
   observe({
     geo_selection$value <- input$geo
+    # print(geo_selection$value)
   })
 
 
@@ -79,6 +83,7 @@ app_server <- function(input, output, session) {
     r = r,
     geo_selection = geo_selection
   )
+
   moduleServer(
     id = "bnf_ch_item_treemap_1",
     module = mod_bnf_ch_item_treemap_server
