@@ -59,7 +59,7 @@ mod_02_overall_summary_ui <- function(id) {
       ),
       column(
         width = 6,  #
-        h6("65+ non-care home patients receiving prescriptions", style = 'margin-bottom: 10px')
+        h6("65+ non-care home patients receiving prescriptions", style = 'text-indent:3px;margin-bottom: 10px')
       )
     ),
     fluidRow(
