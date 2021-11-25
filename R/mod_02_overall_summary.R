@@ -54,18 +54,19 @@ mod_02_overall_summary_ui <- function(id) {
     br(),
     fluidRow(
       column(
-        width = 6,
-        h6("65+ care home residents receiving prescriptions")
+        width = 6,  #
+        h6("65+ care home residents receiving prescriptions", style = 'margin-bottom: 10px')
       ),
       column(
-        width = 6,
-        h6("65+ patients receiving prescriptions")
+        width = 6,  #
+        h6("65+ non-care home patients receiving prescriptions", style = 'margin-bottom: 10px')
       )
     ),
     fluidRow(
+      p("Average number of prescription items per patient per month", style = 'text-indent: 20px;margin-bottom: 10px'),
       column(
-        width = 6,
-        p("Average number of prescription items per patient per month in care home"),
+        width = 6, offset = 0, style='padding-left:0px', #
+        # p("Average number of prescription items per patient per month in care home"),
         mod_value_box_ui(
           id = "1",
           care_home = TRUE,
@@ -74,8 +75,8 @@ mod_02_overall_summary_ui <- function(id) {
         ),
       ),
       column(
-        width = 6,
-        p("Average number of prescription items per patient per month"),
+        width = 6, #
+        # p("Average number of prescription items per patient per month"),
         mod_value_box_ui(
           id = "2",
           care_home = FALSE,
@@ -85,9 +86,10 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
+      p("Average drug cost per patient per month (£)", style = 'text-indent: 20px;margin-bottom: 10px'),
       column(
-        width = 6,
-        p("Average drug cost per patient in care home"),
+        width = 6, offset = 0, style='padding-left:0px', #
+          # p("Average drug cost per patient in care home"),
         mod_value_box_ui(
           id = "3",
           care_home = TRUE,
@@ -97,7 +99,7 @@ mod_02_overall_summary_ui <- function(id) {
       ),
       column(
         width = 6,
-        p("Average drug cost per patient"),
+        # p("Average drug cost per patient"),
         mod_value_box_ui(
           id = "4",
           care_home = FALSE,
@@ -107,9 +109,10 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
+      p("Average number of unique medicines per patient per month", style = 'text-indent: 20px;margin-bottom: 10px'),
       column(
-        width = 6,
-        p("Average number of unique medicines per patient per month in care home"),
+        width = 6, offset = 0, style='padding-left:0px', #
+        # p("Average number of unique medicines per patient per month in care home"),
         mod_value_box_ui(
           id = "5",
           care_home = TRUE,
@@ -119,7 +122,7 @@ mod_02_overall_summary_ui <- function(id) {
       ),
       column(
         width = 6,
-        p("Average number of unique medicines per patient"),
+        # p("Average number of unique medicines per patient"),
         mod_value_box_ui(
           id = "6",
           care_home = FALSE,

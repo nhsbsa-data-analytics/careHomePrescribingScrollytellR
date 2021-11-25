@@ -135,7 +135,7 @@ patients_by_gender_and_age_band_la_df <-
   # Format for highcharter
   mutate(
     YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall"),
-    LEVEL = "LA"
+    LEVEL = "Local Authority"
   ) %>%
   rename(GEOGRAPHY = PCD_LAD_NAME) %>%
   arrange(YEAR_MONTH)
@@ -188,7 +188,7 @@ stp_la_region_lookup <- geography_lookup %>%
   collect() %>%
   rename(
     STP = PCD_STP_NAME,
-    LA = PCD_LAD_NAME,
+    `Local Authority` = PCD_LAD_NAME,
     Region = PCD_REGION_NAME
   ) %>%
   tidyr::pivot_longer(cols = everything(), names_to = "GEOGRAPHY", values_to = "NAME") %>%
