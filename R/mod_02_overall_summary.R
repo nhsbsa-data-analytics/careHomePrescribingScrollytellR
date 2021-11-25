@@ -54,18 +54,18 @@ mod_02_overall_summary_ui <- function(id) {
     br(),
     fluidRow(
       column(
-        width = 6,  #
-        h6("65+ care home residents receiving prescriptions", style = 'margin-bottom: 10px')
+        width = 6, #
+        h6("65+ care home residents receiving prescriptions", style = "margin-bottom: 10px")
       ),
       column(
-        width = 6,  #
-        h6("65+ non-care home patients receiving prescriptions", style = 'text-indent:3px;margin-bottom: 10px')
+        width = 6, #
+        h6("65+ non-care home patients receiving prescriptions", style = "text-indent:3px;margin-bottom: 10px")
       )
     ),
     fluidRow(
-      p("Average number of prescription items per patient per month", style = 'text-indent: 20px;margin-bottom: 10px'),
+      p("Average number of prescription items per patient per month", style = "text-indent: 20px;margin-bottom: 10px"),
       column(
-        width = 6, offset = 0, style='padding-left:0px', #
+        width = 6, offset = 0, style = "padding-left:0px", #
         # p("Average number of prescription items per patient per month in care home"),
         mod_value_box_ui(
           id = "1",
@@ -86,10 +86,10 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
-      p("Average drug cost per patient per month (£)", style = 'text-indent: 20px;margin-bottom: 10px'),
+      p("Average drug cost per patient per month (£)", style = "text-indent: 20px;margin-bottom: 10px"),
       column(
-        width = 6, offset = 0, style='padding-left:0px', #
-          # p("Average drug cost per patient in care home"),
+        width = 6, offset = 0, style = "padding-left:0px", #
+        # p("Average drug cost per patient in care home"),
         mod_value_box_ui(
           id = "3",
           care_home = TRUE,
@@ -109,9 +109,9 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
-      p("Average number of unique medicines per patient per month", style = 'text-indent: 20px;margin-bottom: 10px'),
+      p("Average number of unique medicines per patient per month", style = "text-indent: 20px;margin-bottom: 10px"),
       column(
-        width = 6, offset = 0, style='padding-left:0px', #
+        width = 6, offset = 0, style = "padding-left:0px", #
         # p("Average number of unique medicines per patient per month in care home"),
         mod_value_box_ui(
           id = "5",
