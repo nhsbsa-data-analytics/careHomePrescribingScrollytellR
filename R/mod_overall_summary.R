@@ -38,11 +38,34 @@ mod_overall_summary_ui <- function(id) {
       values_from = UNIQUE_MEDICINES_PER_PATIENT
     ) %>%
     dplyr::mutate(ICON = "tablets")
-
+  
+  ten_or_more_unique_medicines_per_patient_df <-
+    careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_df %>%
+    dplyr::filter(is.na(YEAR_MONTH)) %>%
+    dplyr::mutate(
+      PCT_PATIENTS_TEN_OR_MORE = round(PCT_PATIENTS_TEN_OR_MORE, 0)
+    ) %>%
+    tidyr::pivot_wider(
+      names_from = CH_FLAG,
+      values_from = PCT_PATIENTS_TEN_OR_MORE
+    ) %>%
+    dplyr::mutate(ICON = "pills")
+    
+  
   tagList(
-    h3("Estimated prescribing patterns of care home residents and older population"),
+    h3("Estimated prescribing patterns of care home patients and older population"),
     h6(em("All metrics are calculated per patient, per month")),
     br(),
+    fluidRow(
+      column(
+        width = 6,
+        h6("Care Home Patients") 
+      ),
+      column(
+        width = 6,
+        h6("Non Care Home Patients") 
+      )
+    ),
     fluidRow(
       h6("Items"),
       mod_value_box_ui(
@@ -87,7 +110,22 @@ mod_overall_summary_ui <- function(id) {
         value = unique_medicines_per_patient_df$`Non care home`,
         icon = unique_medicines_per_patient_df$ICON
       )
-    )
+    ),
+    fluidRow(
+      h6("Ten or more unique medicines"),
+      mod_value_box_ui(
+        id = "7",
+        care_home = TRUE,
+        value = ten_or_more_unique_medicines_per_patient_df$`Care home`,
+        icon = ten_or_more_unique_medicines_per_patient_df$ICON
+      ),
+      mod_value_box_ui(
+        id = "8",
+        care_home = FALSE,
+        value = ten_or_more_unique_medicines_per_patient_df$`Non care home`,
+        icon = ten_or_more_unique_medicines_per_patient_df$ICON
+      )
+    ),    
   )
 }
 

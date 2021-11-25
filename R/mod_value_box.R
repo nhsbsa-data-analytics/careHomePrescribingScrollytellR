@@ -22,7 +22,7 @@ mod_value_box_ui <- function(id,
 
   tagList(
     div(
-      class = "col-lg-3 col-md-3",
+      class = "col-lg-6 col-md-6",
       div(
         class = "panel panel-white",
         div(
@@ -31,7 +31,7 @@ mod_value_box_ui <- function(id,
           div(
             class = "row",
             div(
-              class = "col-md-3",
+              class = "col-md-6",
               icon(icon_name, "fa-3x"),
               style = "color: #FFFFFF"
             ),
