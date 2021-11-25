@@ -26,11 +26,6 @@ mod_04_patients_by_gender_and_age_band_chart_ui <- function(id) {
     ),
     br(),
     fluidRow(
-      # style = "background-color: #FFFFFF;", # will rearrange the button location
-      # selectInput("geography", label = h4("List of geographies"), choices = NULL, selected = "Overall", multiple = FALSE),
-      # uiOutput(ns("geo_level2"))
-    ),
-    fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;", # will rearrange the button location
       # selectInput("geography", label = "List of geographies", choices = stp_list, selected = "Overall", multiple = FALSE),
@@ -39,6 +34,12 @@ mod_04_patients_by_gender_and_age_band_chart_ui <- function(id) {
         height = "500px",
         width = "800px"
       )
+    ),
+    fluidRow(
+      # style = "background-color: #FFFFFF;", # will rearrange the button location
+      # selectInput("geography", label = h4("List of geographies"), choices = NULL, selected = "Overall", multiple = FALSE),
+      # uiOutput(ns("geo_level2"))
+      mod_slider_ui("slider_ui_1", width = "60%")
     )
   )
 }
@@ -46,11 +47,30 @@ mod_04_patients_by_gender_and_age_band_chart_ui <- function(id) {
 #' patients_by_gender_and_age_band_chart Server Function
 #'
 #' @noRd
-mod_04_patients_by_gender_and_age_band_chart_server <- function(input, output, session, input_view) {
+mod_04_patients_by_gender_and_age_band_chart_server <- function(input, output, session, r, geo_selection) {
   ns <- session$ns
 
+  # Pull the slider value
+  year_month <- reactive({
+    callModule(mod_slider_server, "slider_1")
+  })
+
+  # Pull the level geography value
+
+  observe({
+    geo_level1 <- r$dataset
+    print(geo_level1)
+  })
+
+  observe({
+    print(geo_selection$value)
+  })
 
 
+
+  # print(selected_geography)
+
+  # pull the level 2 geography value
 
   # output$geo_level2 <- renderUI({
   #   if (input_view() == "STP") {
@@ -65,8 +85,6 @@ mod_04_patients_by_gender_and_age_band_chart_server <- function(input, output, s
   #     )
   #   }
   # })
-
-
 
 
   # Filter out Co-applicants and Unknowns, calculate %s

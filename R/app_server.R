@@ -35,15 +35,17 @@ app_server <- function(input, output, session) {
 
 
   # mod_03_select_geography_server("03_select_geogrphy_ui_1")
+  # This part is getting reactiveValues for geography selection
 
   r <- reactiveValues()
 
   observe({
     r$dataset <- input$input_view
-    print(r$dataset)
+    # print(r$dataset)
   })
 
   g <- reactiveValues()
+
   observe({
     g$geo_list <-
       if (r$dataset == "STP") {
@@ -53,27 +55,29 @@ app_server <- function(input, output, session) {
       } else if (r$dataset == "Local Authority") {
         la_list
       }
-    print(g$geo_list)
+    # print(g$geo_list)
   })
 
-
-
   output$geo_level2 <- renderUI({
-    selectInput("geo", h5("Choose sub geography"),
+    selectInput("geo", h5("Select sub geography"),
       choices = g$geo_list,
-      selected = "Overall",
+      selected = g$geo_list[1],
       width = "400px"
     )
   })
 
+  geo_selection <- reactiveValues()
+  # take selected geo_level2
+  observe({
+    geo_selection$value <- input$geo
+  })
 
-
-  # print(r$dataset())
 
   callModule(
     id = "04_patients_by_gender_and_age_band_chart_1",
     module = mod_04_patients_by_gender_and_age_band_chart_server,
-    input_view = radio_input
+    r = r,
+    geo_selection = geo_selection
   )
   moduleServer(
     id = "bnf_ch_item_treemap_1",

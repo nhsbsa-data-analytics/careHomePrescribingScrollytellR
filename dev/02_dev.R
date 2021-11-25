@@ -21,9 +21,8 @@ usethis::use_package( "thinkr" )
 ## Create a module infrastructure in R/
 golem::add_module( name = "radio" ) # Name of the module
 golem::add_module( name = "03_select_geography" ) # Name of the module
-golem::add_module( name = "util_data" ) # Name of the module
-golem::add_module( name = "geography_list" ) # Name of the module
-golem::add_module( name = "drop_down" ) # Name of the module
+golem::add_module( name = "slider" ) # Name of the module
+
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*
