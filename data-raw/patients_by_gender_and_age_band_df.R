@@ -172,9 +172,6 @@ patients_by_gender_and_age_band_region_df <-
   rename(GEOGRAPHY = PCD_REGION_NAME) %>%
   arrange(YEAR_MONTH)
 
-
-
-
 # rbind
 
 patients_by_gender_and_age_band_df <- bind_rows(
@@ -184,7 +181,7 @@ patients_by_gender_and_age_band_df <- bind_rows(
   patients_by_gender_and_age_band_region_df
 )
 
-# Also keep geography_lookup for the inputselect
+# Also keep geography_lookup for the input select
 
 stp_la_region_lookup <- geography_lookup %>%
   distinct(PCD_STP_NAME, PCD_LAD_NAME, PCD_REGION_NAME) %>%
@@ -193,29 +190,20 @@ stp_la_region_lookup <- geography_lookup %>%
     STP = PCD_STP_NAME,
     LA = PCD_LAD_NAME,
     Region = PCD_REGION_NAME
-  )
+  ) %>%
+  tidyr::pivot_longer(cols = everything(), names_to = "GEOGRAPHY", values_to = "NAME") %>%
+  arrange(GEOGRAPHY, NAME) %>%
+  tibble::add_row(GEOGRAPHY = "Overall", NAME = "Overall") %>%
+  distinct(GEOGRAPHY, NAME)
 
-# keep list of STP and LA
-stp_list <- stp_la_region_lookup %>%
-  distinct(STP) %>%
-  arrange(STP)
-
-la_list <- stp_la_region_lookup %>%
-  distinct(LA) %>%
-  arrange(LA)
-
-region_list <- stp_la_region_lookup %>%
-  distinct(Region) %>%
-  arrange(Region)
 
 
 
 
 # Add to data-raw/
 usethis::use_data(patients_by_gender_and_age_band_df, overwrite = TRUE)
-usethis::use_data(stp_list, overwrite = TRUE)
-usethis::use_data(la_list, overwrite = TRUE)
-usethis::use_data(region_list, overwrite = TRUE)
+usethis::use_data(stp_la_region_lookup, overwrite = TRUE)
+
 
 
 

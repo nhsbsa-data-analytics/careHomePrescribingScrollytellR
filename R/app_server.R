@@ -36,52 +36,52 @@ app_server <- function(input, output, session) {
 
   # mod_03_select_geography_server("03_select_geogrphy_ui_1")
   # This part is getting reactiveValues for geography selection
-
-  r <- reactiveValues()
-
-  observe({
-    r$dataset <- input$input_view
-    # print(r$dataset)
-  })
-
-  g <- reactiveValues()
-
-  observe({
-    g$geo_list <-
-      if (r$dataset == "Overall") {
-        "Overall"
-      } else if (r$dataset == "STP") {
-        stp_list
-      } else if (r$dataset == "Region") {
-        region_list
-      } else if (r$dataset == "Local Authority") {
-        la_list
-      }
-    # print(g$geo_list)
-  })
-
-  output$geo_level2 <- renderUI({
-    selectInput("geo", h5("Select sub geography"),
-      choices = g$geo_list,
-      selected = g$geo_list[1],
-      width = "400px"
-    )
-  })
-
-  geo_selection <- reactiveValues()
-
-  # take selected geo_level2
-  observe({
-    geo_selection$value <- input$geo
-    # print(geo_selection$value)
-  })
-
+  #
+  #   r <- reactiveValues()
+  #
+  #   observe({
+  #     r$dataset <- input$input_view
+  #     # print(r$dataset)
+  #   })
+  #
+  #   g <- reactiveValues()
+  #
+  #   observe({
+  #     g$geo_list <-
+  #       if (r$dataset == "Overall") {
+  #         "Overall"
+  #       } else if (r$dataset == "STP") {
+  #         stp_list
+  #       } else if (r$dataset == "Region") {
+  #         region_list
+  #       } else if (r$dataset == "Local Authority") {
+  #         la_list
+  #       }
+  #     # print(g$geo_list)
+  #   })
+  #
+  #   output$geo_level2 <- renderUI({
+  #     selectInput("geo", h5("Select sub geography"),
+  #       choices = g$geo_list,
+  #       selected = g$geo_list[1],
+  #       width = "400px"
+  #     )
+  #   })
+  #
+  #   geo_selection <- reactiveValues()
+  #
+  #   # take selected geo_level2
+  #   observe({
+  #     geo_selection$value <- input$geo
+  #     # print(geo_selection$value)
+  #   })
+  #
 
   callModule(
     id = "04_patients_by_gender_and_age_band_chart_1",
-    module = mod_04_patients_by_gender_and_age_band_chart_server,
-    r = r,
-    geo_selection = geo_selection
+    module = mod_04_patients_by_gender_and_age_band_chart_server # ,
+    # r = r,
+    # geo_selection = geo_selection
   )
 
   moduleServer(
