@@ -44,7 +44,7 @@ mod_02_overall_summary_ui <- function(id) {
     h3("Estimated prescribing patterns of care home residents and older care home residents"),
     p(
       "Care home patients receive more prescription items than non-care home patients",
-      " aged 65+ receiving prescriptions.We estimate",
+      " aged 65+ receiving prescriptions. We estimate",
       tags$b("10 prescription items"), " per patient per month at an estimated cost of £90 per patient per month.",
       "This compares to 6 items per patient per month at a cost of £47 per patient per month for non-care home patients aged 65+ receiving prescriptions."
     ),

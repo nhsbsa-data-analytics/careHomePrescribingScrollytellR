@@ -19,75 +19,10 @@ app_server <- function(input, output, session) {
     module = mod_02_overall_summary_server
   )
 
+  mod_03_patients_by_gender_and_age_band_chart_server("03_patients_by_gender_and_age_band_chart_1")
 
-  # moduleServer(
-  #   id = "03_items_per_patient_chart_1",
-  #   module = mod_03_items_per_patient_chart_server
-  # )
+  mod_04_common_drugs_server("04_common_drugs_ui_1")
 
-
-  # selected_geography <- callModule(mod_util_data_server,
-  #                                  "util_data_ui_1",
-  #                                  radio_input = radio_input)
-  #
-  # radio_input <- mod_radio_server("radio_ui_1")
-  # mod_drop_down_server("drop_down_ui_1")
-
-
-  # mod_03_select_geography_server("03_select_geogrphy_ui_1")
-  # This part is getting reactiveValues for geography selection
-  #
-  #   r <- reactiveValues()
-  #
-  #   observe({
-  #     r$dataset <- input$input_view
-  #     # print(r$dataset)
-  #   })
-  #
-  #   g <- reactiveValues()
-  #
-  #   observe({
-  #     g$geo_list <-
-  #       if (r$dataset == "Overall") {
-  #         "Overall"
-  #       } else if (r$dataset == "STP") {
-  #         stp_list
-  #       } else if (r$dataset == "Region") {
-  #         region_list
-  #       } else if (r$dataset == "Local Authority") {
-  #         la_list
-  #       }
-  #     # print(g$geo_list)
-  #   })
-  #
-  #   output$geo_level2 <- renderUI({
-  #     selectInput("geo", h5("Select sub geography"),
-  #       choices = g$geo_list,
-  #       selected = g$geo_list[1],
-  #       width = "400px"
-  #     )
-  #   })
-  #
-  #   geo_selection <- reactiveValues()
-  #
-  #   # take selected geo_level2
-  #   observe({
-  #     geo_selection$value <- input$geo
-  #     # print(geo_selection$value)
-  #   })
-  #
-
-  callModule(
-    id = "04_patients_by_gender_and_age_band_chart_1",
-    module = mod_04_patients_by_gender_and_age_band_chart_server # ,
-    # r = r,
-    # geo_selection = geo_selection
-  )
-
-  moduleServer(
-    id = "bnf_ch_item_treemap_1",
-    module = mod_bnf_ch_item_treemap_server
-  )
   moduleServer(
     id = "99_footer_1",
     module = mod_99_footer_server

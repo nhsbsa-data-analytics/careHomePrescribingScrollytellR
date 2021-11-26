@@ -23,7 +23,7 @@ golem::add_module( name = "radio" ) # Name of the module
 golem::add_module( name = "03_select_geography" ) # Name of the module
 golem::add_module( name = "slider" ) # Name of the module
 golem::add_module( name = "05_common_drugs")
-
+golem::add_module(name = '03_patients_by_gender_and_age_band_chart')
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*

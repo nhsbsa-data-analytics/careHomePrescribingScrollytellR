@@ -63,15 +63,15 @@ app_ui <- function(request) {
           # ),
           # br(),
           scrollytell::scrolly_section(
-            id = "04_patients_by_gender_and_age_band",
-            mod_04_patients_by_gender_and_age_band_chart_ui(
-              id = "04_patients_by_gender_and_age_band_chart_1"
+            id = "03_patients_by_gender_and_age_band",
+            mod_03_patients_by_gender_and_age_band_chart_ui(
+              id = "03_patients_by_gender_and_age_band_chart_1"
             )
           ),
           br(),
           scrollytell::scrolly_section(
-            id = "bnf_carehome_item",
-            mod_bnf_ch_item_treemap_ui("bnf_ch_item_treemap_1")
+            id = "04_common_drugs",
+            mod_04_common_drugs_ui("04_common_drugs_ui_1")
           )
         )
       )
