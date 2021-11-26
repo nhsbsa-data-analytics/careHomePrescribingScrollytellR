@@ -5,8 +5,6 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Load the 5 tables required for script
-
 # AddressBase base table
 ab_base <- con %>%
   tbl(from = in_schema("ADNSH", "ADDRESSBASE_PLUS_CARE_HOME"))
@@ -252,10 +250,6 @@ df_two <- ab_base %>%
 
 # Generate outputs
 total_data = total_match(df_one, df_two)
-
-# Write the table back to the DB (~1h 20m)
-total_data %>%
-  nhsbsaR::oracle_create_table(table_name = "CARE_HOME_MATCH")
 
 # Disconnect from database
 DBI::dbDisconnect(con)

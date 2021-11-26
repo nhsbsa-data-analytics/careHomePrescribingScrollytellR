@@ -36,12 +36,13 @@ five_plus <- presc_base %>%
   left_join(y = postcodes, by = c("PAT_POSTCODE" = "AB_POSTCODE")) %>% 
   mutate(
     FIVE_PLUS_MONTHS = ifelse(PATIENT_COUNT >= 5, 1, 0),
+    FIVE_PLUS = ifelse(PATIENT_COUNT >= 5, 1, 0),
     CH_POSTCODE = ifelse(is.na(CH_POSTCODE), 0, 1)
     ) %>%
   group_by(ADDRESS_RECORD_ID, CH_POSTCODE) %>%
   summarise(
     FIVE_PLUS_MONTHS = sum(FIVE_PLUS_MONTHS),
-    FIVE_PLUS = max(FIVE_PLUS_MONTHS)
+    FIVE_PLUS = max(FIVE_PLUS)
     ) %>%
   ungroup()
 
@@ -114,7 +115,6 @@ jw_matches <- match %>%
   group_by(POSTCODE, ADDRESS_RECORD_ID, PAT_ADDRESS) %>% 
   summarise_all(.funs = max) %>% 
   ungroup() %>% 
-  left_join(y = five_plus, by = "ADDRESS_RECORD_ID") %>% 
   mutate(
     UPRN_ID = ifelse(UPRN_COUNT >= 2, NA, UPRN_ID),
     AB_ADDRESS = ifelse(UPRN_COUNT >= 2, NA, AB_ADDRESS),
@@ -156,7 +156,7 @@ non_matches <- match %>%
 match <- jw_matches %>% 
   union_all(y = exact_matches) %>% 
   union_all(y = non_matches) %>% 
-  left_join(y = total_record_info, by = "ADDRESS_RECORD_ID") 
+  left_join(y = total_record_info, by = "ADDRESS_RECORD_ID") %>% 
   mutate(
     MATCH_TYPE = ifelse(CH_FLAG == 0 & CH_POSTCODE == 1 & FIVE_PLUS  == 1, 'FIVE_PLUS', MATCH_TYPE),
     CH_FLAG = ifelse(CH_FLAG == 0 & CH_POSTCODE == 1 & FIVE_PLUS == 1, 1, CH_FLAG),
@@ -167,10 +167,9 @@ match <- jw_matches %>%
   )
 
 # Write the table back to the DB (~30m)
-  Sys.time()
 match %>%
   nhsbsaR::oracle_create_table(table_name = "CARE_HOME_VALIDATION")
-Sys.time()
+
 # Disconnect from database
 DBI::dbDisconnect(con)
 
