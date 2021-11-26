@@ -30,21 +30,22 @@ drug_db <- dplyr::tbl(
 # Filter to 2020/2021 and subset columns
 drug_db <- drug_db %>%
   dplyr::inner_join(year_month_db) %>%
-  dplyr::select(YEAR_MONTH, RECORD_ID, CHEMICAL_SUBSTANCE_BNF_DESCR)
+  dplyr::select(YEAR_MONTH, RECORD_ID, CHEMICAL_SUBSTANCE_BNF_DESCR, BNF_CHAPTER)
 
 # Join the drug information to the FACT table
 fact_db <- fact_db %>%
   dplyr::inner_join(
     y = drug_db %>%
-      dplyr::select(YEAR_MONTH, RECORD_ID, CHEMICAL_SUBSTANCE_BNF_DESCR),
+      dplyr::select(YEAR_MONTH, RECORD_ID, CHEMICAL_SUBSTANCE_BNF_DESCR, BNF_CHAPTER),
     by = c(
       "YEAR_MONTH" = "YEAR_MONTH",
       "CALC_PREC_DRUG_RECORD_ID" = "RECORD_ID"
     )
   )
 
-# Unique medicines patient dataframe
+# Unique medicines patient dataframe BNF_CHAPTER 1:10
 unique_medicines_db <- fact_db %>%
+  dplyr::filter(BNF_CHAPTER %in% c(01, 02, 03, 04, 05, 06, 07, 08, 09, 10)) %>%
   dplyr::mutate(
     CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
   ) %>%
