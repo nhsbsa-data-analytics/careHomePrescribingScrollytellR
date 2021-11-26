@@ -53,7 +53,7 @@ unique_medicines_db <- fact_db %>%
   dplyr::summarise(
     UNIQUE_MEDICINES = dplyr::n_distinct(CHEMICAL_SUBSTANCE_BNF_DESCR)
   ) %>%
-  dplyr::ungroup() 
+  dplyr::ungroup()
 
 # Number of unique medicines per patient per month by care home flag
 unique_medicines_per_patient_df <- unique_medicines_db %>%
@@ -86,13 +86,13 @@ ten_or_more_unique_medicines_per_patient_df <- unique_medicines_db %>%
   dplyr::group_by(YEAR_MONTH, CH_FLAG) %>%
   dplyr::summarise(
     PATIENTS_TEN_OR_MORE = dplyr::n_distinct(
-      ifelse(test = UNIQUE_MEDICINES >= 10, 
-             yes = NHS_NO, 
-             no = NA
-            )
-      ),
+      ifelse(test = UNIQUE_MEDICINES >= 10,
+        yes = NHS_NO,
+        no = NA
+      )
+    ),
     TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO)
-  ) %>% 
+  ) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(
     PCT_PATIENTS_TEN_OR_MORE = PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS * 100
@@ -100,7 +100,7 @@ ten_or_more_unique_medicines_per_patient_df <- unique_medicines_db %>%
   dplyr::select(-c(PATIENTS_TEN_OR_MORE, TOTAL_PATIENTS))
 
 # Add overall mean and format for highcharter
-ten_or_more_unique_medicines_per_patient_df <- 
+ten_or_more_unique_medicines_per_patient_df <-
   ten_or_more_unique_medicines_per_patient_df %>%
   dplyr::union_all(
     y = ten_or_more_unique_medicines_per_patient_df %>%
