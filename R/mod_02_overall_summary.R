@@ -130,57 +130,30 @@ mod_02_overall_summary_ui <- function(id) {
           icon = unique_medicines_per_patient_df$ICON
         )
       )
+    ),
+    fluidRow(
+      p("Ten or more unique medicines", style = "text-indent: 20px;margin-bottom: 10px"),
+      column(
+        width = 6, offset = 0, style = "padding-left:0px", #
+        # p("Average number of unique medicines per patient per month in care home"),
+        mod_value_box_ui(
+          id = "7",
+          care_home = TRUE,
+          value = ten_or_more_unique_medicines_per_patient_df$`Care home`,
+          icon = ten_or_more_unique_medicines_per_patient_df$ICON
+        )
+      ),
+      column(
+        width = 6,
+        # p("Average number of unique medicines per patient"),
+        mod_value_box_ui(
+          id = "8",
+          care_home = FALSE,
+          value = ten_or_more_unique_medicines_per_patient_df$`Non Care home`,
+          icon = ten_or_more_unique_medicines_per_patient_df$ICON
+        )
+      )
     )
-
-
-
-
-    #
-    # fluidRow(
-    #   h6("Items"),
-    #   mod_value_box_ui(
-    #     id = "1",
-    #     care_home = TRUE,
-    #     value = items_per_patient_df$`Care home`,
-    #     icon = items_per_patient_df$ICON
-    #   ),
-    #   mod_value_box_ui(
-    #     id = "2",
-    #     care_home = FALSE,
-    #     value = items_per_patient_df$`Non care home`,
-    #     icon = items_per_patient_df$ICON
-    #   )
-    # ),
-    # fluidRow(
-    #   h6("Drug Cost (£)"),
-    #   mod_value_box_ui(
-    #     id = "3",
-    #     care_home = TRUE,
-    #     value = cost_per_patient_df$`Care home`,
-    #     icon = cost_per_patient_df$ICON
-    #   ),
-    #   mod_value_box_ui(
-    #     id = "4",
-    #     care_home = FALSE,
-    #     value = cost_per_patient_df$`Non care home`,
-    #     icon = cost_per_patient_df$ICON
-    #   )
-    # ),
-    # fluidRow(
-    #   h6("Unique Medicines"),
-    #   mod_value_box_ui(
-    #     id = "5",
-    #     care_home = TRUE,
-    #     value = unique_medicines_per_patient_df$`Care home`,
-    #     icon = unique_medicines_per_patient_df$ICON
-    #   ),
-    #   mod_value_box_ui(
-    #     id = "6",
-    #     care_home = FALSE,
-    #     value = unique_medicines_per_patient_df$`Non care home`,
-    #     icon = unique_medicines_per_patient_df$ICON
-    #   )
-    # )
   )
 }
 
@@ -192,7 +165,7 @@ mod_02_overall_summary_server <- function(input, output, session) {
 }
 
 ## To be copied in the UI
-# mod_overall_summary_ui("overall_summary_1")
+# mod_02_overall_summary_ui("02_overall_summary_1")
 
 ## To be copied in the server
-# callModule(mod_overall_summary_server, "overall_summary_1")
+# callModule(mod_02_overall_summary_server, "02_overall_summary_1")
