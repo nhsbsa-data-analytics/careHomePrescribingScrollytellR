@@ -17,6 +17,7 @@ mod_04_patients_by_gender_and_age_band_chart_ui <- function(id) {
     ),
     p(
       tags$b("One quarter"), " of care home residents in 2020/21 are", tags$b("female aged 90."),
+      "This is reasonably consistent across local authorities, region and sustainability and transformation plan (STPs)",
       "The age and gender profile is broadly comparable to",
       a(
         "ONS Estimates of care home residents from April 2020.",
@@ -28,7 +29,7 @@ mod_04_patients_by_gender_and_age_band_chart_ui <- function(id) {
     br(),
     fluidRow(
       p(
-        "Select a sustainability and transofmration plan (STP), Region or local authority for observing care home profile."
+        "Select a STP, Region or local authority for observing care home profile."
       ),
       column(
         width = 5,
