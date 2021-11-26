@@ -22,6 +22,7 @@ usethis::use_package( "thinkr" )
 golem::add_module( name = "radio" ) # Name of the module
 golem::add_module( name = "03_select_geography" ) # Name of the module
 golem::add_module( name = "slider" ) # Name of the module
+golem::add_module( name = "05_common_drugs")
 
 
 ## Add helper functions ----
