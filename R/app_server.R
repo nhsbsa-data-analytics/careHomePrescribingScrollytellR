@@ -5,6 +5,7 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
+
   # Your application server logic
   moduleServer(
     id = "00_header_1",
@@ -18,11 +19,14 @@ app_server <- function(input, output, session) {
     id = "02_overall_summary_1",
     module = mod_02_overall_summary_server
   )
-
-  mod_03_patients_by_gender_and_age_band_chart_server("03_patients_by_gender_and_age_band_chart_1")
-
-  mod_04_common_drugs_server("04_common_drugs_ui_1")
-
+  moduleServer(
+    id = "03_patients_by_gender_and_age_band_chart_1",
+    module = mod_03_patients_by_gender_and_age_band_chart_server
+  )
+  moduleServer(
+    id = "04_common_drugs_ui_1",
+    module = mod_04_common_drugs_server
+  )
   moduleServer(
     id = "99_footer_1",
     module = mod_99_footer_server
@@ -31,4 +35,5 @@ app_server <- function(input, output, session) {
   output$scrolly <- scrollytell::renderScrollytell({
     scrollytell::scrollytell()
   })
+
 }
