@@ -43,10 +43,10 @@ mod_02_overall_summary_ui <- function(id) {
   tagList(
     h3("Estimated prescribing patterns of care home residents and older care home residents"),
     p(
-      "As might be expected care home residents receive more prescription items than",
-      "those aged 65+ receiving prescriptions in general. We estimate",
+      "Care home patients receive more prescription items than non-care home patients",
+      " aged 65+ receiving prescriptions.We estimate",
       tags$b("10 prescription items"), " per patient per month at an estimated cost of £90 per patient per month.",
-      "This compares to 6 items per patient per month at a cost of £47 per patient per month in those aged 65+ receiving prescriptions in general."
+      "This compares to 6 items per patient per month at a cost of £47 per patient per month for non-care home patients aged 65+ receiving prescriptions."
     ),
     p("Correspondingly the estimated volumne and number of medicines per patient per month is higher."),
     # h6(em("All metrics are calculated per patient, per month")),
