@@ -57,16 +57,6 @@ mod_overall_summary_ui <- function(id) {
     h6(em("All metrics are calculated per patient, per month")),
     br(),
     fluidRow(
-      column(
-        width = 6,
-        h6("Care Home Patients") 
-      ),
-      column(
-        width = 6,
-        h6("Non Care Home Patients") 
-      )
-    ),
-    fluidRow(
       h6("Items"),
       mod_value_box_ui(
         id = "1",
