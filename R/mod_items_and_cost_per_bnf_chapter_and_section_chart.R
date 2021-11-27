@@ -57,7 +57,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(
       # BNF section
       items_and_cost_per_bnf_chapter_and_section_df %>%
         dplyr::mutate(parent = tolower(BNF_CHAPTER)) %>%
-        dplyr::select(parent, mname = BNF_SECTION, value = PCT_LEVEL_2) %>%
+        dplyr::select(parent, name = BNF_SECTION, value = PCT_LEVEL_2) %>%
         dplyr::mutate(id = as.character(dplyr::row_number()))
       
     ) %>%
