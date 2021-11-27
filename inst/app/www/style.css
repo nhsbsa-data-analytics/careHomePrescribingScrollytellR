@@ -64,3 +64,8 @@ should be no wider as per NHS guidelines) */
   background-color: var(--nhs-pale-grey);
 	max-width: 960px;
 }
+
+/* Scrolly stuff */
+
+/* Force scrolly sections to be the full width of the container-fluid ^ */
+.scrolly-sections { width: 100% !important; }
