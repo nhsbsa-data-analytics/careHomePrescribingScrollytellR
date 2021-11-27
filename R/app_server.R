@@ -20,12 +20,12 @@ app_server <- function(input, output, session) {
     module = mod_02_overall_summary_server
   )
   moduleServer(
-    id = "03_patients_by_gender_and_age_band_chart_1",
-    module = mod_03_patients_by_gender_and_age_band_chart_server
+    id = "patients_by_gender_and_age_band_chart_1",
+    module = mod_patients_by_gender_and_age_band_chart_server
   )
   moduleServer(
-    id = "04_common_drugs_ui_1",
-    module = mod_04_common_drugs_server
+    id = "items_and_cost_per_bnf_chapter_and_section_chart_1",
+    module = mod_items_and_cost_per_bnf_chapter_and_section_chart_server
   )
   moduleServer(
     id = "99_footer_1",
