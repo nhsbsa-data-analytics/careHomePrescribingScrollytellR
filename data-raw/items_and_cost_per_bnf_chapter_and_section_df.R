@@ -72,7 +72,7 @@ items_and_cost_per_bnf_chapter_and_section_df <-
   ungroup() %>%
   # Add %s
   group_by(METRIC, BNF_CHAPTER) %>%
-  mutate(PCT_LEVEL_2 = TOTAL_LEVEL_2 / sum(TOTAL_LEVEL_2) * 100) %>%
+  mutate(PRP_LEVEL_2 = TOTAL_LEVEL_2 / sum(TOTAL_LEVEL_2)) %>%
   ungroup()
 
 
@@ -93,7 +93,7 @@ items_and_cost_per_bnf_chapter_df <- items_and_cost_per_bnf_chapter_df %>%
   ungroup() %>%
   # Add %s
   group_by(METRIC) %>%
-  mutate(PCT_LEVEL_1 = TOTAL_LEVEL_1 / sum(TOTAL_LEVEL_1) * 100) %>%
+  mutate(PRP_LEVEL_1 = TOTAL_LEVEL_1 / sum(TOTAL_LEVEL_1)) %>%
   ungroup()
 
 # Join the two datasets together

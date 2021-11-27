@@ -40,61 +40,99 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(
     careHomePrescribingScrollytellR::items_and_cost_per_bnf_chapter_and_section_df %>%
     dplyr::filter(METRIC == metric)
   
+  # Define the colours (tint for the second level based on the %)
+  # NOTE: Not happy with this but does the job for the moment
+  items_and_cost_per_bnf_chapter_and_section_df <-
+    items_and_cost_per_bnf_chapter_and_section_df %>%
+    dplyr::left_join(
+      y = items_and_cost_per_bnf_chapter_and_section_df %>%
+        dplyr::distinct(BNF_CHAPTER) %>%
+        cbind(COLOUR_LEVEL_1 = nhsbsaR::palette_nhsbsa())
+    ) %>%
+    dplyr::mutate(
+      PRP_LEVEL_2 = ifelse(is.na(PRP_LEVEL_2), 0, PRP_LEVEL_2),
+    )
+  items_and_cost_per_bnf_chapter_and_section_df$COLOUR_LEVEL_2 <-
+    Vectorize(tinter::lighten)(
+      items_and_cost_per_bnf_chapter_and_section_df$COLOUR_LEVEL_1,
+      items_and_cost_per_bnf_chapter_and_section_df$PRP_LEVEL_2
+    )
+  items_and_cost_per_bnf_chapter_and_section_df <- 
+    items_and_cost_per_bnf_chapter_and_section_df %>%
+    dplyr::mutate(
+      COLOUR_LEVEL_2 = as.character(COLOUR_LEVEL_2),
+      COLOUR_LEVEL_2 = ifelse(
+        test = COLOUR_LEVEL_2 == "character(0)", 
+        yes = "#FFFFFF", 
+        no = COLOUR_LEVEL_2
+      )
+    )
+  
   # Format data for highcharter
-  plot_df <- 
+  plot_df <-
     dplyr::bind_rows(
-    
+      
       # BNF chapter
       items_and_cost_per_bnf_chapter_and_section_df %>%
-        dplyr::distinct(BNF_CHAPTER, PCT_LEVEL_1) %>%
-        dplyr::mutate(
-          id = tolower(BNF_CHAPTER),
-          value = PCT_LEVEL_1
-        ) %>%
-        dplyr::select(name = BNF_CHAPTER, id, value) %>%
-        cbind(color = nhsbsaR::palette_nhsbsa()),
+        dplyr::distinct(BNF_CHAPTER, PRP_LEVEL_1, COLOUR_LEVEL_1) %>%
+        dplyr::mutate(id = tolower(BNF_CHAPTER)) %>%
+        dplyr::select(
+          name = BNF_CHAPTER, 
+          id, 
+          value = PRP_LEVEL_1, 
+          color = COLOUR_LEVEL_1
+        ),
       
       # BNF section
       items_and_cost_per_bnf_chapter_and_section_df %>%
-        dplyr::mutate(parent = tolower(BNF_CHAPTER)) %>%
-        dplyr::select(parent, name = BNF_SECTION, value = PCT_LEVEL_2) %>%
-        dplyr::mutate(id = as.character(dplyr::row_number()))
+        dplyr::mutate(
+          parent = tolower(BNF_CHAPTER),
+          id = tolower(BNF_SECTION)
+        ) %>%
+        dplyr::select(
+          parent, 
+          name = BNF_SECTION, 
+          id, 
+          value = PRP_LEVEL_2,
+          color = COLOUR_LEVEL_2
+        )
       
     ) %>%
     highcharter::list_parse()
-
-  # Pyramid plot for age band and gender
+  
   output$items_and_cost_per_bnf_chapter_and_section_chart <- 
     highcharter::renderHighchart({
-    highcharter::highchart() %>%
-      highcharter::hc_chart(type = "treemap") %>%
-      highcharter::hc_add_series(
-        data = plot_df,
-        allowDrillToNode = TRUE,
-        levelIsConstant = FALSE,
-        textOverflow = "clip",
-        dataLabels = list(color = "white"),
-        levels = list(
-          list(
-            level = 1,
-            borderWidth = 3,
-            colorByPoint = TRUE,
-            # colorVariation = list(key = 'brightness', to = -0.5),
-            dataLabels = list(
-              enabled = TRUE,
-              verticalAlign = "top",
-              align = "left",
-              style = list(fontSize = "12px", textOutline = FALSE)
+  
+      highcharter::highchart() %>%
+        highcharter::hc_chart(type = "treemap") %>%
+        highcharter::hc_add_series(
+          data = plot_df,
+          allowDrillToNode = TRUE,
+          levelIsConstant = FALSE,
+          textOverflow = "clip",
+          dataLabels = list(color = "white"),
+          levels = list(
+            list(
+              level = 1,
+              borderWidth = 3,
+              colorByPoint = TRUE,
+              dataLabels = list(
+                enabled = TRUE,
+                verticalAlign = "top",
+                align = "left",
+                color = "black",
+                style = list(fontSize = "12px", textOutline = FALSE)
+              )
+            ),
+            list(
+              level = 2,
+              borderWidth = 0.2,
+              dataLabels = list(enabled = FALSE)
             )
-          ),
-          list(
-            level = 2,
-            borderWidth = 0.2,
-            dataLabels = list(enabled = FALSE)
           )
-        )
-      ) %>%
-      highcharter::hc_title(text = "Most prescribed BNF chapter in care home prescription")
+        ) %>%
+        highcharter::hc_title(text = "Drug group distribution for care home patients")
+  
   })
 }
 
