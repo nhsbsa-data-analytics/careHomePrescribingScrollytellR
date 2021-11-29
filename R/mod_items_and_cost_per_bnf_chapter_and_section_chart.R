@@ -171,7 +171,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             )
           )
         ) %>%
-        highcharter::hc_tooltip(pointFormat = "<b> % of total items:</b> {point.p: .1f}% <br> <b> Number of items: </b> {point.value1:,.0f}")
+        highcharter::hc_tooltip(pointFormat = "<b> % of total items:</b> {point.p: .1f}% <br> <b> Number of items: </b> {point.value1:,.0f}K")
     } else {
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "treemap") %>%
@@ -201,7 +201,8 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             )
           )
         ) %>%
-        highcharter::hc_tooltip(pointFormat = "<b> % of total NIC (£):</b> {point.p: .1f}% <br> <b> NIC (£): </b>£ {point.value1:,.0f}")
+        highcharter::hc_tooltip(pointFormat = "<b> % of total NIC (£):</b> {point.p: .1f}% <br> <b> NIC (£): </b>£ {point.value1:,.0f}M")
+        # highcharter::hc_tooltip(formatter = htmlwidgets::JS("function(){return ( this.p, this.point.value1)}"))
     }
   })
 }
