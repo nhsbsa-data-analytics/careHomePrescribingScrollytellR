@@ -102,9 +102,9 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   plot_series_list <- reactive({
     req(input$geography)
     plot_df() %>%
-      tidyr::expand(YEAR_MONTH, AGE_BAND, PDS_GENDER) %>%
-      dplyr::left_join(plot_df()) %>%
-      dplyr::mutate(p = tidyr::replace_na(p)) %>%
+      tidyr::complete(YEAR_MONTH, AGE_BAND, PDS_GENDER,
+        fill = list(value = 0)
+      ) %>%
       dplyr::group_by(AGE_BAND, PDS_GENDER) %>%
       dplyr::do(data = list(sequence = .$p)) %>%
       dplyr::ungroup() %>%
