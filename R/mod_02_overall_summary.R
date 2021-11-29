@@ -157,7 +157,7 @@ mod_02_overall_summary_ui <- function(id) {
   )
 }
 
-#' slider Server Function
+#' 02_overall_summary Server Function
 #'
 #' @noRd
 mod_02_overall_summary_server <- function(input, output, session) {

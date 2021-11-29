@@ -32,8 +32,8 @@ app_ui <- function(request) {
           ),
           br(),
           scrollytell::scrolly_section(
-            id = "patients_by_gender_and_age_band_chart",
-            mod_patients_by_gender_and_age_band_chart_ui("patients_by_gender_and_age_band_chart_1")
+            id = "patients_by_geography_and_gender_and_age_band_chart",
+            mod_patients_by_geography_and_gender_and_age_band_chart_ui("patients_by_geography_and_gender_and_age_band_chart_1")
           ),
           br(),
           scrollytell::scrolly_section(
