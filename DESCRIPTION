@@ -39,8 +39,8 @@ Imports:
     tidyr,
     scrollytell
 Remotes:
-    nhsbsa-data-analytics/nhsbsaR
-    nhsbsa-data-analytics/addressMatchR
+    nhsbsa-data-analytics/nhsbsaR,
+    nhsbsa-data-analytics/addressMatchR,
     statistiekcbs/scrollytell
 Encoding: UTF-8
 LazyData: true
