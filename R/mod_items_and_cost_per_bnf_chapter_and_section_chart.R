@@ -10,6 +10,8 @@
 mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
+    h3("Commonly prescribed drugs"),
+    p("Text will be added."),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
@@ -33,28 +35,38 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
 #' items_and_cost_per_bnf_chapter_and_section_chart Server Function
 #'
 #' @noRd
-mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(
-  input, 
-  output, 
-  session
-) {
+mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
+                                                                        output,
+                                                                        session) {
   ns <- session$ns
-  
-  # Pull the input reactive value
-  input_metric <- reactive({ input$metric })
-  
-  # Limit based on metric
-  items_and_cost_per_bnf_chapter_and_section_df <-  reactive({
-    careHomePrescribingScrollytellR::items_and_cost_per_bnf_chapter_and_section_df %>%
-    dplyr::filter(METRIC == input_metric())
+
+  # Had to create reactiveValues as radiobutton holds NULL
+
+  metric_selection <- reactiveValues(v = NULL)
+
+  observe({
+    metric_selection$v <- input$metric
   })
-  
+
+  # create as reactive value - now it holds selected value
+
+  input_metric <- reactive(metric_selection$v)
+
+  # Limit based on metric
+  items_and_cost_per_bnf_chapter_and_section_df <- reactive({
+    careHomePrescribingScrollytellR::items_and_cost_per_bnf_chapter_and_section_df %>%
+      dplyr::filter(METRIC == input_metric())
+  })
+
+
   # Define the colours (tint for the second level based on the %)
   # NOTE: Not happy with this but does the job for the moment
-  items_and_cost_per_bnf_chapter_and_section_df <- reactive({
-    
-    print("HERE")
-    
+  items_and_cost_per_bnf_chapter_and_section_df_1 <- reactive({
+
+    # print("HERE")
+    #
+    # cat(str(items_and_cost_per_bnf_chapter_and_section_df()))
+
     tmp_df <- items_and_cost_per_bnf_chapter_and_section_df() %>%
       dplyr::left_join(
         y = items_and_cost_per_bnf_chapter_and_section_df() %>%
@@ -64,91 +76,97 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(
       dplyr::mutate(
         PRP_LEVEL_2 = ifelse(is.na(PRP_LEVEL_2), 0, PRP_LEVEL_2),
       )
-    
+
     tmp_df$COLOUR_LEVEL_2 <- Vectorize(tinter::lighten)(
       tmp_df$COLOUR_LEVEL_1,
       tmp_df$PRP_LEVEL_2
     )
-    
+
     tmp_df %>%
       dplyr::mutate(
         COLOUR_LEVEL_2 = as.character(COLOUR_LEVEL_2),
         COLOUR_LEVEL_2 = ifelse(
-          test = COLOUR_LEVEL_2 == "character(0)", 
-          yes = "#FFFFFF", 
+          test = COLOUR_LEVEL_2 == "character(0)",
+          yes = "#FFFFFF",
           no = COLOUR_LEVEL_2
         )
       )
-    
   })
-  
+
+
+  # observe({
+  #   print(head(items_and_cost_per_bnf_chapter_and_section_df_1()))
+  # })
+
   # Format data for highcharter
   plot_df <- reactive({
-    
     dplyr::bind_rows(
-      
+
       # BNF chapter
-      items_and_cost_per_bnf_chapter_and_section_df() %>%
+      items_and_cost_per_bnf_chapter_and_section_df_1() %>%
         dplyr::distinct(BNF_CHAPTER, PRP_LEVEL_1, COLOUR_LEVEL_1) %>%
         dplyr::mutate(id = tolower(BNF_CHAPTER)) %>%
         dplyr::select(
-          name = BNF_CHAPTER, 
-          id, 
-          value = PRP_LEVEL_1, 
+          name = BNF_CHAPTER,
+          id,
+          value = PRP_LEVEL_1,
           color = COLOUR_LEVEL_1
         ),
-      
+
       # BNF section
-      items_and_cost_per_bnf_chapter_and_section_df() %>%
+      items_and_cost_per_bnf_chapter_and_section_df_1() %>%
         dplyr::mutate(
           parent = tolower(BNF_CHAPTER),
           id = tolower(BNF_SECTION)
         ) %>%
         dplyr::select(
-          parent, 
-          name = BNF_SECTION, 
-          id, 
+          parent,
+          name = BNF_SECTION,
+          id,
           value = PRP_LEVEL_2,
           color = COLOUR_LEVEL_2
         )
-      
     ) %>%
-    highcharter::list_parse()
-    
+      highcharter::list_parse()
   })
-  
-  output$items_and_cost_per_bnf_chapter_and_section_chart <- 
-    highcharter::renderHighchart({
-  
-      highcharter::highchart() %>%
-        highcharter::hc_chart(type = "treemap") %>%
-        highcharter::hc_add_series(
-          data = plot_df(),
-          allowDrillToNode = TRUE,
-          levelIsConstant = FALSE,
-          textOverflow = "clip",
-          dataLabels = list(color = "white"),
-          levels = list(
-            list(
-              level = 1,
-              borderWidth = 3,
-              colorByPoint = TRUE,
-              dataLabels = list(
-                enabled = TRUE,
-                verticalAlign = "top",
-                align = "left",
-                color = "black",
-                style = list(fontSize = "12px", textOutline = FALSE)
-              )
-            ),
-            list(
-              level = 2,
-              borderWidth = 0.2,
-              dataLabels = list(enabled = FALSE)
+
+  # observe({
+  #   print(head(plot_df()))
+  # })
+
+  output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
+    req(input$metric)
+    observe({
+      print(head(plot_df()))
+    })
+    highcharter::highchart() %>%
+      highcharter::hc_chart(type = "treemap") %>%
+      highcharter::hc_add_series(
+        data = plot_df(),
+        allowDrillToNode = TRUE,
+        levelIsConstant = FALSE,
+        textOverflow = "clip",
+        dataLabels = list(color = "white"),
+        levels = list(
+          list(
+            level = 1,
+            borderWidth = 3,
+            colorByPoint = TRUE,
+            dataLabels = list(
+              enabled = TRUE,
+              verticalAlign = "top",
+              align = "left",
+              color = "black",
+              style = list(fontSize = "12px", textOutline = FALSE)
             )
+          ),
+          list(
+            level = 2,
+            borderWidth = 0.2,
+            dataLabels = list(enabled = FALSE)
           )
         )
-
+      )
   })
 }
 

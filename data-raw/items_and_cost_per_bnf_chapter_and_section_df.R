@@ -48,8 +48,8 @@ fact_db <- fact_db %>%
 items_and_cost_per_bnf_chapter_and_section_df <- fact_db %>%
   group_by(BNF_CHAPTER, BNF_SECTION) %>%
   summarise(
-    ITEMS = sum(ITEM_COUNT),
-    COST = sum(ITEM_PAY_DR_NIC * 0.01)
+    Items = sum(ITEM_COUNT),
+    Cost = sum(ITEM_PAY_DR_NIC * 0.01)
   ) %>%
   ungroup() %>%
   tidyr::pivot_longer(
@@ -60,7 +60,7 @@ items_and_cost_per_bnf_chapter_and_section_df <- fact_db %>%
   collect()
 
 # Group any BNF sections ranked 8th or less into a group called "Other"
-items_and_cost_per_bnf_chapter_and_section_df <- 
+items_and_cost_per_bnf_chapter_and_section_df <-
   items_and_cost_per_bnf_chapter_and_section_df %>%
   group_by(METRIC, BNF_CHAPTER) %>%
   mutate(
@@ -77,7 +77,7 @@ items_and_cost_per_bnf_chapter_and_section_df <-
 
 
 # Get the total items and cost per BNF chapter (level 1)
-items_and_cost_per_bnf_chapter_df <- 
+items_and_cost_per_bnf_chapter_df <-
   items_and_cost_per_bnf_chapter_and_section_df %>%
   group_by(METRIC, BNF_CHAPTER) %>%
   summarise(TOTAL_LEVEL_1 = sum(TOTAL_LEVEL_2)) %>%
@@ -105,7 +105,7 @@ items_and_cost_per_bnf_chapter_and_section_df <-
 
 # Add to data-raw/
 usethis::use_data(
-  items_and_cost_per_bnf_chapter_and_section_df, 
+  items_and_cost_per_bnf_chapter_and_section_df,
   overwrite = TRUE
 )
 

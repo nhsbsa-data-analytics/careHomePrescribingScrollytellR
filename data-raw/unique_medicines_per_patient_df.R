@@ -27,7 +27,7 @@ drug_db <- drug_db %>%
 # Create a lazy table from the care home FACT table
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
-  
+
 # Join the drug information to the FACT table
 fact_db <- fact_db %>%
   inner_join(

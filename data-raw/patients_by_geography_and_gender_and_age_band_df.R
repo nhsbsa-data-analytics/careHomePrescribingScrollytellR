@@ -17,12 +17,12 @@ postcode_db <- postcode_db %>%
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
-# Filter to care home only, join the postcode info and add gender and age band 
+# Filter to care home only, join the postcode info and add gender and age band
 # groups to the FACT table
 fact_db <- fact_db %>%
   filter(CH_FLAG == 1) %>%
   left_join(
-    y = postcode_db, 
+    y = postcode_db,
     by = c("PCD_NO_SPACES" = "POSTCODE")
   ) %>%
   mutate(
@@ -79,9 +79,9 @@ patients_by_region_and_gender_and_age_band_df <-
     # By year month
     y = fact_db %>%
       group_by(
-        YEAR_MONTH, 
-        PDS_GENDER, 
-        AGE_BAND, 
+        YEAR_MONTH,
+        PDS_GENDER,
+        AGE_BAND,
         GEOGRAPHY = PCD_REGION_NAME
       ) %>%
       summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
@@ -98,7 +98,7 @@ patients_by_region_and_gender_and_age_band_df <-
   mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
   arrange(YEAR_MONTH)
 
-# Process for STP 
+# Process for STP
 patients_by_stp_and_gender_and_age_band_df <-
   union_all(
     # Overall
@@ -109,9 +109,9 @@ patients_by_stp_and_gender_and_age_band_df <-
     # By year month
     y = fact_db %>%
       group_by(
-        YEAR_MONTH, 
-        PDS_GENDER, 
-        AGE_BAND, 
+        YEAR_MONTH,
+        PDS_GENDER,
+        AGE_BAND,
         GEOGRAPHY = PCD_STP_NAME
       ) %>%
       summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
@@ -128,7 +128,7 @@ patients_by_stp_and_gender_and_age_band_df <-
   mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
   arrange(YEAR_MONTH)
 
-# Process for LA 
+# Process for LA
 patients_by_la_and_gender_and_age_band_df <-
   union_all(
     # Overall
@@ -139,9 +139,9 @@ patients_by_la_and_gender_and_age_band_df <-
     # By year month
     y = fact_db %>%
       group_by(
-        YEAR_MONTH, 
-        PDS_GENDER, 
-        AGE_BAND, 
+        YEAR_MONTH,
+        PDS_GENDER,
+        AGE_BAND,
         GEOGRAPHY = PCD_LAD_NAME
       ) %>%
       summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
@@ -168,7 +168,7 @@ patients_by_geography_and_gender_and_age_band_df <- bind_rows(
 
 # Add to data-raw/
 usethis::use_data(
-  patients_by_geography_and_gender_and_age_band_df, 
+  patients_by_geography_and_gender_and_age_band_df,
   overwrite = TRUE
 )
 

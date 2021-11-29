@@ -40,7 +40,7 @@ mod_02_overall_summary_ui <- function(id) {
       values_from = UNIQUE_MEDICINES_PER_PATIENT
     ) %>%
     dplyr::mutate(ICON = "tablets")
-  
+
   ten_or_more_unique_medicines_per_patient_df <-
     careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_df %>%
     dplyr::filter(is.na(YEAR_MONTH)) %>%
@@ -76,7 +76,7 @@ mod_02_overall_summary_ui <- function(id) {
         p("Number of prescription items")
       ),
       column(
-        width = 3, 
+        width = 3,
         mod_value_box_ui(
           id = "1",
           care_home = TRUE,
@@ -100,7 +100,7 @@ mod_02_overall_summary_ui <- function(id) {
         p("Drug cost")
       ),
       column(
-        width = 3, 
+        width = 3,
         mod_value_box_ui(
           id = "3",
           care_home = TRUE,
@@ -124,7 +124,7 @@ mod_02_overall_summary_ui <- function(id) {
         p("Number of unique medicines")
       ),
       column(
-        width = 3, 
+        width = 3,
         mod_value_box_ui(
           id = "5",
           care_home = TRUE,
@@ -148,7 +148,7 @@ mod_02_overall_summary_ui <- function(id) {
         p("Percentage of patients on ten or more unique medicines")
       ),
       column(
-        width = 3, 
+        width = 3,
         mod_value_box_ui(
           id = "7",
           care_home = TRUE,
@@ -167,7 +167,7 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     p(
-      "Metrics are calculated as an average per patient per month.", 
+      "Metrics are calculated as an average per patient per month.",
       style = "text-align: right"
     )
   )

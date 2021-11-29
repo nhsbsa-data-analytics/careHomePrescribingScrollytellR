@@ -47,43 +47,40 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
 #' patients_by_geography_and_gender_and_age_band_chart Server Function
 #'
 #' @noRd
-mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
-  input, 
-  output, 
-  session
-) {
+mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input,
+                                                                           output,
+                                                                           session) {
   ns <- session$ns
-  
+
   # Filter to relevant data for this chart
-  patients_by_geography_and_gender_and_age_band_df <- 
+  patients_by_geography_and_gender_and_age_band_df <-
     careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
     dplyr::filter(
       !is.na(LEVEL),
       !is.na(GEOGRAPHY),
       !is.na(PDS_GENDER)
     )
-    
+
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
-  
+
   # Filter the data based on the level
   level_df <- reactive({
     req(input$level)
     patients_by_geography_and_gender_and_age_band_df %>%
       dplyr::filter(LEVEL == input$level)
-    
   })
-  
+
   # Update the list of choices for geography from the rows in level dataframe
   observeEvent(
-    eventExpr = level_df(), 
+    eventExpr = level_df(),
     handlerExpr = {
-      geography_choices <- level_df() %>% 
-        dplyr::distinct(GEOGRAPHY) %>% 
+      geography_choices <- level_df() %>%
+        dplyr::distinct(GEOGRAPHY) %>%
         dplyr::pull()
-      updateSelectInput(inputId = "geography", choices = geography_choices) 
+      updateSelectInput(inputId = "geography", choices = geography_choices)
     }
   )
-  
+
   # Filter the data based on the level and format for the plot
   plot_df <- reactive({
     req(input$geography)
@@ -94,13 +91,13 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
       dplyr::ungroup() %>%
       dplyr::mutate(p = p * ifelse(PDS_GENDER == "Male", 1, -1))
   })
-  
+
   # Pull the max p
   max_p <- reactive({
     req(input$geography)
     max(abs(plot_df()$p))
   })
-  
+
   # Format for highcharter animation
   plot_series_list <- reactive({
     req(input$geography)
@@ -115,14 +112,12 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
       dplyr::do(data = .$data) %>%
       dplyr::mutate(name = PDS_GENDER) %>%
       highcharter::list_parse()
-    
   })
 
   # Pyramid plot for age band and gender
   output$patients_by_geography_and_gender_and_age_band_chart <- highcharter::renderHighchart({
-    
     req(input$geography)
-    
+
     highcharter::highchart() %>%
       highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
       highcharter::hc_add_series_list(x = plot_series_list()) %>%
