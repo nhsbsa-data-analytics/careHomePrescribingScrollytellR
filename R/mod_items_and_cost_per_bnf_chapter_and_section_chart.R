@@ -62,11 +62,6 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
   # Define the colours (tint for the second level based on the %)
   # NOTE: Not happy with this but does the job for the moment
   items_and_cost_per_bnf_chapter_and_section_df_1 <- reactive({
-
-    # print("HERE")
-    #
-    # cat(str(items_and_cost_per_bnf_chapter_and_section_df()))
-
     tmp_df <- items_and_cost_per_bnf_chapter_and_section_df() %>%
       dplyr::left_join(
         y = items_and_cost_per_bnf_chapter_and_section_df() %>%
@@ -92,11 +87,6 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
         )
       )
   })
-
-
-  # observe({
-  #   print(head(items_and_cost_per_bnf_chapter_and_section_df_1()))
-  # })
 
   # Format data for highcharter
   plot_df <- reactive({
@@ -130,15 +120,9 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       highcharter::list_parse()
   })
 
-  # observe({
-  #   print(head(plot_df()))
-  # })
 
   output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
     req(input$metric)
-    observe({
-      print(head(plot_df()))
-    })
     highcharter::highchart() %>%
       highcharter::hc_chart(type = "treemap") %>%
       highcharter::hc_add_series(
