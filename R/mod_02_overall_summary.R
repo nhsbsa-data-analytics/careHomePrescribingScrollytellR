@@ -55,8 +55,17 @@ mod_02_overall_summary_ui <- function(id) {
 
   tagList(
     h3(
-      "Estimated prescribing patterns of care home patients and non-care home ",
-      "patients"
+      "Estimated prescribing patterns of ",
+      tippy(
+        text = "older care home patients", 
+        tooltip = tooltip_text$care_home
+      ),
+      " compared to ",
+      tippy(
+        text = "older non-care home patients", 
+        tooltip = tooltip_text$non_care_home
+      ),
+      "."
     ),
     br(),
     fluidRow(
@@ -70,7 +79,12 @@ mod_02_overall_summary_ui <- function(id) {
     ),
     fluidRow(
       col_6(
-        p("Number of prescription items")
+        p(
+          tippy(
+            text = "Number of prescription items", 
+            tooltip = tooltip_text$items
+          )
+        )
       ),
       col_3(
         mod_value_box_ui(
@@ -91,7 +105,12 @@ mod_02_overall_summary_ui <- function(id) {
     ),
     fluidRow(
       col_6(
-        p("Drug cost")
+        p(
+          tippy(
+            text = "Total drug cost", 
+            tooltip = tooltip_text$cost
+          )
+        )
       ),
       col_3(
         mod_value_box_ui(
@@ -112,7 +131,12 @@ mod_02_overall_summary_ui <- function(id) {
     ),
     fluidRow(
       col_6(
-        p("Number of unique medicines")
+        p(
+          tippy(
+            text = "Number of unique medicines", 
+            tooltip = tooltip_text$unique_medicines
+          )
+        )
       ),
       col_3(
         mod_value_box_ui(
@@ -133,7 +157,12 @@ mod_02_overall_summary_ui <- function(id) {
     ),
     fluidRow(
       col_6(
-        p("Percentage of patients on ten or more unique medicines")
+        p(
+          tippy(
+            text = "Patients on ten or more unique mediciness", 
+            tooltip = tooltip_text$ten_or_more_unique_medicines
+          )
+        )
       ),
       col_3(
         mod_value_box_ui(
@@ -151,10 +180,6 @@ mod_02_overall_summary_ui <- function(id) {
           icon = ten_or_more_unique_medicines_per_patient_df$ICON
         )
       )
-    ),
-    p(
-      "Metrics are calculated as an average per patient per month.", 
-      style = "text-align: right"
     )
   )
 }
