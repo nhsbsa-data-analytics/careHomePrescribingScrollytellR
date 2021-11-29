@@ -15,7 +15,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      h6("Drugs prescribed to care home patients in England (2020/21)"),
+      h6("Drugs prescribed to older care home patients in England (2020/21)"),
       radioButtons(
         inputId = ns("metric"),
         label = "Metric",
@@ -39,6 +39,9 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
                                                                         output,
                                                                         session) {
   ns <- session$ns
+  hcoptslang <- getOption("highcharter.lang")
+  hcoptslang$thousandsSep <- ","
+  options(highcharter.lang = hcoptslang)
 
   # Had to create reactiveValues as radiobutton holds NULL
 
@@ -88,18 +91,25 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       )
   })
 
+
+
   # Format data for highcharter
   plot_df <- reactive({
     dplyr::bind_rows(
 
       # BNF chapter
       items_and_cost_per_bnf_chapter_and_section_df_1() %>%
-        dplyr::distinct(BNF_CHAPTER, PRP_LEVEL_1, COLOUR_LEVEL_1) %>%
-        dplyr::mutate(id = tolower(BNF_CHAPTER)) %>%
+        dplyr::distinct(BNF_CHAPTER, PRP_LEVEL_1, COLOUR_LEVEL_1, TOTAL_LEVEL_1) %>%
+        dplyr::mutate(
+          id = tolower(BNF_CHAPTER),
+          PRP_LEVEL_1_p = PRP_LEVEL_1 * 100
+        ) %>%
         dplyr::select(
           name = BNF_CHAPTER,
           id,
           value = PRP_LEVEL_1,
+          p = PRP_LEVEL_1_p,
+          value1 = TOTAL_LEVEL_1,
           color = COLOUR_LEVEL_1
         ),
 
@@ -107,50 +117,91 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       items_and_cost_per_bnf_chapter_and_section_df_1() %>%
         dplyr::mutate(
           parent = tolower(BNF_CHAPTER),
-          id = tolower(BNF_SECTION)
+          id = tolower(BNF_SECTION),
+          PRP_LEVEL_2_p = PRP_LEVEL_2 * 100
         ) %>%
         dplyr::select(
           parent,
           name = BNF_SECTION,
           id,
           value = PRP_LEVEL_2,
+          p = PRP_LEVEL_2_p,
+          value1 = TOTAL_LEVEL_2,
           color = COLOUR_LEVEL_2
         )
     ) %>%
       highcharter::list_parse()
   })
 
+  observe({
+    print(plot_df())
+  })
+
 
   output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
     req(input$metric)
-    highcharter::highchart() %>%
-      highcharter::hc_chart(type = "treemap") %>%
-      highcharter::hc_add_series(
-        data = plot_df(),
-        allowDrillToNode = TRUE,
-        levelIsConstant = FALSE,
-        textOverflow = "clip",
-        dataLabels = list(color = "white"),
-        levels = list(
-          list(
-            level = 1,
-            borderWidth = 3,
-            colorByPoint = TRUE,
-            dataLabels = list(
-              enabled = TRUE,
-              verticalAlign = "top",
-              align = "left",
-              color = "black",
-              style = list(fontSize = "12px", textOutline = FALSE)
+    # NOTE: Not sure how to deal with if statemetn with tooltip so here I am splitting two ways....
+    if (input$metric == "Items") {
+      highcharter::highchart() %>%
+        highcharter::hc_chart(type = "treemap") %>%
+        highcharter::hc_add_series(
+          data = plot_df(),
+          allowDrillToNode = TRUE,
+          levelIsConstant = FALSE,
+          textOverflow = "clip",
+          dataLabels = list(color = "white"),
+          levels = list(
+            list(
+              level = 1,
+              borderWidth = 3,
+              colorByPoint = TRUE,
+              dataLabels = list(
+                enabled = TRUE,
+                verticalAlign = "top",
+                align = "left",
+                color = "black",
+                style = list(fontSize = "12px", textOutline = FALSE)
+              )
+            ),
+            list(
+              level = 2,
+              borderWidth = 0.2,
+              dataLabels = list(enabled = FALSE)
             )
-          ),
-          list(
-            level = 2,
-            borderWidth = 0.2,
-            dataLabels = list(enabled = FALSE)
           )
-        )
-      )
+        ) %>%
+        highcharter::hc_tooltip(pointFormat = "<b> % of total items:</b> {point.p: .1f}% <br> <b> Number of items: </b> {point.value1:,.0f}")
+    } else {
+      highcharter::highchart() %>%
+        highcharter::hc_chart(type = "treemap") %>%
+        highcharter::hc_add_series(
+          data = plot_df(),
+          allowDrillToNode = TRUE,
+          levelIsConstant = FALSE,
+          textOverflow = "clip",
+          dataLabels = list(color = "white"),
+          levels = list(
+            list(
+              level = 1,
+              borderWidth = 3,
+              colorByPoint = TRUE,
+              dataLabels = list(
+                enabled = TRUE,
+                verticalAlign = "top",
+                align = "left",
+                color = "black",
+                style = list(fontSize = "12px", textOutline = FALSE)
+              )
+            ),
+            list(
+              level = 2,
+              borderWidth = 0.2,
+              dataLabels = list(enabled = FALSE)
+            )
+          )
+        ) %>%
+        highcharter::hc_tooltip(pointFormat = "<b> % of total NIC (£):</b> {point.p: .1f}% <br> <b> NIC (£): </b>£ {point.value1:,.0f}")
+    }
   })
 }
 
