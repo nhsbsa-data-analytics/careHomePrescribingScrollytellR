@@ -17,8 +17,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
         "Age band and gender of estimated care home patients in England ",
         "(2020/21)"
       ),
-      column(
-        width = 6,
+      col_6(
         selectInput(
           inputId = ns("level"),
           label = "Level",
@@ -26,8 +25,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
           width = "100%"
         )
       ),
-      column(
-        width = 6,
+      col_6(
         selectInput(
           inputId = ns("geography"),
           label = "Geography",
