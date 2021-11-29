@@ -60,7 +60,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
     dplyr::filter(
       !is.na(LEVEL),
       !is.na(GEOGRAPHY),
-      !is.na(PDS_GENDER)
+      !is.na(GENDER)
     )
     
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
@@ -92,7 +92,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
       dplyr::group_by(YEAR_MONTH) %>%
       dplyr::mutate(p = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
       dplyr::ungroup() %>%
-      dplyr::mutate(p = p * ifelse(PDS_GENDER == "Male", 1, -1))
+      dplyr::mutate(p = p * ifelse(GENDER == "Male", 1, -1))
   })
   
   # Pull the max p
@@ -105,15 +105,15 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
   plot_series_list <- reactive({
     req(input$geography)
     plot_df() %>%
-      tidyr::expand(YEAR_MONTH, AGE_BAND, PDS_GENDER) %>%
+      tidyr::expand(YEAR_MONTH, AGE_BAND, GENDER) %>%
       dplyr::left_join(plot_df()) %>%
       dplyr::mutate(p = tidyr::replace_na(p)) %>%
-      dplyr::group_by(AGE_BAND, PDS_GENDER) %>%
+      dplyr::group_by(AGE_BAND, GENDER) %>%
       dplyr::do(data = list(sequence = .$p)) %>%
       dplyr::ungroup() %>%
-      dplyr::group_by(PDS_GENDER) %>%
+      dplyr::group_by(GENDER) %>%
       dplyr::do(data = .$data) %>%
-      dplyr::mutate(name = PDS_GENDER) %>%
+      dplyr::mutate(name = GENDER) %>%
       highcharter::list_parse()
     
   })
