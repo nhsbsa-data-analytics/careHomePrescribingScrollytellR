@@ -69,3 +69,15 @@ should be no wider as per NHS guidelines) */
 
 /* Force scrolly sections to be the full width of the container-fluid ^ */
 .scrolly-sections { width: 100% !important; }
+
+
+.scrolly-graph {
+	margin: 0px !important;
+	padding: 0px;
+	z-index: 1;
+	top: 10px;
+	font-size: 16px !important;
+	background-color: var(--nhs-pale-grey);
+	opacity: 0.8;
+	width: 50%;
+}
