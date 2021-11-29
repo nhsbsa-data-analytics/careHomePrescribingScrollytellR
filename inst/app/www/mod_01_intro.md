@@ -2,7 +2,7 @@
 
 In this article we provide unique insight into primary care prescribing patterns for older care home residents in England during 2020/21.
 
-We estimate that there were a monthly average of **284 thousand care home patients**, aged 65+ years receiving prescriptions each month in 2020/21. They received an estimated 34 million prescription items at a cost of **£318 million.** 
+We estimate that there was a monthly average of **284 thousand care home patients**, aged 65+ years receiving prescriptions each month in 2020/21. They received an estimated 34 million prescription items at a cost of **£318 million.** 
 
 This accounts for around **X%** of patients aged 65+ years receiving prescription items and **£yy** of the total primary care drug spend for the 65+ population during 2020/21. 
 
