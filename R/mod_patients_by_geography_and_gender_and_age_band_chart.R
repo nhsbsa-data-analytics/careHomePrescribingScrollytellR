@@ -60,7 +60,6 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
       !is.na(PDS_GENDER)
     )
     
-  
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
   
   # Filter the data based on the level

@@ -23,7 +23,9 @@ mod_02_overall_summary_ui <- function(id) {
   cost_per_patient_df <-
     careHomePrescribingScrollytellR::cost_per_patient_df %>%
     dplyr::filter(is.na(YEAR_MONTH)) %>%
-    dplyr::mutate(COST_PER_PATIENT = round(COST_PER_PATIENT, 0)) %>%
+    dplyr::mutate(
+      COST_PER_PATIENT = paste0("£", round(COST_PER_PATIENT, 0))
+    ) %>%
     tidyr::pivot_wider(names_from = CH_FLAG, values_from = COST_PER_PATIENT) %>%
     dplyr::mutate(ICON = "coins")
 
@@ -38,35 +40,43 @@ mod_02_overall_summary_ui <- function(id) {
       values_from = UNIQUE_MEDICINES_PER_PATIENT
     ) %>%
     dplyr::mutate(ICON = "tablets")
-
+  
+  ten_or_more_unique_medicines_per_patient_df <-
+    careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_df %>%
+    dplyr::filter(is.na(YEAR_MONTH)) %>%
+    dplyr::mutate(
+      PCT_PATIENTS_TEN_OR_MORE = paste0(round(PCT_PATIENTS_TEN_OR_MORE, 0), "%")
+    ) %>%
+    tidyr::pivot_wider(
+      names_from = CH_FLAG,
+      values_from = PCT_PATIENTS_TEN_OR_MORE
+    ) %>%
+    dplyr::mutate(ICON = "tablets")
 
   tagList(
-    h3("Estimated prescribing patterns of care home residents and older care home residents"),
-    p(
-      "Care home patients receive more prescription items than non-care home patients",
-      " aged 65+ receiving prescriptions. We estimate",
-      tags$b("10 prescription items"), " per patient per month at an estimated cost of £90 per patient per month.",
-      "This compares to 6 items per patient per month at a cost of £47 per patient per month for non-care home patients aged 65+ receiving prescriptions."
+    h3(
+      "Estimated prescribing patterns of care home patients and non-care home ",
+      "patients"
     ),
-    p("Correspondingly the estimated volumne and number of medicines per patient per month is higher."),
-    # h6(em("All metrics are calculated per patient, per month")),
-    # h6(em("Values are shown 65+ care home residents receiving prescription, and 65+ patients receiving prescriptions")),
     br(),
     fluidRow(
       column(
-        width = 6, #
-        h6("65+ care home residents receiving prescriptions", style = "margin-bottom: 10px")
+        width = 3,
+        offset = 6,
+        h6("Care home")
       ),
       column(
-        width = 6, #
-        h6("65+ non-care home patients receiving prescriptions", style = "text-indent:3px;margin-bottom: 10px")
+        width = 3,
+        h6("Non-care home")
       )
     ),
     fluidRow(
-      p("Average number of prescription items per patient per month", style = "text-indent: 20px;margin-bottom: 10px"),
       column(
-        width = 6, offset = 0, style = "padding-left:0px", #
-        # p("Average number of prescription items per patient per month in care home"),
+        width = 6,
+        p("Number of prescription items")
+      ),
+      column(
+        width = 3, 
         mod_value_box_ui(
           id = "1",
           care_home = TRUE,
@@ -75,8 +85,7 @@ mod_02_overall_summary_ui <- function(id) {
         ),
       ),
       column(
-        width = 6, #
-        # p("Average number of prescription items per patient per month"),
+        width = 3,
         mod_value_box_ui(
           id = "2",
           care_home = FALSE,
@@ -86,10 +95,12 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
-      p("Average drug cost per patient per month (£)", style = "text-indent: 20px;margin-bottom: 10px"),
       column(
-        width = 6, offset = 0, style = "padding-left:0px", #
-        # p("Average drug cost per patient in care home"),
+        width = 6,
+        p("Drug cost")
+      ),
+      column(
+        width = 3, 
         mod_value_box_ui(
           id = "3",
           care_home = TRUE,
@@ -98,8 +109,7 @@ mod_02_overall_summary_ui <- function(id) {
         )
       ),
       column(
-        width = 6,
-        # p("Average drug cost per patient"),
+        width = 3,
         mod_value_box_ui(
           id = "4",
           care_home = FALSE,
@@ -109,10 +119,12 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
-      p("Average number of unique medicines per patient per month", style = "text-indent: 20px;margin-bottom: 10px"),
       column(
-        width = 6, offset = 0, style = "padding-left:0px", #
-        # p("Average number of unique medicines per patient per month in care home"),
+        width = 6,
+        p("Number of unique medicines")
+      ),
+      column(
+        width = 3, 
         mod_value_box_ui(
           id = "5",
           care_home = TRUE,
@@ -121,8 +133,7 @@ mod_02_overall_summary_ui <- function(id) {
         )
       ),
       column(
-        width = 6,
-        # p("Average number of unique medicines per patient"),
+        width = 3,
         mod_value_box_ui(
           id = "6",
           care_home = FALSE,
@@ -132,10 +143,12 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
-      p("Ten or more unique medicines", style = "text-indent: 20px;margin-bottom: 10px"),
       column(
-        width = 6, offset = 0, style = "padding-left:0px", #
-        # p("Average number of unique medicines per patient per month in care home"),
+        width = 6,
+        p("Percentage of patients on ten or more unique medicines")
+      ),
+      column(
+        width = 3, 
         mod_value_box_ui(
           id = "7",
           care_home = TRUE,
@@ -144,15 +157,18 @@ mod_02_overall_summary_ui <- function(id) {
         )
       ),
       column(
-        width = 6,
-        # p("Average number of unique medicines per patient"),
+        width = 3,
         mod_value_box_ui(
           id = "8",
           care_home = FALSE,
-          value = ten_or_more_unique_medicines_per_patient_df$`Non Care home`,
+          value = ten_or_more_unique_medicines_per_patient_df$`Non care home`,
           icon = ten_or_more_unique_medicines_per_patient_df$ICON
         )
       )
+    ),
+    p(
+      "Metrics are calculated as an average per patient per month.", 
+      style = "text-align: right"
     )
   )
 }
