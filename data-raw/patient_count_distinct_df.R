@@ -11,7 +11,7 @@ fact_db <- dplyr::tbl(
 
 # Create gender flag per NHS_NO
 gender_flag <- fact_db %>%
-  dplyr::group_by(NHS_NO) %>% 
+  dplyr::group_by(NHS_NO) %>%
   dplyr::mutate(
     MALE_FLAG = dplyr::case_when(PDS_GENDER == 1 ~ 1, TRUE ~ 0),
     FEMALE_FLAG = dplyr::case_when(PDS_GENDER == 2 ~ 1, TRUE ~ 0),
@@ -28,19 +28,19 @@ gender_flag_patient <- gender_flag %>%
   )
 
 # Apply logic for each NHS_NO
- # Male & Female = Unknown 
- # Male & Unknown = Male
- # Female & Unknown = Female
+# Male & Female = Unknown
+# Male & Unknown = Male
+# Female & Unknown = Female
 gender_flag_db <- gender_flag_patient %>%
   dplyr::group_by(NHS_NO) %>%
   dplyr::mutate(
     GENDER_FLAG = dplyr::case_when(
-      MALE_FLAG > 0 & FEMALE_FLAG > 0 ~ 'UNKNOWN',
-      MALE_FLAG > 0 & UNKNOWN_FLAG > 0 ~ 'MALE',
-      FEMALE_FLAG > 0 & UNKNOWN_FLAG > 0 ~ 'FEMALE',
-      MALE_FLAG > 0 ~ 'MALE',
-      FEMALE_FLAG > 0 ~ 'FEMALE',
-      TRUE ~ 'UNKNOWN'
+      MALE_FLAG > 0 & FEMALE_FLAG > 0 ~ "UNKNOWN",
+      MALE_FLAG > 0 & UNKNOWN_FLAG > 0 ~ "MALE",
+      FEMALE_FLAG > 0 & UNKNOWN_FLAG > 0 ~ "FEMALE",
+      MALE_FLAG > 0 ~ "MALE",
+      FEMALE_FLAG > 0 ~ "FEMALE",
+      TRUE ~ "UNKNOWN"
     )
   )
 
@@ -83,7 +83,7 @@ ch_agg_ym_df <- fact_db %>%
   dplyr::group_by(CH_FLAG, YEAR_MONTH) %>%
   dplyr::summarise(
     TOTAL_PATIENTS = dplyr::n_distinct(NHS_NO),
-  ) %>% 
+  ) %>%
   dplyr::ungroup()
 
 # Add overall mean and format for highcharter
@@ -98,7 +98,7 @@ patient_count_distinct_df <- ch_agg_ym_df %>%
   dplyr::mutate(
     YEAR_MONTH = lubridate::ym(YEAR_MONTH),
     CH_FLAG = forcats::fct_rev(CH_FLAG)
-  )  
+  )
 
 # Add to data-raw/
 usethis::use_data(patient_count_distinct_df, overwrite = TRUE)
