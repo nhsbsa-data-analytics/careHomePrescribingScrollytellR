@@ -13,7 +13,10 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      h6("Age band and gender of estimated care home residents in England (2020/21)"),
+      h6(
+        "Age band and gender of estimated care home patients in England ",
+        "(2020/21)"
+      ),
       column(
         width = 6,
         selectInput(
