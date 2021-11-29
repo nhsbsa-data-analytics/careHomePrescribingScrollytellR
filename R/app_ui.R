@@ -22,23 +22,18 @@ app_ui <- function(request) {
           ),
           br(),
           scrollytell::scrolly_section(
-            id = "overall_summary",
-            mod_overall_summary_ui(id = "overall_summary_1")
+            id = "02_overall_summary",
+            mod_02_overall_summary_ui("02_overall_summary_1")
           ),
           br(),
           scrollytell::scrolly_section(
-            id = "items_per_patient",
-            mod_items_per_patient_chart_ui("items_per_patient_chart_1")
+            id = "patients_by_geography_and_gender_and_age_band_chart",
+            mod_patients_by_geography_and_gender_and_age_band_chart_ui("patients_by_geography_and_gender_and_age_band_chart_1")
           ),
           br(),
           scrollytell::scrolly_section(
-            id = "patients_by_gender_and_age_band",
-            mod_patients_by_gender_and_age_band_chart_ui("patients_by_gender_and_age_band_chart_1")
-          ),
-          br(),
-          scrollytell::scrolly_section(
-            id = "bnf_carehome_item",
-            mod_bnf_ch_item_treemap_ui("bnf_ch_item_treemap_1")
+            id = "items_and_cost_per_bnf_chapter_and_section_chart",
+            mod_items_and_cost_per_bnf_chapter_and_section_chart_ui("items_and_cost_per_bnf_chapter_and_section_chart_1")
           )
         )
       )
