@@ -57,11 +57,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
   # Filter to relevant data for this chart
   patients_by_geography_and_gender_and_age_band_df <- 
     careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-    dplyr::filter(
-      !is.na(LEVEL),
-      !is.na(GEOGRAPHY),
-      !is.na(PDS_GENDER)
-    )
+    dplyr::filter(dplyr::across(c(LEVEL, GEOGRAPHY, PDS_GENDER), ~ !is.na(.x)))
     
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
   
@@ -77,10 +73,10 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
   observeEvent(
     eventExpr = level_df(), 
     handlerExpr = {
-      geography_choices <- level_df() %>% 
-        dplyr::distinct(GEOGRAPHY) %>% 
-        dplyr::pull()
-      updateSelectInput(inputId = "geography", choices = geography_choices) 
+      updateSelectInput(
+        inputId = "geography", 
+        choices = unique(level_df()$GEOGRAPHY)
+      ) 
     }
   )
   
