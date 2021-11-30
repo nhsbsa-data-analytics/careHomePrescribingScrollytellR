@@ -38,7 +38,8 @@ Imports:
     NHSRtheme,
     tidyr,
     scrollytell,
-    tippy
+    tippy,
+    tinter
 Remotes:
     nhsbsa-data-analytics/nhsbsaR,
     nhsbsa-data-analytics/addressMatchR,
