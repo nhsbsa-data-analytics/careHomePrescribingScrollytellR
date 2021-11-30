@@ -37,7 +37,9 @@ Imports:
     shinyWidgets,
     NHSRtheme,
     tidyr,
-    scrollytell
+    scrollytell,
+    tippy,
+    tinter
 Remotes:
     nhsbsa-data-analytics/nhsbsaR,
     nhsbsa-data-analytics/addressMatchR,
