@@ -18,8 +18,7 @@ mod_99_footer_ui <- function(id) {
       align = "center",
       fluidRow(
         style = "background-color: #D8DDE0; max-width: 950px; padding: 15px",
-        column(
-          width = 9,
+        col_9(
           align = "left",
           p(
             "Developed by the ",
@@ -39,8 +38,7 @@ mod_99_footer_ui <- function(id) {
             "."
           )
         ),
-        column(
-          width = 3,
+        col_3(
           align = "right",
           p("© APLv2")
         )

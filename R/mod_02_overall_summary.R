@@ -39,7 +39,7 @@ mod_02_overall_summary_ui <- function(id) {
       names_from = CH_FLAG,
       values_from = UNIQUE_MEDICINES_PER_PATIENT
     ) %>%
-    dplyr::mutate(ICON = "tablets")
+    dplyr::mutate(ICON = "pills")
   
   ten_or_more_unique_medicines_per_patient_df <-
     careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_df %>%
@@ -51,32 +51,42 @@ mod_02_overall_summary_ui <- function(id) {
       names_from = CH_FLAG,
       values_from = PCT_PATIENTS_TEN_OR_MORE
     ) %>%
-    dplyr::mutate(ICON = "tablets")
+    dplyr::mutate(ICON = "pills")
 
   tagList(
-    h3(
-      "Estimated prescribing patterns of care home patients and non-care home ",
-      "patients"
+    h4(
+      "Estimated prescribing patterns of ",
+      tippy(
+        text = "older care home patients", 
+        tooltip = tooltip_text$care_home
+      ),
+      " compared to ",
+      tippy(
+        text = "older non-care home patients", 
+        tooltip = tooltip_text$non_care_home
+      ),
+      "."
     ),
     br(),
     fluidRow(
-      column(
-        width = 3,
+      col_3(
         offset = 6,
         h6("Care home")
       ),
-      column(
-        width = 3,
+      col_3(
         h6("Non-care home")
       )
     ),
     fluidRow(
-      column(
-        width = 6,
-        p("Number of prescription items")
+      col_6(
+        p(
+          tippy(
+            text = "Number of prescription items", 
+            tooltip = tooltip_text$items
+          )
+        )
       ),
-      column(
-        width = 3, 
+      col_3(
         mod_value_box_ui(
           id = "1",
           care_home = TRUE,
@@ -84,8 +94,7 @@ mod_02_overall_summary_ui <- function(id) {
           icon = items_per_patient_df$ICON
         ),
       ),
-      column(
-        width = 3,
+      col_3(
         mod_value_box_ui(
           id = "2",
           care_home = FALSE,
@@ -95,12 +104,15 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
-      column(
-        width = 6,
-        p("Drug cost")
+      col_6(
+        p(
+          tippy(
+            text = "Total drug cost", 
+            tooltip = tooltip_text$cost
+          )
+        )
       ),
-      column(
-        width = 3, 
+      col_3(
         mod_value_box_ui(
           id = "3",
           care_home = TRUE,
@@ -108,8 +120,7 @@ mod_02_overall_summary_ui <- function(id) {
           icon = cost_per_patient_df$ICON
         )
       ),
-      column(
-        width = 3,
+      col_3(
         mod_value_box_ui(
           id = "4",
           care_home = FALSE,
@@ -119,12 +130,15 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
-      column(
-        width = 6,
-        p("Number of unique medicines")
+      col_6(
+        p(
+          tippy(
+            text = "Number of unique medicines", 
+            tooltip = tooltip_text$unique_medicines
+          )
+        )
       ),
-      column(
-        width = 3, 
+      col_3(
         mod_value_box_ui(
           id = "5",
           care_home = TRUE,
@@ -132,8 +146,7 @@ mod_02_overall_summary_ui <- function(id) {
           icon = unique_medicines_per_patient_df$ICON
         )
       ),
-      column(
-        width = 3,
+      col_3(
         mod_value_box_ui(
           id = "6",
           care_home = FALSE,
@@ -143,12 +156,15 @@ mod_02_overall_summary_ui <- function(id) {
       )
     ),
     fluidRow(
-      column(
-        width = 6,
-        p("Percentage of patients on ten or more unique medicines")
+      col_6(
+        p(
+          tippy(
+            text = "Patients on ten or more unique medicines", 
+            tooltip = tooltip_text$ten_or_more_unique_medicines
+          )
+        )
       ),
-      column(
-        width = 3, 
+      col_3(
         mod_value_box_ui(
           id = "7",
           care_home = TRUE,
@@ -156,8 +172,7 @@ mod_02_overall_summary_ui <- function(id) {
           icon = ten_or_more_unique_medicines_per_patient_df$ICON
         )
       ),
-      column(
-        width = 3,
+      col_3(
         mod_value_box_ui(
           id = "8",
           care_home = FALSE,
@@ -165,10 +180,6 @@ mod_02_overall_summary_ui <- function(id) {
           icon = ten_or_more_unique_medicines_per_patient_df$ICON
         )
       )
-    ),
-    p(
-      "Metrics are calculated as an average per patient per month.", 
-      style = "text-align: right"
     )
   )
 }
