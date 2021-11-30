@@ -54,7 +54,7 @@ mod_02_overall_summary_ui <- function(id) {
     dplyr::mutate(ICON = "tablets")
 
   tagList(
-    h3(
+    h4(
       "Estimated prescribing patterns of ",
       tippy(
         text = "older care home patients", 
@@ -159,7 +159,7 @@ mod_02_overall_summary_ui <- function(id) {
       col_6(
         p(
           tippy(
-            text = "Patients on ten or more unique mediciness", 
+            text = "Patients on ten or more unique medicines", 
             tooltip = tooltip_text$ten_or_more_unique_medicines
           )
         )

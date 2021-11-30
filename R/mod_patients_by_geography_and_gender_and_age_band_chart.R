@@ -14,7 +14,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        "Age band and gender of estimated care home patients in England ",
+        "Age band and gender of estimated older care home patients in England ",
         "(2020/21)"
       ),
       col_6(
