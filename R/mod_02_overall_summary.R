@@ -39,7 +39,7 @@ mod_02_overall_summary_ui <- function(id) {
       names_from = CH_FLAG,
       values_from = UNIQUE_MEDICINES_PER_PATIENT
     ) %>%
-    dplyr::mutate(ICON = "tablets")
+    dplyr::mutate(ICON = "pills")
   
   ten_or_more_unique_medicines_per_patient_df <-
     careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_df %>%
@@ -51,7 +51,7 @@ mod_02_overall_summary_ui <- function(id) {
       names_from = CH_FLAG,
       values_from = PCT_PATIENTS_TEN_OR_MORE
     ) %>%
-    dplyr::mutate(ICON = "tablets")
+    dplyr::mutate(ICON = "pills")
 
   tagList(
     h4(
