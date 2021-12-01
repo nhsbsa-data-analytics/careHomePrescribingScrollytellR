@@ -10,6 +10,21 @@
 mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
+    h4("Demographic estimates for older care home patients receiving prescriptions"),
+    p(
+      tags$b("Two thirds"), " are ", tags$b("female"), "(66%) and", tags$b("one quarter"), "are", tags$b("female aged 90+ years"), ". This is",
+      "reasonably consistent across local authorities and STPs."
+    ),
+    p(
+      "The age and gender profile is broadly comparable to",
+      a(
+        "ONS Estimates of care home patients from April 2020.",
+        href = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales",
+        target = "_blank"
+      ),
+    ),
+    br(),
+    br(),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
@@ -20,7 +35,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       col_6(
         selectInput(
           inputId = ns("level"),
-          label = "Level",
+          label = "Geography",
           choices = c("Overall", "Region", "STP", "Local Authority"),
           width = "100%"
         )
@@ -28,7 +43,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       col_6(
         selectInput(
           inputId = ns("geography"),
-          label = "Geography",
+          label = "Sub-geography",
           choices = NULL, # dynamically generated
           width = "100%"
         )
@@ -69,9 +84,9 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
     eventExpr = level_df(),
     handlerExpr = {
       updateSelectInput(
-        inputId = "geography", 
+        inputId = "geography",
         choices = unique(level_df()$GEOGRAPHY)
-      ) 
+      )
     }
   )
 
@@ -96,10 +111,10 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   plot_series_list <- reactive({
     req(input$geography)
     plot_df() %>%
-    tidyr::complete(YEAR_MONTH, AGE_BAND, PDS_GENDER,
+      tidyr::complete(YEAR_MONTH, AGE_BAND, GENDER,
         fill = list(value = 0)
       ) %>%
-      dplyr::group_by(AGE_BAND, PDS_GENDER) %>%
+      dplyr::group_by(AGE_BAND, GENDER) %>%
       dplyr::do(data = list(sequence = .$p)) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(GENDER) %>%
@@ -121,14 +136,16 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
       ) %>%
       theme_nhsbsa(palette = "gender") %>%
       highcharter::hc_xAxis(
+        title = list(text = "Age group"),
         categories = sort(unique(plot_df()$AGE_BAND)),
         reversed = FALSE
       ) %>%
       highcharter::hc_yAxis(
+        title = list(text = "Percentage of older care home patients (%)"),
         min = -ceiling(max_p() / 5) * 5,
         max = ceiling(max_p() / 5) * 5,
         labels = list(
-          formatter = highcharter::JS("function(){ return Math.abs(this.value) + '%' ;}")
+          formatter = highcharter::JS("function(){ return Math.abs(this.value);}")
         )
       ) %>%
       highcharter::hc_tooltip(

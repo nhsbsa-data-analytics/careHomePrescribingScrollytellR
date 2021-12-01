@@ -23,7 +23,7 @@ fact_db <- fact_db %>%
   left_join(
     y = postcode_db,
     by = c("PCD_NO_SPACES" = "POSTCODE")
-  ) 
+  )
 
 # Get a single gender and age for the period
 patient_db <- fact_db %>%
@@ -98,7 +98,7 @@ patients_by_region_and_gender_and_age_band_df <-
       ungroup(),
     # By year month
     y = fact_db %>%
-    group_by(YEAR_MONTH, GENDER, AGE_BAND, GEOGRAPHY = PCD_REGION_NAME) %>%
+      group_by(YEAR_MONTH, GENDER, AGE_BAND, GEOGRAPHY = PCD_REGION_NAME) %>%
       summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
       ungroup()
   ) %>%
@@ -123,7 +123,7 @@ patients_by_stp_and_gender_and_age_band_df <-
       ungroup(),
     # By year month
     y = fact_db %>%
-     group_by(YEAR_MONTH, GENDER, AGE_BAND, GEOGRAPHY = PCD_STP_NAME) %>%
+      group_by(YEAR_MONTH, GENDER, AGE_BAND, GEOGRAPHY = PCD_STP_NAME) %>%
       summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
       ungroup()
   ) %>%

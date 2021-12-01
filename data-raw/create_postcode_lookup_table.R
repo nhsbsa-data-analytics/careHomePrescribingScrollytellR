@@ -13,6 +13,14 @@ geography_db <- con %>%
 postcode_db <- con %>%
   tbl(from = in_schema("DIM", sql("ONS_POSTCODE_DATA_DIM@dwcpb")))
 
+# Check if the table exists
+exists <- DBI::dbExistsTable(conn = con, name = "INT615_POSTCODE_LOOKUP")
+
+# Drop any existing table beforehand
+if (exists) {
+  DBI::dbRemoveTable(conn = con, name = "INT615_POSTCODE_LOOKUP")
+}
+
 # Get the latest postcode data for each postcode
 postcode_db <- postcode_db %>%
   group_by(POSTCODE) %>%
@@ -30,7 +38,7 @@ postcode_db <- postcode_db %>%
       filter(RELATIONSHIP == "LSOA_STP2021") %>%
       select(
         LSOA_CODE = CHILD_ONS_CODE,
-        PCD_STP_CODE = PARENT_ONS_CODE, 
+        PCD_STP_CODE = PARENT_ONS_CODE,
         PCD_STP_NAME = PARENT_NAME
       )
   ) %>%
@@ -40,7 +48,7 @@ postcode_db <- postcode_db %>%
       filter(RELATIONSHIP == "LSOA_WARD2020") %>%
       select(
         LSOA_CODE = CHILD_ONS_CODE,
-        PCD_WARD_CODE = PARENT_ONS_CODE, 
+        PCD_WARD_CODE = PARENT_ONS_CODE,
         PCD_WARD_NAME = PARENT_NAME
       )
   ) %>%
@@ -49,8 +57,8 @@ postcode_db <- postcode_db %>%
       filter(RELATIONSHIP == "WARD2020_LAD2020") %>%
       select(
         PCD_WARD_CODE = CHILD_ONS_CODE,
-        PCD_LA_CODE = PARENT_ONS_CODE, 
-        PCD_LA_NAME = PARENT_NAME
+        PCD_LAD_CODE = PARENT_ONS_CODE,
+        PCD_LAD_NAME = PARENT_NAME
       )
   ) %>%
   # Region
@@ -58,8 +66,8 @@ postcode_db <- postcode_db %>%
     y = geography_db %>%
       filter(RELATIONSHIP == "LAD2020_REG2020") %>%
       select(
-        PCD_LA_CODE = CHILD_ONS_CODE,
-        PCD_REGION_CODE = PARENT_ONS_CODE, 
+        PCD_LAD_CODE = CHILD_ONS_CODE,
+        PCD_REGION_CODE = PARENT_ONS_CODE,
         PCD_REGION_NAME = PARENT_NAME
       )
   )
@@ -67,15 +75,15 @@ postcode_db <- postcode_db %>%
 # Reorder the columns
 postcode_db <- postcode_db %>%
   select(
-    POSTCODE, 
+    POSTCODE,
     PCD_REGION_CODE,
     PCD_REGION_NAME,
     PCD_STP_CODE,
     PCD_STP_NAME,
-    PCD_LA_CODE,
-    PCD_LA_NAME
+    PCD_LAD_CODE,
+    PCD_LAD_NAME
   )
-  
+
 # Write the table back to the DB
 postcode_db %>%
   nhsbsaR::oracle_create_table(table_name = "INT615_POSTCODE_LOOKUP")
