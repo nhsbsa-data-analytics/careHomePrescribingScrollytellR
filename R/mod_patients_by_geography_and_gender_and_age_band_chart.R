@@ -14,11 +14,10 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        "Age band and gender of estimated care home patients in England ",
+        "Age band and gender of estimated older care home patients in England ",
         "(2020/21)"
       ),
-      column(
-        width = 6,
+      col_6(
         selectInput(
           inputId = ns("level"),
           label = "Level",
@@ -26,8 +25,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
           width = "100%"
         )
       ),
-      column(
-        width = 6,
+      col_6(
         selectInput(
           inputId = ns("geography"),
           label = "Geography",
@@ -55,11 +53,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   # Filter to relevant data for this chart
   patients_by_geography_and_gender_and_age_band_df <-
     careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-    dplyr::filter(
-      !is.na(LEVEL),
-      !is.na(GEOGRAPHY),
-      !is.na(PDS_GENDER)
-    )
+    dplyr::filter(dplyr::across(c(LEVEL, GEOGRAPHY, GENDER), not_na))
 
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
@@ -74,10 +68,10 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   observeEvent(
     eventExpr = level_df(),
     handlerExpr = {
-      geography_choices <- level_df() %>%
-        dplyr::distinct(GEOGRAPHY) %>%
-        dplyr::pull()
-      updateSelectInput(inputId = "geography", choices = geography_choices)
+      updateSelectInput(
+        inputId = "geography", 
+        choices = unique(level_df()$GEOGRAPHY)
+      ) 
     }
   )
 
@@ -89,7 +83,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
       dplyr::group_by(YEAR_MONTH) %>%
       dplyr::mutate(p = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
       dplyr::ungroup() %>%
-      dplyr::mutate(p = p * ifelse(PDS_GENDER == "Male", 1, -1))
+      dplyr::mutate(p = p * ifelse(GENDER == "Male", 1, -1))
   })
 
   # Pull the max p
@@ -102,15 +96,15 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   plot_series_list <- reactive({
     req(input$geography)
     plot_df() %>%
-      tidyr::complete(YEAR_MONTH, AGE_BAND, PDS_GENDER,
+    tidyr::complete(YEAR_MONTH, AGE_BAND, PDS_GENDER,
         fill = list(value = 0)
       ) %>%
       dplyr::group_by(AGE_BAND, PDS_GENDER) %>%
       dplyr::do(data = list(sequence = .$p)) %>%
       dplyr::ungroup() %>%
-      dplyr::group_by(PDS_GENDER) %>%
+      dplyr::group_by(GENDER) %>%
       dplyr::do(data = .$data) %>%
-      dplyr::mutate(name = PDS_GENDER) %>%
+      dplyr::mutate(name = GENDER) %>%
       highcharter::list_parse()
   })
 

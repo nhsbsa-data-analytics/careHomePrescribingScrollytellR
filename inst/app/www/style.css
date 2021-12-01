@@ -81,3 +81,36 @@ should be no wider as per NHS guidelines) */
 	opacity: 0.8;
 	width: 50%;
 }
+
+/* Tippy stuff */
+
+.tippy-box {
+  font-size: 15px !important;
+}
+
+.tippy {
+  text-decoration: underline;
+}
+
+.tippy-content{
+	transition-duration: 325ms;
+	transition-delay: 54ms;
+	background: var(--nhs-pale-grey) none repeat scroll 0% 0%;
+	padding: 4px;
+	text-align: left;
+}
+
+.tippy-popper {
+  font-size: 15px !important;
+}
+
+.tippy-tooltip{
+    font-size: 15px !important;
+    color: var(--nhs-black);
+    background-color: var(--nhs-pale-grey) !important;
+}
+
+.tippy-backdrop {
+  background-color: var(--nhs-pale-grey);
+
+}

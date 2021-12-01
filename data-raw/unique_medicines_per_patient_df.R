@@ -18,9 +18,10 @@ year_month_db <- year_month_db %>%
 drug_db <- con %>%
   tbl(from = in_schema("SB_DIM", "CDR_DRUG_BNF_DIM"))
 
-# Filter to BNF chapters 1 - 10 in 2020/2021 and subset columns
+# Filter to BNF chapters 1 - 4 and 6 - 10 (inline with polypharmacy) in 
+# 2020/2021 and subset columns
 drug_db <- drug_db %>%
-  filter(BNF_CHAPTER %in% c(01, 02, 03, 04, 05, 06, 07, 08, 09, 10)) %>%
+  filter(BNF_CHAPTER %in% c(01, 02, 03, 04, 06, 07, 08, 09, 10)) %>%
   inner_join(year_month_db) %>%
   select(YEAR_MONTH, RECORD_ID, CHEMICAL_SUBSTANCE_BNF_DESCR)
 

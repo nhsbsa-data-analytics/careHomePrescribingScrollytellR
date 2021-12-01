@@ -42,6 +42,7 @@ Imports:
     NHSRtheme,
     tidyr,
     scrollytell,
+    tippy,
     tinter
 Remotes:
     nhsbsa-data-analytics/nhsbsaR,
