@@ -43,7 +43,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       col_6(
         selectInput(
           inputId = ns("geography"),
-          label = "Sub-geography",
+          label = "Sub Geography",
           choices = NULL, # dynamically generated
           width = "100%"
         )
@@ -141,7 +141,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
         reversed = FALSE
       ) %>%
       highcharter::hc_yAxis(
-        title = list(text = "Percentage of older care home patients (%)"),
+        title = list(text = "Number of care home residents as percentage of all care home residents (%)"),
         min = -ceiling(max_p() / 5) * 5,
         max = ceiling(max_p() / 5) * 5,
         labels = list(
