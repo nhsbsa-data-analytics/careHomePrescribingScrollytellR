@@ -130,9 +130,9 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       highcharter::list_parse()
   })
 
-  observe({
-    print(plot_df())
-  })
+  # observe({
+  #   print(plot_df())
+  # })
 
 
   output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
