@@ -21,9 +21,9 @@ fact_db <- con %>%
 fact_db <- fact_db %>%
   filter(CH_FLAG == 1) %>%
   left_join(
-    y = postcode_db, 
+    y = postcode_db,
     by = c("PCD_NO_SPACES" = "POSTCODE")
-  ) 
+  )
 
 # Get a single gender and age for the period
 patient_db <- fact_db %>%
@@ -113,7 +113,7 @@ patients_by_region_and_gender_and_age_band_df <-
   mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
   arrange(YEAR_MONTH)
 
-# Process for STP 
+# Process for STP
 patients_by_stp_and_gender_and_age_band_df <-
   union_all(
     # Overall
@@ -138,7 +138,7 @@ patients_by_stp_and_gender_and_age_band_df <-
   mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
   arrange(YEAR_MONTH)
 
-# Process for LA 
+# Process for LA
 patients_by_la_and_gender_and_age_band_df <-
   union_all(
     # Overall
@@ -173,7 +173,7 @@ patients_by_geography_and_gender_and_age_band_df <- bind_rows(
 
 # Add to data-raw/
 usethis::use_data(
-  patients_by_geography_and_gender_and_age_band_df, 
+  patients_by_geography_and_gender_and_age_band_df,
   overwrite = TRUE
 )
 

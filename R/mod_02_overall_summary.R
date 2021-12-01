@@ -40,7 +40,7 @@ mod_02_overall_summary_ui <- function(id) {
       values_from = UNIQUE_MEDICINES_PER_PATIENT
     ) %>%
     dplyr::mutate(ICON = "pills")
-  
+
   ten_or_more_unique_medicines_per_patient_df <-
     careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_df %>%
     dplyr::filter(is.na(YEAR_MONTH)) %>%
@@ -54,15 +54,24 @@ mod_02_overall_summary_ui <- function(id) {
     dplyr::mutate(ICON = "pills")
 
   tagList(
+    h3("Estimated prescribing patterns of care home residents and older care home residents"),
+    br(),
+    p(
+      "Care home patients receive more prescription items than non-care home patients",
+      " aged 65+ receiving prescriptions. We estimate",
+      tags$b("10 prescription items"), " per patient per month at an estimated cost of £90 per patient per month.",
+      "This compares to 6 items per patient per month at a cost of £47 per patient per month for non-care home patients aged 65+ receiving prescriptions."
+    ),
+    p("Correspondingly the estimated volumne and number of medicines per patient per month is higher."),
     h4(
       "Estimated prescribing patterns of ",
       tippy(
-        text = "older care home patients", 
+        text = "older care home patients",
         tooltip = tooltip_text$care_home
       ),
       " compared to ",
       tippy(
-        text = "older non-care home patients", 
+        text = "older non-care home patients",
         tooltip = tooltip_text$non_care_home
       ),
       "."
@@ -81,7 +90,7 @@ mod_02_overall_summary_ui <- function(id) {
       col_6(
         p(
           tippy(
-            text = "Number of prescription items", 
+            text = "Number of prescription items",
             tooltip = tooltip_text$items
           )
         )
@@ -107,7 +116,7 @@ mod_02_overall_summary_ui <- function(id) {
       col_6(
         p(
           tippy(
-            text = "Total drug cost", 
+            text = "Total drug cost",
             tooltip = tooltip_text$cost
           )
         )
@@ -133,7 +142,7 @@ mod_02_overall_summary_ui <- function(id) {
       col_6(
         p(
           tippy(
-            text = "Number of unique medicines", 
+            text = "Number of unique medicines",
             tooltip = tooltip_text$unique_medicines
           )
         )
@@ -159,7 +168,7 @@ mod_02_overall_summary_ui <- function(id) {
       col_6(
         p(
           tippy(
-            text = "Patients on ten or more unique medicines", 
+            text = "Patients on ten or more unique medicines",
             tooltip = tooltip_text$ten_or_more_unique_medicines
           )
         )

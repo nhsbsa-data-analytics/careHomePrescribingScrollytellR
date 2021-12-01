@@ -8,14 +8,12 @@
 #'
 #' @noRd
 #'
-tippy <- function(
-  tooltip,
-  text
-) {
+tippy <- function(tooltip,
+                  text) {
   tippy::tippy(
     tooltip = tooltip,
     text = text,
-    #placement = "right-end",
+    # placement = "right-end",
     interactive = "true",
     allowHTML = "true"
   )

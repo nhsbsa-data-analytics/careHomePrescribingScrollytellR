@@ -35,5 +35,4 @@ app_server <- function(input, output, session) {
   output$scrolly <- scrollytell::renderScrollytell({
     scrollytell::scrollytell()
   })
-
 }
