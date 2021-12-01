@@ -104,21 +104,6 @@ items_and_cost_per_bnf_chapter_and_section_df <-
   )
 
 
-# Add one more extra step for rounding figures as I haven't figured out yet how to manipulate using JS in hc_tooltip
-# for METRIC = Cost, round to M
-items_and_cost_per_bnf_chapter_and_section_df <- items_and_cost_per_bnf_chapter_and_section_df %>% 
-  mutate(TOTAL_LEVEL_1 = case_when(
-    METRIC == "Items" ~ TOTAL_LEVEL_1/1000,
-    METRIC == "Cost" ~ TOTAL_LEVEL_1/100000
-  ),
-  TOTAL_LEVEL_2 = case_when(
-    METRIC == "Items" ~ TOTAL_LEVEL_2/1000,
-    METRIC == "Cost" ~ TOTAL_LEVEL_2/100000
-  )
-  )
-  
-# for METRIC = Items, round to thousand
-
 # Add to data-raw/
 usethis::use_data(
   items_and_cost_per_bnf_chapter_and_section_df,

@@ -39,7 +39,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
                                                                         output,
                                                                         session) {
   ns <- session$ns
-  # comma separate setting.
+  # comma separate setting. (otherwise comma didn't show)
   hcoptslang <- getOption("highcharter.lang")
   hcoptslang$thousandsSep <- ","
   options(highcharter.lang = hcoptslang)
@@ -70,7 +70,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       dplyr::left_join(
         y = items_and_cost_per_bnf_chapter_and_section_df() %>%
           dplyr::distinct(BNF_CHAPTER) %>%
-          cbind(COLOUR_LEVEL_1 = nhsbsaR::palette_nhsbsa())
+          cbind(COLOUR_LEVEL_1 = nhsbsaR::palette_nhsbsa()) # Other change to differnet colour (not significant)
       ) %>%
       dplyr::mutate(
         PRP_LEVEL_2 = ifelse(is.na(PRP_LEVEL_2), 0, PRP_LEVEL_2),
@@ -102,15 +102,13 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       items_and_cost_per_bnf_chapter_and_section_df_1() %>%
         dplyr::distinct(BNF_CHAPTER, PRP_LEVEL_1, COLOUR_LEVEL_1, TOTAL_LEVEL_1) %>%
         dplyr::mutate(
-          id = tolower(BNF_CHAPTER),
-          PRP_LEVEL_1_p = PRP_LEVEL_1 * 100
+          id = tolower(BNF_CHAPTER)
         ) %>%
         dplyr::select(
           name = BNF_CHAPTER,
           id,
           value = PRP_LEVEL_1,
-          p = PRP_LEVEL_1_p,
-          value1 = TOTAL_LEVEL_1,
+          value_total = TOTAL_LEVEL_1,
           color = COLOUR_LEVEL_1
         ),
 
@@ -119,15 +117,13 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
         dplyr::mutate(
           parent = tolower(BNF_CHAPTER),
           id = tolower(BNF_SECTION),
-          PRP_LEVEL_2_p = PRP_LEVEL_2 * 100
         ) %>%
         dplyr::select(
           parent,
           name = BNF_SECTION,
           id,
           value = PRP_LEVEL_2,
-          p = PRP_LEVEL_2_p,
-          value1 = TOTAL_LEVEL_2,
+          value_total = TOTAL_LEVEL_2,
           color = COLOUR_LEVEL_2
         )
     ) %>%
@@ -141,7 +137,8 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
 
   output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
     req(input$metric)
-    # NOTE: Not sure how to deal with if statemetn with tooltip so here I am splitting two ways....
+
+    # NOTE: Not sure how to deal with if statemetn with tooltip so here I am splitting two ways.... (It could improve using JS)
     if (input$metric == "Items") {
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "treemap") %>%
@@ -171,7 +168,23 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             )
           )
         ) %>%
-        highcharter::hc_tooltip(pointFormat = "<b> % of total items:</b> {point.p: .1f}% <br> <b> Number of items: </b> {point.value1:,.0f}K")
+        # useful: https://www.titanwolf.org/Network/q/9ba6af5e-1a32-404f-aefb-bc9ce6daf227/y (wrap around highcharts.numberFormat)
+        highcharter::hc_tooltip(
+          useHTML = TRUE,
+          formatter = htmlwidgets::JS(
+            "
+            function(){
+            if (this.point.parent == null) {
+            outHTML = '<b> % of total items: </b>' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000) ,0) + 'K'
+            return(outHTML)
+            } else {
+            outHTML = '<b> % of total items in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000),0) + 'K'
+            return(outHTML)
+            }
+            }
+            "
+          )
+        )
     } else {
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "treemap") %>%
@@ -201,8 +214,22 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             )
           )
         ) %>%
-        highcharter::hc_tooltip(pointFormat = "<b> % of total NIC (£):</b> {point.p: .1f}% <br> <b> NIC (£): </b>£ {point.value1:,.0f}M")
-        # highcharter::hc_tooltip(formatter = htmlwidgets::JS("function(){return ( this.p, this.point.value1)}"))
+        highcharter::hc_tooltip(
+          useHTML = TRUE,
+          formatter = htmlwidgets::JS(
+            "
+            function(){
+            if (this.point.parent == null) {
+            outHTML = '<b> % of total Net Ingredient Cost (NIC (£)): </b>' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/ 100000),0) + 'M'
+            return(outHTML)
+            } else {
+            outHTML = '<b> % of total NIC in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/100000),0) + 'M'
+            return(outHTML)
+            }
+            }
+            "
+          )
+        )
     }
   })
 }
