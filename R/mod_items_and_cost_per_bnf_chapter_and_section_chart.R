@@ -27,6 +27,13 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
         outputId = ns("items_and_cost_per_bnf_chapter_and_section_chart"),
         height = "500px",
         width = "800px"
+      ),
+      br(),
+      br(),
+      highcharter::highchartOutput(
+        outputId = ns("items_and_cost_top_ch_para_chart"),
+        height = "500px",
+        width = "800px"
       )
     )
   )
@@ -231,6 +238,54 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           )
         )
     }
+  })
+
+
+  #### Process for the dumbbell chart
+  items_and_cost_top_20_df <- reactive({
+    careHomePrescribingScrollytellR::top20_df %>%
+      dplyr::filter(METRIC == input_metric()) %>%
+      dplyr::arrange(desc(BNF_PARAGRAPH))
+  })
+
+  observe({
+    print(items_and_cost_top_20_df)
+  })
+
+
+  # Need to work on it
+
+  output$items_and_cost_top_ch_para_chart <- highcharter::renderHighchart({
+    req(input$metric)
+
+    highcharter::hchart(
+      items_and_cost_top_20_df(),
+      type = "dumbbell",
+      highcharter::hcaes(
+        low = NONE_CH_P,
+        high = CH_P
+      ),
+      name = "Proportion of prescribing of care home residents and 65+ population",
+      lowColor = "grey",
+      color = "grey",
+      marker = list(fillColor = "#005EB8")
+    ) %>%
+      highcharter::hc_xAxis(
+        categories = unique(items_and_cost_top_20_df()$BNF_PARAGRAPH),
+        title = list(
+          text = "Top 20 medicines prescribed",
+          style = list(
+            fontSize = 15
+          )
+        )
+      ) %>%
+      highcharter::hc_yAxis(title = list(
+        text = "",
+        style = list(
+          fontSize = 15
+        )
+      )) %>%
+      highcharter::hc_chart(inverted = TRUE)
   })
 }
 

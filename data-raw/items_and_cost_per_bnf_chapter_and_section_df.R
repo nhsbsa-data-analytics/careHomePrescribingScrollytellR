@@ -29,7 +29,8 @@ drug_db <- drug_db %>%
   mutate(
     BNF_CHAPTER = paste0("(", BNF_CHAPTER, ") ", CHAPTER_DESCR),
     BNF_SECTION = paste0("(", BNF_SECTION, ") ", SECTION_DESCR),
-    BNF_PARAGRAPH = PARAGRAPH_DESCR) %>%
+    BNF_PARAGRAPH = PARAGRAPH_DESCR
+  ) %>%
   select(YEAR_MONTH, RECORD_ID, BNF_CHAPTER, BNF_SECTION, BNF_PARAGRAPH)
 
 # Create a lazy table from the care home FACT table
@@ -63,7 +64,7 @@ items_and_cost_per_bnf_chapter_and_section_df <- fact_db %>%
   collect()
 
 # Group any BNF sections ranked 8th or less into a group called "Other"
-items_and_cost_per_bnf_chapter_and_section_df <- 
+items_and_cost_per_bnf_chapter_and_section_df <-
   items_and_cost_per_bnf_chapter_and_section_df %>%
   group_by(METRIC, BNF_CHAPTER) %>%
   mutate(
@@ -80,7 +81,7 @@ items_and_cost_per_bnf_chapter_and_section_df <-
 
 
 # Get the total items and cost per BNF chapter (level 1)
-items_and_cost_per_bnf_chapter_df <- 
+items_and_cost_per_bnf_chapter_df <-
   items_and_cost_per_bnf_chapter_and_section_df %>%
   group_by(METRIC, BNF_CHAPTER) %>%
   summarise(TOTAL_LEVEL_1 = sum(TOTAL_LEVEL_2)) %>%
@@ -114,75 +115,81 @@ ch_items_and_cost_per_bnf_para_df <- fact_db %>%
     Items = sum(ITEM_COUNT),
     Cost = sum(ITEM_PAY_DR_NIC * 0.01)
   ) %>%
-  ungroup() %>% 
-  collect() %>% 
-  group_by(CH_FLAG) %>% 
-  mutate(Items_p = Items / sum(Items),
-         Cost_p = Cost / sum(Cost)) %>% 
+  ungroup() %>%
+  collect() %>%
+  group_by(CH_FLAG) %>%
+  mutate(
+    Items_p = Items / sum(Items),
+    Cost_p = Cost / sum(Cost)
+  ) %>%
   ungroup()
 
 # create Items related table
 # top 20 in ch
-ch_items_top_20_df <- ch_items_and_cost_per_bnf_para_df %>% 
-  filter(CH_FLAG == 1) %>% 
-  slice_max(Items_p, n = 20) %>% 
-  select(CH_FLAG, BNF_PARAGRAPH, Items_p) %>% 
-  mutate(CH_P = Items_p) %>% 
+ch_items_top_20_df <- ch_items_and_cost_per_bnf_para_df %>%
+  filter(CH_FLAG == 1) %>%
+  slice_max(Items_p, n = 20) %>%
+  select(CH_FLAG, BNF_PARAGRAPH, Items_p) %>%
+  mutate(CH_P = Items_p) %>%
   select(-c(Items_p, CH_FLAG))
 
 # pull top 20 to filter from non care home
-top20 <- ch_items_top_20_df %>% 
+top20 <- ch_items_top_20_df %>%
   pull(BNF_PARAGRAPH)
 
 # get equivalent percent in none-ch
-none_ch_item_20_df <- ch_items_and_cost_per_bnf_para_df %>% 
-  filter(CH_FLAG == 0 ) %>% 
-  filter(BNF_PARAGRAPH %in% top20) %>% 
-  select(CH_FLAG, BNF_PARAGRAPH, Items_p) %>% 
-  mutate(NONE_CH_P = Items_p) %>% 
-  select(-c(Items_p,CH_FLAG))
+none_ch_item_20_df <- ch_items_and_cost_per_bnf_para_df %>%
+  filter(CH_FLAG == 0) %>%
+  filter(BNF_PARAGRAPH %in% top20) %>%
+  select(CH_FLAG, BNF_PARAGRAPH, Items_p) %>%
+  mutate(NONE_CH_P = Items_p) %>%
+  select(-c(Items_p, CH_FLAG))
 
 # item df for dumbbell chart
-top20_item_df <- ch_items_top_20_df %>% 
-  inner_join(y = none_ch_item_20_df,
-             by = "BNF_PARAGRAPH") %>% 
+top20_item_df <- ch_items_top_20_df %>%
+  inner_join(
+    y = none_ch_item_20_df,
+    by = "BNF_PARAGRAPH"
+  ) %>%
   mutate(METRIC = "Items")
 
 
-# repeat again for NIC 
+# repeat again for NIC
 
-ch_nic_top_20_df <- ch_items_and_cost_per_bnf_para_df %>% 
-  filter(CH_FLAG == 1) %>% 
-  slice_max(Cost_p, n = 20) %>% 
-  select(CH_FLAG, BNF_PARAGRAPH, Cost_p) %>% 
-  mutate(CH_P = Cost_p) %>% 
+ch_nic_top_20_df <- ch_items_and_cost_per_bnf_para_df %>%
+  filter(CH_FLAG == 1) %>%
+  slice_max(Cost_p, n = 20) %>%
+  select(CH_FLAG, BNF_PARAGRAPH, Cost_p) %>%
+  mutate(CH_P = Cost_p) %>%
   select(-c(Cost_p, CH_FLAG))
 
 # pull top 20 to filter from non care home
-top20_nic <- ch_nic_top_20_df %>% 
+top20_nic <- ch_nic_top_20_df %>%
   pull(BNF_PARAGRAPH)
 
 # get equivalent percent in none-ch
-none_ch_cost_20_df <- ch_items_and_cost_per_bnf_para_df %>% 
-  filter(CH_FLAG == 0 ) %>% 
-  filter(BNF_PARAGRAPH %in% top20_nic) %>% 
-  select(CH_FLAG, BNF_PARAGRAPH, Cost_p) %>% 
-  mutate(NONE_CH_P = Cost_p) %>% 
-  select(-c(Cost_p,CH_FLAG))
+none_ch_cost_20_df <- ch_items_and_cost_per_bnf_para_df %>%
+  filter(CH_FLAG == 0) %>%
+  filter(BNF_PARAGRAPH %in% top20_nic) %>%
+  select(CH_FLAG, BNF_PARAGRAPH, Cost_p) %>%
+  mutate(NONE_CH_P = Cost_p) %>%
+  select(-c(Cost_p, CH_FLAG))
 
-top20_cost_df <- ch_nic_top_20_df %>% 
-  inner_join(y = none_ch_cost_20_df,
-             by = "BNF_PARAGRAPH") %>% 
-  mutate(METRIC = "Costs")
+top20_cost_df <- ch_nic_top_20_df %>%
+  inner_join(
+    y = none_ch_cost_20_df,
+    by = "BNF_PARAGRAPH"
+  ) %>%
+  mutate(METRIC = "Cost")
 
-# stack them 
+# stack them
 top20_df <- bind_rows(top20_cost_df, top20_item_df)
 
 
 
 # Add to data-raw/
 usethis::use_data(
-  items_and_cost_per_bnf_chapter_and_section_df, 
+  items_and_cost_per_bnf_chapter_and_section_df,
   overwrite = TRUE
 )
 
