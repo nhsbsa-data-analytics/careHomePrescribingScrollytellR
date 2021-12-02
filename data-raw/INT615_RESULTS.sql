@@ -2,19 +2,17 @@
 INT615 - Care Home Insight
 Additional Matching and Results
 Version 1.0
-
 Created by Adnan Shroufi
 Created on 09-11-2021
-
 AMENDMENTS:
 	--DATE------:--NAME-------------:--DETAILS-------------------------------------------------------------------------------------
     12-11-2021  :   Steven Buckley  :   Reviewed code base, adding some commentary
                                     :   Added additional limitations to the "patient_count_match" section
                                     :       only include properties that share a postcode with a care home location in AddressBase
                                     :       T.B.C (currently not applied) limit to properties with 5+ patients aged 65+ in x months
+    26-11-2021  :   Steven Buckley  :   Updated code to reflect amended to address matching where CQC data was incorporated
+                                    :   As CQC data is included in the string matching this can be removed from this script
                                         
-
-
 DESCRIPTION:
     NHS Prescription data does not identify whether or not the patient is a care home resident.
     It is proposed to infer this based on whether or not the patient's addess information aligns with a care home property.
@@ -28,16 +26,13 @@ DESCRIPTION:
     The results of each matching stage can be fed back to identify a single outcome for each address supplied by a patient
     
     These results can be linked back to the precsription item level data to flag, for each record, if the patient is inferred to be a care home patient or not
-
-
+    
 DEPENDENCIES:
         INT615_MATCH                :   Address level match results for each unique patient address
         INT615_PRESC_ADDRESS_BASE   :   unique patient address level dataset, including summary of token information
         INT615_PRESC_BASE           :   prescription form level dataset including cleansed address information
-        INT615_CQC_CAREHOMES        :   Dataset of CQC location data pulled from the CQC API
         
         
-
 OUTPUTS:
         INT615_RESULTS  :   Final output dataset at individual prescription item level
                         :   Each prescription item will be supplement with any care home flag information
@@ -54,67 +49,6 @@ create table INT615_RESULTS compress for query high as
 
 with
 
------SECTION START: CQC UPRN CLASSIFICATION: ACTIVE LOCATIONS-----------------------------------------------------------------------------------------
---for any UPRNs that are linked to active care home locations (REGISTRATIONSTATUS = 'Registered') take the max of the classifications
---if there is only one location this will reflect that locations classification
---if there are multiple active locations this will flag as Y if any of them had a Y
-active_uprn_classification as
-(
-select      UPRN,
-            max(NURSINGHOME)        as NURSING_HOME_FLAG,
-            max(RESIDENTIALHOME)    as RESIDENTIAL_HOME_FLAG
-from        DALL_REF.INT615_CQC_CAREHOMES
-where       1=1
-    and     CAREHOME = 'Y'
-    and     REGISTRATIONSTATUS = 'Registered'
-group by    UPRN
-)
---select * from active_uprn_classification;
------SECTION END: CQC UPRN CLASSIFICATION: ACTIVE LOCATIONS-------------------------------------------------------------------------------------------
-,
------SECTION START: CQC UPRN CLASSIFICATION: DEACTIVED LOCATIONS--------------------------------------------------------------------------------------
---for any UPRNs that have no active care home locations (do not exist in active_uprn_classification)
---look for the latest data for any deactivated locations (REGISTRATIONSTATUS = 'Deregistered')
---rank by DEREGISTRATIONDATE and take the classifications from the latest
-deactived_uprn_classification as
-(
-select      UPRN,
-            ID,
-            NURSINGHOME     as NURSING_HOME_FLAG,
-            RESIDENTIALHOME as RESIDENTIAL_HOME_FLAG,
-            --rank to show the latest deactived care home first, include the most recent registration and finally ID as tie-breaksers
-            rank() over (partition by UPRN order by to_date(DEREGISTRATIONDATE, 'YYYY-MM-DD') desc, to_date(REGISTRATIONDATE, 'YYYY-MM-DD') asc, ID asc) as RNK
-from        DALL_REF.INT615_CQC_CAREHOMES
-where       1=1
-    and     UPRN not in (select UPRN from active_uprn_classification)
-    and     CAREHOME = 'Y'
-    and     REGISTRATIONSTATUS = 'Deregistered'
-)
---select * from deactived_uprn_classification;
------SECTION END: CQC UPRN CLASSIFICATION: DEACTIVED LOCATIONS----------------------------------------------------------------------------------------
-,
------SECTION START: CQC UPRN CLASSIFICATION: COMBINED-------------------------------------------------------------------------------------------------
---combine the results for the active carehomes (active_uprn_classification) and deactived carehomes (deactived_uprn_classification)
---this will leave a single result per UPRN with the latest "best fit" classifications for nursing/residential homes
-combined_uprn_classification as
-(
-select      UPRN,
-            NURSING_HOME_FLAG,
-            RESIDENTIAL_HOME_FLAG
-from        active_uprn_classification
-union all
-select      UPRN,
-            NURSING_HOME_FLAG,
-            RESIDENTIAL_HOME_FLAG
-from        deactived_uprn_classification
-where       1=1
-    and     RNK = 1 --only take the top ranked (latest entry)
-)
---select * from combined_uprn_classification;
------SECTION END: CQC UPRN CLASSIFICATION: COMBINED-------
-
-,
-
 -----SECTION START: Identify care home address matches------------------------------------------------------------------------------------------------
 --following the address matching processes identify which patient addresses can be matched to a care home property
 --exclude any addresses containing anything that may strongly suggest the property is not a care home for the elderly
@@ -123,12 +57,15 @@ address_match as
 select  /*+ materialize */
             ADDRESS_RECORD_ID,
             CAREHOME_FLAG,
-            UPRN,
+            NURSING_HOME_FLAG,
+            RESIDENTIAL_HOME_FLAG,
+            ADDRESS_ID  as CH_ADDRESS_ID,
             MATCH_TYPE
 from        INT615_MATCH
 where       1=1
     and     CAREHOME_FLAG = 1
-    and     regexp_instr(PAT_ADDRESS, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
+    --the exclusion list can be less restrictive at this point as the address matching has suggested that this is a care home
+    and     regexp_instr(PAT_ADDRESS, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|HOLIDAY|NO FIXED ABODE') = 0
 )
 --select * from address_match;
 -----SECTION END: Identify care home address matches--------------------------------------------------------------------------------------------------
@@ -144,12 +81,15 @@ keyword_match as
 select  /*+ materialize */
             ADDRESS_RECORD_ID,
             1           as CAREHOME_FLAG,
-            null        as UPRN,
+            null        as NURSING_HOME_FLAG,
+            null        as RESIDENTIAL_HOME_FLAG,
+            null        as CH_ADDRESS_ID,
             'KEY_WORD'  as MATCH_TYPE
 from        INT615_MATCH
 where       1=1
     and     CAREHOME_FLAG = 0
-    and     regexp_instr(PAT_ADDRESS, 'NURSING|RESIDENTIAL HOME|RESPITE|ELDERLY|CONVALESCENT|REST HOME|CARE HOME') != 0
+    and     regexp_instr(PAT_ADDRESS, 'NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME|CARE HOME|CARE-HOME') != 0
+    --the exclusion list needs to be more restrictive at this point as there is no other support that this is a care home
     and     regexp_instr(PAT_ADDRESS, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
 )
 --select * from keyword_match;
@@ -167,7 +107,9 @@ patient_count_match as
 select  /*+ materialize */
             m.ADDRESS_RECORD_ID,
             1           as CAREHOME_FLAG,
-            null        as UPRN,
+            null        as NURSING_HOME_FLAG,
+            null        as RESIDENTIAL_HOME_FLAG,
+            null        as CH_ADDRESS_ID,
             'PATIENT_COUNT'  as MATCH_TYPE
 from        INT615_MATCH                m
 left join   INT615_PRESC_ADDRESS_BASE   pab     on  m.ADDRESS_RECORD_ID =   pab.ADDRESS_RECORD_ID
@@ -176,7 +118,8 @@ where       1=1
     and     pab.MAX_MONTHLY_PATIENTS >= 5
     --and     pab.MONTHS_5PLUS_PATIENTS >= 3  : to be confirmed
     and     m.PAT_POSTCODE in (select AB_POSTCODE from INT615_AB_PLUS_BASE)
-    and     regexp_instr(m.PAT_ADDRESS, 'NURSING|RESIDENTIAL HOME|RESPITE|ELDERLY|CONVALESCENT|REST HOME|CARE HOME') = 0
+    and     regexp_instr(m.PAT_ADDRESS, 'NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME|CARE HOME|CARE-HOME') = 0
+    --the exclusion list needs to be more restrictive at this point as there is no other support that this is a care home
     and     regexp_instr(m.PAT_ADDRESS, 'CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE') = 0
 )
 --select * from patient_count_match;
@@ -192,9 +135,11 @@ form_match_results as
 (
 select      pb.PF_ID,
             pb.ADDRESS_RECORD_ID,
-            coalesce(am.CAREHOME_FLAG, km.CAREHOME_FLAG, pcm.CAREHOME_FLAG, 0)  as CH_FLAG,
-            coalesce(am.UPRN, km.UPRN, pcm.UPRN)                                as UPRN,
-            coalesce(am.MATCH_TYPE, km.MATCH_TYPE, pcm.MATCH_TYPE, 'NO_MATCH')  as MATCH_TYPE
+            coalesce(am.CAREHOME_FLAG, km.CAREHOME_FLAG, pcm.CAREHOME_FLAG, 0)                      as CH_FLAG,
+            coalesce(am.NURSING_HOME_FLAG, km.NURSING_HOME_FLAG, pcm.NURSING_HOME_FLAG)             as NURSING_HOME_FLAG,
+            coalesce(am.RESIDENTIAL_HOME_FLAG, km.RESIDENTIAL_HOME_FLAG, pcm.RESIDENTIAL_HOME_FLAG) as RESIDENTIAL_HOME_FLAG,
+            coalesce(am.CH_ADDRESS_ID, km.CH_ADDRESS_ID, pcm.CH_ADDRESS_ID)                         as CH_ADDRESS_ID,
+            coalesce(am.MATCH_TYPE, km.MATCH_TYPE, pcm.MATCH_TYPE, 'NO_MATCH')                      as MATCH_TYPE
 from        INT615_PRESC_BASE   pb
 left join   address_match       am  on  pb.ADDRESS_RECORD_ID    =   am.ADDRESS_RECORD_ID
 left join   keyword_match       km  on  pb.ADDRESS_RECORD_ID    =   km.ADDRESS_RECORD_ID
@@ -223,16 +168,15 @@ select      fact.YEAR_MONTH,
             fact.CALC_PREC_DRUG_RECORD_ID,
             fact.EPS_FLAG,
             nvl(fmr.CH_FLAG,0) as CH_FLAG,
-            fmr.UPRN,
+            fmr.NURSING_HOME_FLAG,
+            fmr.RESIDENTIAL_HOME_FLAG,
+            fmr.CH_ADDRESS_ID,
             fmr.ADDRESS_RECORD_ID,
-            nvl(fmr.MATCH_TYPE, 'NO_MATCH') as MATCH_TYPE,
-            cuc.NURSING_HOME_FLAG,
-            cuc.RESIDENTIAL_HOME_FLAG
+            nvl(fmr.MATCH_TYPE, 'NO_MATCH') as MATCH_TYPE
 from        SB_AML.PX_FORM_ITEM_ELEM_COMB_FACT  fact  
-left join   form_match_results                  fmr     on  fact.PF_ID = fmr.PF_ID
+left join   form_match_results                  fmr     on  fact.PF_ID      = fmr.PF_ID
 left join   DALL_REF.INT615_PAPER_PFID_ADDRESS_20_21 ppr on fact.YEAR_MONTH = ppr.YEAR_MONTH
-                                                            and fact.PF_ID = ppr.PF_ID
-left join   COMBINED_UPRN_CLASSIFICATION    cuc         on  cuc.UPRN  =  fmr.UPRN
+                                                            and fact.PF_ID  = ppr.PF_ID
 where       1=1
     and     fact.YEAR_MONTH in (202004, 202005, 202006, 202007, 202008, 202009, 202010, 202011, 202012, 202101, 202102, 202103)
     and     fact.PATIENT_IDENTIFIED = 'Y'

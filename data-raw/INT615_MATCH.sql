@@ -2,19 +2,16 @@
 INT615 - Care Home Insight
 Address Matching (AddressBasePlus to NHS Prescriptions)
 Version 1.0
-
 Created by Adnan Shroufi
 Created on 09-11-2021
-
 AMENDMENTS:
 	--DATE------:--NAME-------------:--DETAILS-------------------------------------------------------------------------------------
     11-11-2021  :   Steven Buckley  :   Reviewed code base, adding some commentary
                                     :   Removed "results_base" section as this is replaced by INT615_PRESC_ADDRESS_BASE
                                     :   Moved the JW scoring to the "cross_join_diff" section to prevent it being required as a limiting clause
                                     :   Replaced "agg_one" and "agg_two" to include new tie-break for top scoring rank
+    26-11-2021  :   Steven Buckley  :   Amended script to run from different source tables that combine AddressBasePlus and CQC datasets
     
-
-
 DESCRIPTION:
     NHS Prescription data does not identify whether or not the patient is a care home resident.
     It is proposed to infer this based on whether or not the patient's addess information aligns with a care home property.
@@ -28,15 +25,13 @@ DESCRIPTION:
         +   using a "tokenised" version of the addresses, each individual word can be compared (where postcodes match)
         +   where the words are not exactly the same, string matching scores can be calculated to determine the potential quality of the match
         +   the individual scores for each word can be combined to find the best scoring match    
-
-
+        
 DEPENDENCIES:
         INT615_PRESC_ADDRESS_BASE   :   unique patient address level dataset, including summary of token information
         INT615_PRESC_TOKENS         :   tokenised records for each unique patient address
-        INT615_AB_PLUS_BASE         :   Subset of AddressBasePlus data limited to addresses at same postcode as identifed care homes
-		INT615_AB_PLUS_TOKENS		:	tokenised records for each AddressBasePlus record of interest
+        INT615_AB_PLUS_CQC_BASE     :   final subset of carehome address data limited to addresses at same postcode as identifed care homes
+		INT615_AB_PLUS_CQC_TOKENS   :   tokenised records for each address record of interest
         
-
 OUTPUTS:
         INT615_MATCH            :   Address level match results for each unique patient address
         
@@ -61,11 +56,13 @@ with
 exact_matches as (
 select  /*+ materialize */
         -- AddressBase info
-            ab.UPRN,
-            ab.UPRN_ID,
-            ab.CLASS,
+            ab.ADDRESS_ID,
+            ab.ADDRESS_LINE_ID,
             ab.CAREHOME_FLAG,
-            ab.AB_ADDRESS,
+            ab.NURSING_HOME_FLAG,
+            ab.RESIDENTIAL_HOME_FLAG,
+            ab.POSTCODE,
+            ab.ADDRESS,
         -- Prescribing info
             pab.ADDRESS_RECORD_ID,
         -- Match results
@@ -74,8 +71,8 @@ select  /*+ materialize */
             1                                               as  MATCH_SCORE,
             'EXACT'                                         as  MATCH_TYPE
 from        INT615_PRESC_ADDRESS_BASE   pab
-inner join  INT615_AB_PLUS_BASE         ab      on  ab.AB_ADDRESS   =   pab.PAT_ADDRESS
-                                                and ab.AB_POSTCODE  =   pab.PAT_POSTCODE
+inner join  INT615_AB_PLUS_CQC_BASE     ab      on  pab.PAT_ADDRESS     =   ab.ADDRESS
+                                                and pab.PAT_POSTCODE    =   ab.POSTCODE
 where       1=1
     --limit the patient address to only those that are align to care home postcode and have been tokenised
     and     pab.PAT_TOTAL is not null   
@@ -110,15 +107,15 @@ where       1=1
 --limit the AddressBase tokens to only include any addresses that match postcodes for patients to be match
 plus_tokens as (
 select  /*+ materialize */
-            UPRN,
-            UPRN_ID,
-            AB_POSTCODE,
-            AB_ADDRESS,
+            ADDRESS_ID,
+            ADDRESS_LINE_ID,
+            POSTCODE,
+            ADDRESS_TKN,
             INT_FLAG
-from        INT615_AB_PLUS_TOKENS
+from        INT615_AB_PLUS_CQC_TOKENS
 where       1=1
     --limit to records with postcodes that appear in the patient address dataset
-    and     AB_POSTCODE in (select distinct PAT_POSTCODE from PAT_TOKENS)
+    and     POSTCODE in (select distinct PAT_POSTCODE from PAT_TOKENS)
 )
 --select * from plus_tokens;                                 
 -----SECTION END: Limit AddressBase records for token matching----------------------------------------------------------------------------------------
@@ -130,17 +127,17 @@ where       1=1
 --the postcode, address token and string type (integer/number) must match
 cross_join_exact as (
 select  /*+ materialize */
-            ab.UPRN,
-            ab.UPRN_ID,
+            ab.ADDRESS_ID,
+            ab.ADDRESS_LINE_ID,
             pat.ADDRESS_RECORD_ID,
             pat.PAT_POSTCODE,
-            ab.AB_ADDRESS,
+            ab.ADDRESS_TKN,
             pat.PAT_ADDRESS,
             pat.INT_FLAG,
             case when pat.INT_FLAG = 1 then 4 else 1 end    as  JW    
 from        pat_tokens      pat
-inner join  plus_tokens     ab      on  pat.PAT_POSTCODE    =   ab.AB_POSTCODE
-                                    and pat.PAT_ADDRESS     =   ab.AB_ADDRESS
+inner join  plus_tokens     ab      on  pat.PAT_POSTCODE    =   ab.POSTCODE
+                                    and pat.PAT_ADDRESS     =   ab.ADDRESS_TKN
                                     and pat.INT_FLAG        =   ab.INT_FLAG
 )                                        
 --select * from cross_join_exact;
@@ -154,17 +151,17 @@ inner join  plus_tokens     ab      on  pat.PAT_POSTCODE    =   ab.AB_POSTCODE
 --these non-matching strings will be scored using jaro winkler similarity scoring to identify how accuracte the match is
 cross_join_diff as (
 select  /*+ materialize */
-            ab.UPRN,
-            ab.UPRN_ID,
+            ab.ADDRESS_ID,
+            ab.ADDRESS_LINE_ID,
             pat.ADDRESS_RECORD_ID,
             pat.PAT_POSTCODE,
-            ab.AB_ADDRESS,
+            ab.ADDRESS_TKN,
             pat.PAT_ADDRESS,
             pat.INT_FLAG,
-            utl_match.jaro_winkler(pat.PAT_ADDRESS, ab.AB_ADDRESS)  as  JW
+            utl_match.jaro_winkler(pat.PAT_ADDRESS, ab.ADDRESS_TKN)  as  JW
 from        pat_tokens      pat
-inner join  plus_tokens     ab      on  pat.PAT_POSTCODE     =   ab.AB_POSTCODE
-                                    and pat.PAT_ADDRESS     !=   ab.AB_ADDRESS
+inner join  plus_tokens     ab      on  pat.PAT_POSTCODE     =   ab.POSTCODE
+                                    and pat.PAT_ADDRESS     !=   ab.ADDRESS_TKN
                                     and pat.INT_FLAG         =   ab.INT_FLAG    
 where       1=1
     --only look at non-numeric tokens (numeric tokens need to be an exact match or no match)
@@ -172,11 +169,11 @@ where       1=1
     and     ab.INT_FLAG = 0
     --to limit matches that are very unlikely to score well
     --limit results to where there is some commoninality between datasets
-    and     (   substr(ab.ab_address, 1, 1) = substr(pat.pat_address, 1, 1) --initial letter matches across tokens
-            or  substr(ab.ab_address, 2, 1) = substr(pat.pat_address, 2, 1) --second letter matches across tokens
-            or  substr(ab.ab_address, length(ab.ab_address), 1)  =  substr(pat.pat_address, length(pat.pat_address), 1) --last letter matches across tokens
-            or  instr(ab.ab_address, pat.pat_address) > 1   --the Patient token is a substring of the AddressBase token
-            or  instr(pat.pat_address, ab.ab_address) > 1   --the AddressBase token is a substring of the Patient token
+    and     (   substr(ab.ADDRESS_TKN, 1, 1) = substr(pat.PAT_ADDRESS, 1, 1) --initial letter matches across tokens
+            or  substr(ab.ADDRESS_TKN, 2, 1) = substr(pat.PAT_ADDRESS, 2, 1) --second letter matches across tokens
+            or  substr(ab.ADDRESS_TKN, length(ab.ADDRESS_TKN), 1)  =  substr(pat.PAT_ADDRESS, length(pat.PAT_ADDRESS), 1) --last letter matches across tokens
+            or  instr(ab.ADDRESS_TKN, pat.PAT_ADDRESS) > 1   --the Patient token is a substring of the AddressBase token
+            or  instr(pat.PAT_ADDRESS, ab.ADDRESS_TKN) > 1   --the AddressBase token is a substring of the Patient token
             )
 )                             
 --select * from cross_join_diff;
@@ -189,8 +186,8 @@ where       1=1
 --for each patient address token find the best score from any token within each UPRN_ID
 jw_union as 
 (
-select      UPRN,
-            UPRN_ID,
+select      ADDRESS_ID,
+            ADDRESS_LINE_ID,
             ADDRESS_RECORD_ID,
             PAT_ADDRESS,
             max(JW)     as MAX_JW
@@ -204,8 +201,8 @@ from        (
             union all
             select * from cross_join_exact
             )
-group by    UPRN,
-            UPRN_ID,
+group by    ADDRESS_ID,
+            ADDRESS_LINE_ID,
             ADDRESS_RECORD_ID,
             PAT_ADDRESS
 )
@@ -220,14 +217,14 @@ group by    UPRN,
 -- for each Patient Address, rank the scores to identify which is the highest scoring match
 match_score as (
 select  /*+ materialize */
-            UPRN,
-            UPRN_ID,
+            ADDRESS_ID,
+            ADDRESS_LINE_ID,
             ADDRESS_RECORD_ID,    
             sum(MAX_JW)                                                             as  JW_SCORE,
             rank() over (partition by ADDRESS_RECORD_ID order by sum(MAX_JW) desc)  as  SCORE_RANK
 from        jw_union
-group by    UPRN,
-            UPRN_ID,
+group by    ADDRESS_ID,
+            ADDRESS_LINE_ID,
             ADDRESS_RECORD_ID
 )
 --select * from match_score;
@@ -244,9 +241,9 @@ group by    UPRN,
 match_score_tb as (
 select  /*+ materialize */
             ms.*,
-            rank() over (partition by ms.ADDRESS_RECORD_ID order by ab.CAREHOME_FLAG asc, ms.UPRN_ID asc) as MATCH_RANK
-from        match_score         ms
-left join   INT615_AB_PLUS_BASE ab  on  ms.UPRN_ID =   ab.UPRN_ID
+            rank() over (partition by ms.ADDRESS_RECORD_ID order by ab.CAREHOME_FLAG asc, ms.ADDRESS_LINE_ID asc) as MATCH_RANK
+from        match_score                 ms
+left join   INT615_AB_PLUS_CQC_BASE     ab  on  ms.ADDRESS_LINE_ID =   ab.ADDRESS_LINE_ID
 where       1=1
     and     ms.SCORE_RANK = 1
 )
@@ -262,11 +259,13 @@ jw_matches as
 (
 select  /*+ materialize */
         -- AddressBase info
-            ms.UPRN,
-            ms.UPRN_ID,
-            ab.CLASS,
+            ms.ADDRESS_ID,
+            ms.ADDRESS_LINE_ID,
             ab.CAREHOME_FLAG,
-            ab.AB_ADDRESS,
+            ab.NURSING_HOME_FLAG,
+            ab.RESIDENTIAL_HOME_FLAG,
+            ab.POSTCODE,
+            ab.ADDRESS,
         -- Prescribing info
             ms.ADDRESS_RECORD_ID,
         -- Match results
@@ -275,8 +274,8 @@ select  /*+ materialize */
             ms.JW_SCORE / ((pab.PAT_INT_COUNT * 4) + (pab.PAT_CHAR_COUNT))  as  MATCH_SCORE,
             'JW'                                                            as  MATCH_TYPE
 from        match_score_tb              ms
-inner join  INT615_AB_PLUS_BASE         ab      on  ms.UPRN     =   ab.UPRN
-                                                and ms.UPRN_ID  =   ab.UPRN_ID
+inner join  INT615_AB_PLUS_CQC_BASE     ab      on  ms.ADDRESS_ID       =   ab.ADDRESS_ID
+                                                and ms.ADDRESS_LINE_ID  =   ab.ADDRESS_LINE_ID
 inner join  INT615_PRESC_ADDRESS_BASE   pab on  ms.ADDRESS_RECORD_ID    =   pab.ADDRESS_RECORD_ID
 where       1=1
     and     ms.SCORE_RANK = 1
@@ -294,18 +293,20 @@ no_matches as
 (
 select  /*+ materialize */
         -- AddressBase info
-            null    as UPRN,
-            null    as UPRN_ID,
-            null    as CLASS,
+            null    as ADDRESS_ID,
+            null    as ADDRESS_LINE_ID,
             0       as CAREHOME_FLAG,
-            null    as AB_ADDRESS,
+            null    as NURSING_HOME_FLAG,
+            null    as RESIDENTIAL_HOME_FLAG,
+            null    as POSTCODE,
+            null    as ADDRESS,
         -- Prescribing info
             ADDRESS_RECORD_ID,
         -- Match results
             0       as JW_SCORE,
-            0       as  TOTAL_SCORE,
-            0       as  MATCH_SCORE,
-            'NONE'  as  MATCH_TYPE
+            0       as TOTAL_SCORE,
+            0       as MATCH_SCORE,
+            'NONE'  as MATCH_TYPE
 from        INT615_PRESC_ADDRESS_BASE
 where       1=1
     and     ADDRESS_RECORD_ID not in (select ADDRESS_RECORD_ID from exact_matches)
@@ -319,11 +320,13 @@ where       1=1
 -----OUTPUT-------------------------------------------------------------------------------------------------------------------------------------------
 --combine the exact, score and no match results
 select      pab.*,
-            au.UPRN,
-            au.UPRN_ID,
-            au.CLASS,
+            au.ADDRESS_ID,
+            au.ADDRESS_LINE_ID,
             au.CAREHOME_FLAG,
-            au.AB_ADDRESS,
+            au.NURSING_HOME_FLAG,
+            au.RESIDENTIAL_HOME_FLAG,
+            au.POSTCODE,
+            au.ADDRESS,
             au.JW_SCORE,
             au.TOTAL_SCORE,
             au.MATCH_SCORE,
@@ -337,3 +340,5 @@ inner join  (
             select * from exact_matches
             )                           au  on pab.ADDRESS_RECORD_ID  =  au.ADDRESS_RECORD_ID
 ;
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
