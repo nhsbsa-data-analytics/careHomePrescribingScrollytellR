@@ -78,7 +78,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
 
     tmp_df$COLOUR_LEVEL_2 <- Vectorize(tinter::lighten)(
       tmp_df$COLOUR_LEVEL_1,
-      tmp_df$PRP_LEVEL_2/ 2 + 0.5
+      tmp_df$PRP_LEVEL_2 / 2 + 0.5
     )
 
     tmp_df %>%
