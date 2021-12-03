@@ -63,8 +63,8 @@ cqc_uprn_postcode_address_db <- cqc_db %>%
   summarise(
     LOCATION_ID = max(LOCATION_ID, na.rm = TRUE),
     UPRN = max(as.numeric(UPRN), na.rm = TRUE), # change to numeric
-    NURSING_HOME_FLAG = max(NURSING_HOME, na.rm = TRUE),
-    RESIDENTIAL_HOME_FLAG = max(RESIDENTIAL_HOME, na.rm = TRUE)
+    NURSING_HOME_FLAG = max(as.integer(NURSING_HOME), na.rm = TRUE),
+    RESIDENTIAL_HOME_FLAG = max(as.integer(RESIDENTIAL_HOME), na.rm = TRUE)
   ) %>% 
   ungroup() %>%
   relocate(UPRN, LOCATION_ID)
@@ -88,7 +88,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
     substr(CLASS, 1, 1) != "Z", # Object of interest
     RELEASE_DATE == TO_DATE("2021-03-15", "YYYY-MM-DD")
   ) %>%
-  mutate(CH_FLAG = ifelse(CLASS == "RI01", 1, 0)) %>%
+  mutate(CH_FLAG = ifelse(CLASS == "RI01", 1L, 0L)) %>%
   # Take POSTCODE_LOCATOR as the postcode as it is equal to POSTCODE (whenever 
   # one exists) but more complete and tidy it
   mutate(POSTCODE = POSTCODE_LOCATOR) %>%
@@ -100,7 +100,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
 care_home_postcodes_db <- 
   union(
     x = addressbase_plus_db %>% 
-      filter(CH_FLAG == 1) %>%
+      filter(CH_FLAG == 1L) %>%
       select(POSTCODE),
     y = cqc_uprn_postcode_address_db %>%
       select(POSTCODE)
@@ -142,8 +142,8 @@ addressbase_plus_cqc_db <- addressbase_plus_db %>%
       group_by(UPRN) %>%
       summarise(
         LOCATION_ID = max(LOCATION_ID, na.rm = TRUE),
-        NURSING_HOME_FLAG = max(NURSING_HOME_FLAG, na.rm = TRUE),
-        RESIDENTIAL_HOME_FLAG = max(RESIDENTIAL_HOME_FLAG, na.rm = TRUE)
+        NURSING_HOME_FLAG = max(NURSING_HOME_FLAG), 
+        RESIDENTIAL_HOME_FLAG = max(RESIDENTIAL_HOME_FLAG)
       ) %>% 
       ungroup(),
     copy = TRUE
@@ -161,7 +161,7 @@ addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
 
 # Stack the CQC data and make distinct (take max row)
 addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
-  union_all(y = cqc_uprn_postcode_address_db %>% mutate(CH_FLAG = 1)) %>%
+  union_all(y = cqc_uprn_postcode_address_db %>% mutate(CH_FLAG = 1L)) %>%
   group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>% 
   slice_max(order_by = UPRN, with_ties = FALSE) %>%
   ungroup()
