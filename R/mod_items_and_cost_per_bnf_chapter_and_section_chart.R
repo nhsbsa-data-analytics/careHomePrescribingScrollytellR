@@ -32,7 +32,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
       br(),
       highcharter::highchartOutput(
         outputId = ns("items_and_cost_top_ch_para_chart"),
-        height = "500px",
+        height = "600px",
         width = "800px"
       )
     )
@@ -85,7 +85,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
 
     tmp_df$COLOUR_LEVEL_2 <- Vectorize(tinter::lighten)(
       tmp_df$COLOUR_LEVEL_1,
-      tmp_df$PRP_LEVEL_2
+      tmp_df$PRP_LEVEL_2 / 2 + 0.2
     )
 
     tmp_df %>%
@@ -182,10 +182,10 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             "
             function(){
             if (this.point.parent == null) {
-            outHTML = '<b> % of total items: </b>' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000) ,0) + 'K'
+            outHTML = '<b> % of total items: </b>' + (Math.round(this.point.value*100)).toFixed(1) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000) ,0) + 'K'
             return(outHTML)
             } else {
-            outHTML = '<b> % of total items in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000),0) + 'K'
+            outHTML = '<b> % of total items in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + (Math.round(this.point.value*100)).toFixed(1) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000),0) + 'K'
             return(outHTML)
             }
             }
@@ -227,10 +227,10 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             "
             function(){
             if (this.point.parent == null) {
-            outHTML = '<b> % of total Net Ingredient Cost (NIC (£)): </b>' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/ 100000),0) + 'M'
+            outHTML = '<b> % of total Net Ingredient Cost (NIC (£)): </b>' + (Math.round(this.point.value*100)).toFixed(1) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/ 100000),0) + 'M'
             return(outHTML)
             } else {
-            outHTML = '<b> % of total NIC in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/100000),0) + 'M'
+            outHTML = '<b> % of total NIC in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + (Math.round(this.point.value*100)).toFixed(1) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/100000),0) + 'M'
             return(outHTML)
             }
             }
@@ -245,11 +245,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
   items_and_cost_top_20_df <- reactive({
     careHomePrescribingScrollytellR::top20_df %>%
       dplyr::filter(METRIC == input_metric()) %>%
-      dplyr::arrange(desc(BNF_PARAGRAPH))
-  })
-
-  observe({
-    print(items_and_cost_top_20_df)
+      dplyr::arrange(desc(CH_P))
   })
 
 
@@ -258,34 +254,98 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
   output$items_and_cost_top_ch_para_chart <- highcharter::renderHighchart({
     req(input$metric)
 
-    highcharter::hchart(
-      items_and_cost_top_20_df(),
-      type = "dumbbell",
-      highcharter::hcaes(
-        low = NONE_CH_P,
-        high = CH_P
-      ),
-      name = "Proportion of prescribing of care home residents and 65+ population",
-      lowColor = "grey",
-      color = "grey",
-      marker = list(fillColor = "#005EB8")
-    ) %>%
+    title <- ifelse(input$metric == "Cost", "drug cost", "items prescribed")
+
+    highcharter::highchart() %>%
+      highcharter::hc_add_series(
+        data = items_and_cost_top_20_df(),
+        type = "dumbbell",
+        highcharter::hcaes(
+          low = NONE_CH_P * 100,
+          high = CH_P * 100
+        ),
+        lowColor = "#768692",
+        color = "#768692",
+        marker = list(fillColor = "#005EB8")
+      ) %>%
+      highcharter::hc_subtitle(
+        useHTML = TRUE,
+        text = '<span style = "color:#005EB8; font-size: 20px"> &bull; </span> <b>
+      <span style = font-size: 35px"> older care home patients </span>
+      </b> <span style = "color:#768692; font-size: 20px"> &bull;
+      </span> <b> <span style = font-size: 35px"> older non-care home patients </span>'
+      ) %>%
+      highcharter::hc_chart(inverted = TRUE) %>%
+      theme_nhsbsa() %>%
+      highcharter::hc_title(
+        text = glue::glue("Most common medicines prescribed to care home patients.<br>
+                          Total {title} compared to older non-care home patients")
+      ) %>%
       highcharter::hc_xAxis(
         categories = unique(items_and_cost_top_20_df()$BNF_PARAGRAPH),
-        title = list(
-          text = "Top 20 medicines prescribed",
-          style = list(
-            fontSize = 15
-          )
-        )
-      ) %>%
-      highcharter::hc_yAxis(title = list(
-        text = "",
+        text = "Top 20 medicines prescribed in older care home",
         style = list(
           fontSize = 15
         )
-      )) %>%
-      highcharter::hc_chart(inverted = TRUE)
+      ) %>%
+      highcharter::hc_yAxis(
+        labels = list(
+          format = "{value}%"
+        ),
+        min = 0
+      ) %>%
+      highcharter::hc_legend(enabled = FALSE) %>%
+      highcharter::hc_tooltip(
+        # shared = TRUE,
+        useHTML = TRUE,
+        formatter = htmlwidgets::JS(
+          "function(){
+            outHTML = '<b>' + this.point.BNF_PARAGRAPH + '</b> <br>' + 'Older care home patients: ' + '<b>' + this.point.high.toFixed(1) + ' %' + '</b> <br>' + 'Older non-care home patients: ' + '<b>' + this.point.low.toFixed(1) + ' %' + '</b>'
+            return(outHTML)
+          }
+         "
+        )
+      )
+
+
+
+
+
+
+
+
+
+    # items_and_cost_top_20_df() %>%
+    #   highcharter::hchart(
+    #     type = "dumbbell",
+    #     highcharter::hcaes(
+    #       low = NONE_CH_P,
+    #       high = CH_P
+    #     ),
+    #     lowColor = "grey",
+    #     color = "grey",
+    #     marker = list(fillColor = "#005EB8")
+    #   ) %>%
+    #   # highcharter::hc_add_theme(hc_thm = theme_nhsbsa()) %>%
+    #   highcharter::hc_title(
+    #     text = glue::glue("{unique(items_and_cost_top_20_df()$METRIC)} Top 20")
+    #   ) %>%
+    #   highcharter::hc_xAxis(
+    #     categories = unique(items_and_cost_top_20_df()$BNF_PARAGRAPH),
+    #     title = list(
+    #       text = "Top 20 medicines prescribed",
+    #       style = list(
+    #         fontSize = 15
+    #       )
+    #     )
+    #   ) %>%
+    #   highcharter::hc_yAxis(title = list(
+    #     text = "",
+    #     style = list(
+    #       fontSize = 15
+    #     )
+    #   )) %>%
+    #   highcharter::hc_chart(inverted = TRUE)
   })
 }
 
