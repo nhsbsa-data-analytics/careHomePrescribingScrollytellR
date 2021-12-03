@@ -1,46 +1,47 @@
-# Library
 library(dplyr)
 library(dbplyr)
-
-# Connections and Existing Table check
 
 # Set up connection to the DB
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Check if the table exists
-exists <- DBI::dbExistsTable(conn = con, name = "FORM_LEVEL_CARE_HOME_FACT")
+exists <- DBI::dbExistsTable(
+  conn = con, 
+  name = "INT615_FORM_LEVEL_FACT_CARE_HOME"
+)
 
 # Drop any existing table beforehand
-if (exists) DBI::dbRemoveTable(conn = con, name = "FORM_LEVEL_CARE_HOME_FACT")
-
-# Part One: Prescription base table --------------------------------------------
+if (exists) DBI::dbRemoveTable(
+  conn = con, name = 
+    "INT615_FORM_LEVEL_FACT_CARE_HOME"
+)
 
 # Initial Lazy Tables from raw data
 
-# 1. Create a lazy table from the year month table
+# Create a lazy table from the year month table
 year_month_db <- con %>%
   tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
 
-# 2. Create a lazy table from the item level FACT table
+# Create a lazy table from the item level FACT table
 fact_db <- con %>%
   tbl(from = in_schema("SB_AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
 
-# 3. Create a lazy table from SCD2 payload message table 
+# Create a lazy table from SCD2 payload message table 
 eps_payload_messages_db <- con %>% 
   tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")))
 
-# 4. Create a lazy table from the paper addresses table
+# Create a lazy table from the paper addresses table
 paper_addresses_db <- con %>% 
   tbl(from = in_schema("DALL_REF", "INT615_PAPER_PFID_ADDRESS_20_21"))
 
-# FACT table
+# Pull relevant data from FACT table for the period
 
 # Filter to 2020/2021
 year_month_db <- year_month_db %>%
   filter(FINANCIAL_YEAR == "2020/2021") %>%
   select(YEAR_MONTH)
 
-# Filter to elderly patients in 2019/2020 and required columns
+# Filter to elderly patients in 2020/2021 and required columns
 fact_db <- fact_db %>%
   filter(
     # Elderly patients
@@ -54,7 +55,7 @@ fact_db <- fact_db %>%
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
   ) %>%
-  distinct(
+  select(
     YEAR_MONTH,
     PART_DATE = EPS_PART_DATE,
     EPM_ID,
@@ -62,7 +63,11 @@ fact_db <- fact_db %>%
     NHS_NO,
     EPS_FLAG
   ) %>% 
-  inner_join(y = year_month_db, by = "YEAR_MONTH") 
+  inner_join(
+    y = year_month_db,
+    copy = TRUE
+  ) %>%
+  distinct()
 
 # EPS payload message data
 
@@ -87,16 +92,18 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
     )
   ) %>%
   select(
-    PART_DATE,
-    EPM_ID,
-    PAT_POSTCODE = PAT_ADDRESS_POSTCODE,
-    PAT_ADDRESS = SINGLE_LINE_ADDRESS
+    PART_DATE, 
+    EPM_ID, 
+    POSTCODE = PAT_ADDRESS_POSTCODE, 
+    SINGLE_LINE_ADDRESS
   )
 
 # Join back to the EPS forms FACT subset
 eps_fact_db <- eps_fact_db %>%
-  left_join(y = eps_payload_messages_db, by = c("EPM_ID", "PART_DATE")) %>%
-  select(YEAR_MONTH, NHS_NO, PF_ID, PAT_ADDRESS, PAT_POSTCODE)
+  left_join(
+    y = eps_payload_messages_db,
+    copy = TRUE
+  )
 
 # Paper addresses data
 
@@ -106,29 +113,28 @@ paper_fact_db <- fact_db %>%
 
 # Subset columns
 paper_addresses_db <- paper_addresses_db %>%
-  select(PF_ID, PAT_POSTCODE = POSTCODE, PAT_ADDRESS = ADDRESS)
+  select(YEAR_MONTH, PF_ID, POSTCODE, SINGLE_LINE_ADDRESS = ADDRESS)
 
 # Join back to the paper forms FACT subset
 paper_fact_db <- paper_fact_db %>%
-  left_join(y = paper_addresses_db, by = "PF_ID") %>% 
-  select(YEAR_MONTH, NHS_NO, PF_ID, PAT_ADDRESS, PAT_POSTCODE)
+  left_join(
+    y = paper_addresses_db,
+    copy = TRUE
+  )
 
-# Combined EPS and paper data with the FACT
+# Combine EPS and paper data with the FACT
 
 # Stack EPS and paper back together
 fact_db <- union_all(x = eps_fact_db, y = paper_fact_db)
 
 # Tidy postcode and format single line addresses for tokenisation
 fact_db <- fact_db %>%
-  addressMatchR::tidy_postcode(col = PAT_POSTCODE) %>%
-  addressMatchR::tidy_single_line_address(col = PAT_ADDRESS) %>% 
-  mutate(ADDRESS_RECORD_ID = dense_rank(c(PAT_POSTCODE, PAT_ADDRESS)))
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
 
 # Write the table back to the DB
 fact_db %>%
-  nhsbsaR::oracle_create_table(table_name = "FORM_LEVEL_CARE_HOME_FACT")
+  nhsbsaR::oracle_create_table(table_name = "INT615_FORM_LEVEL_FACT_CARE_HOME")
 
 # Disconnect from database
 DBI::dbDisconnect(con)
-
-#-------------------------------------------------------------------------------
