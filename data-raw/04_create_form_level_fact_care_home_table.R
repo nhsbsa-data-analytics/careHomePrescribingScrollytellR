@@ -55,7 +55,7 @@ fact_db <- fact_db %>%
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
   ) %>%
-  distinct(
+  select(
     YEAR_MONTH,
     PART_DATE = EPS_PART_DATE,
     EPM_ID,
@@ -66,7 +66,8 @@ fact_db <- fact_db %>%
   inner_join(
     y = year_month_db,
     copy = TRUE
-  ) 
+  ) %>%
+  distinct()
 
 # EPS payload message data
 
