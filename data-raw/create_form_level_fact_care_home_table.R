@@ -18,19 +18,19 @@ if (exists) DBI::dbRemoveTable(
 
 # Initial Lazy Tables from raw data
 
-# 1. Create a lazy table from the year month table
+# Create a lazy table from the year month table
 year_month_db <- con %>%
   tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
 
-# 2. Create a lazy table from the item level FACT table
+# Create a lazy table from the item level FACT table
 fact_db <- con %>%
   tbl(from = in_schema("SB_AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
 
-# 3. Create a lazy table from SCD2 payload message table 
+# Create a lazy table from SCD2 payload message table 
 eps_payload_messages_db <- con %>% 
   tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")))
 
-# 4. Create a lazy table from the paper addresses table
+# Create a lazy table from the paper addresses table
 paper_addresses_db <- con %>% 
   tbl(from = in_schema("DALL_REF", "INT615_PAPER_PFID_ADDRESS_20_21"))
 
@@ -63,7 +63,10 @@ fact_db <- fact_db %>%
     NHS_NO,
     EPS_FLAG
   ) %>% 
-  inner_join(y = year_month_db) 
+  inner_join(
+    y = year_month_db,
+    copy = TRUE
+  ) 
 
 # EPS payload message data
 
@@ -96,7 +99,10 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
 
 # Join back to the EPS forms FACT subset
 eps_fact_db <- eps_fact_db %>%
-  left_join(y = eps_payload_messages_db)
+  left_join(
+    y = eps_payload_messages_db,
+    copy = TRUE
+  )
 
 # Paper addresses data
 
@@ -110,7 +116,10 @@ paper_addresses_db <- paper_addresses_db %>%
 
 # Join back to the paper forms FACT subset
 paper_fact_db <- paper_fact_db %>%
-  left_join(y = paper_addresses_db)
+  left_join(
+    y = paper_addresses_db,
+    copy = TRUE
+  )
 
 # Combine EPS and paper data with the FACT
 
