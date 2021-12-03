@@ -306,46 +306,6 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
          "
         )
       )
-
-
-
-
-
-
-
-
-
-    # items_and_cost_top_20_df() %>%
-    #   highcharter::hchart(
-    #     type = "dumbbell",
-    #     highcharter::hcaes(
-    #       low = NONE_CH_P,
-    #       high = CH_P
-    #     ),
-    #     lowColor = "grey",
-    #     color = "grey",
-    #     marker = list(fillColor = "#005EB8")
-    #   ) %>%
-    #   # highcharter::hc_add_theme(hc_thm = theme_nhsbsa()) %>%
-    #   highcharter::hc_title(
-    #     text = glue::glue("{unique(items_and_cost_top_20_df()$METRIC)} Top 20")
-    #   ) %>%
-    #   highcharter::hc_xAxis(
-    #     categories = unique(items_and_cost_top_20_df()$BNF_PARAGRAPH),
-    #     title = list(
-    #       text = "Top 20 medicines prescribed",
-    #       style = list(
-    #         fontSize = 15
-    #       )
-    #     )
-    #   ) %>%
-    #   highcharter::hc_yAxis(title = list(
-    #     text = "",
-    #     style = list(
-    #       fontSize = 15
-    #     )
-    #   )) %>%
-    #   highcharter::hc_chart(inverted = TRUE)
   })
 }
 
