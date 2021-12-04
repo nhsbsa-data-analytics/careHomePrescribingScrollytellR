@@ -2,7 +2,7 @@
 library(dplyr)
 library(dbplyr)
 
-# Part One: Temp Table creation in DWCP ----------------------------------------
+# Part 1: Temp Table creation in DWCP ------------------------------------------
 
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DWCP")
@@ -69,7 +69,7 @@ eps_import_db %>%
 # Disconnect from database
 DBI::dbDisconnect(con)
 
-# Part Two: Temp Table creation in DALL ----------------------------------------
+# Part 2: Temp Table creation in DALL ------------------------------------------
 
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
@@ -121,7 +121,7 @@ eps_payload_filter %>%
 # Disconnect from database
 DBI::dbDisconnect(con)
 
-# Part Three: Base tables for final script -------------------------------------
+# Part 3.1: Base tables for final script ---------------------------------------
 
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
@@ -148,7 +148,7 @@ eps_import_db <- con %>%
 cip_db <- con %>%
   tbl(from = in_schema("DIM", "CIP_PATIENT_DIM"))
 
-# Part Four: Base Tables Initial Edit -------------------------------------------
+# Part 3.2 Base Tables Initial Edit --------------------------------------------
 
 # Filter to several months outside 2020/2021
 year_month_extra_wide_db <- year_month_db %>%
@@ -169,7 +169,7 @@ year_month_db <- year_month_db %>%
 cip_db <- cip_db %>% 
   select(NHS_NO_PDS, NHS_NO_CIP)
 
-# Part Five: Data Processing ---------------------------------------------------
+# Part 3.3: Address Level Information Data Processing -------------------------
 
 # Subset of data to check if PDS data can be aligned
 px_data <- fact_db %>% 
@@ -270,7 +270,7 @@ etp_data <- fact_db %>%
   ungroup() %>% 
   group_by(YEAR_MONTH, NHS_NO_PDS) %>%                                          # ... rank() over (partition by YEAR_MONTH, NHS_NO_PDS
   mutate(RNK = rank(
-    c(desc(ITEM_COUNT), PATIENT_ADDR_POSTCODE, PATIENT_ADDR_FULL))              #... order by ITEM_COUNT desc, PATIENT_ADDR_POSTCODE, PATIENT_ADDR_FULL
+    c(desc(ITEM_COUNT), PATIENT_ADDR_POSTCODE, PATIENT_ADDR_FULL))              # ... order by ITEM_COUNT desc, PATIENT_ADDR_POSTCODE, PATIENT_ADDR_FULL
     ) %>% 
   ungroup() %>% 
   filter(RNK == 1) %>% 
@@ -368,6 +368,29 @@ address_info <- px_data %>%
     POSTCODE
   )
 
+# Save Address Information
+Sys.time()
+address_info %>%
+  nhsbsaR::oracle_create_table(table_name = "CARE_HOME_ADDRESS_INFO")
+Sys.time()
+
+# Disconnect from database
+DBI::dbDisconnect(con)
+
+# Part Six: Form Level Information Data Processing -----------------------------
+
+# 1. Create a lazy table from the year month table
+year_month_db <- con %>%
+  tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
+
+# 2. Create a lazy table from the item level FACT table
+fact_db <- con %>%
+  tbl(from = in_schema("AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
+
+# 1. Create a lazy table from the year month table
+address_info_db <- con %>%
+  tbl(from = in_schema("ADNSH", "CARE_HOME_ADDRESS_INFO"))
+
 # final data
 final_data <- fact_db %>% 
   select(
@@ -411,16 +434,11 @@ final_data <- fact_db %>%
   distinct() %>% 
   mutate(ADDRESS = trimws(REGEXP_REPLACE(REPLACE(ADDRESS, ',', ' '), '( ){2,}', ' '))) 
   
-
 # Save Address Information
-Sys.time()
 final_data %>%
-  nhsbsaR::oracle_create_table(table_name = "CARE_HOME_PAPER_ADDRESSES")
-Sys.time()
+  nhsbsaR::oracle_create_table(table_name = "CARE_HOME_PAPER_ADDRESS")
 
-
-  
 # Disconnect from database
 DBI::dbDisconnect(con)
   
-
+#-------------------------------------------------------------------------------
