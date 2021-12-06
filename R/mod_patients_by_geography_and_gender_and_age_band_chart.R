@@ -141,7 +141,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
         reversed = FALSE
       ) %>%
       highcharter::hc_yAxis(
-        title = list(text = "Number of care home residents as percentage of all care home residents (%)"),
+        title = list(text = "Number of care home patients as percentage of all care home patients (%)"),
         min = -ceiling(max_p() / 5) * 5,
         max = ceiling(max_p() / 5) * 5,
         labels = list(
