@@ -63,7 +63,7 @@ match_db <- match_db %>%
     with_ties = FALSE
   ) %>%
   ungroup()
-  
+
 # Manually override the care home flag (and nursing / residential flags) for 
 # matched care home patient addresses that contain anything to strongly suggest 
 # the property is not a care home for the elderly
@@ -147,16 +147,26 @@ item_fact_db <- item_fact_db %>%
     ITEM_COUNT,
     ITEM_PAY_DR_NIC,
     ITEM_CALC_PAY_QTY
+  ) %>%
+  inner_join(
+    y = year_month_db,
+    copy = TRUE
   )
 
 # Join the postcode and addresses
 item_fact_db <- item_fact_db %>%
-  left_join(y = form_fact_db)
+  left_join(
+    y = form_fact_db,
+    copy = TRUE
+  )
 
 # Now we join the columns of interest back to the fact table and fill the 
 # care home flag and match type columns
 item_fact_match_db <- item_fact_db %>%
-  left_join(y = patient_address_match_db) %>%
+  left_join(
+    y = patient_address_match_db,
+    copy = TRUE
+  ) %>%
   tidyr::replace_na(list(CH_FLAG = 0, MATCH_TYPE = "NO MATCH"))
 
 # Write the table back to the DB
