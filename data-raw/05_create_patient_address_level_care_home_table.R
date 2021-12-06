@@ -4,6 +4,17 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
+# Check if the table exists
+exists <- DBI::dbExistsTable(
+  conn = con, 
+  name = "INT615_ADDRESS_MATCHED_CARE_HOME"
+)
+
+# Drop any existing table beforehand
+if (exists) {
+  DBI::dbRemoveTable(conn = con, name = "INT615_ADDRESS_MATCHED_CARE_HOME")
+}
+
 # Initial lazy tables from database
 
 # Create a lazy table from the year month table
@@ -32,8 +43,8 @@ patient_address_db <- form_fact_db %>%
   # Add yearly attributes to the addresses
   group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
   summarise(
-    MONTHS_5PLUS_PATIENTS = sum(
-      ifelse(PATIENT_COUNT >= 5L, 1L, 0L),
+    MONTHS_5PLUS_PATIENTS = n_distinct(
+      ifelse(PATIENT_COUNT >= 5L, YEAR_MONTH, NA_integer_),
       na.rm = TRUE
     ),
     MAX_MONTHLY_PATIENTS = max(PATIENT_COUNT, na.rm = TRUE)
@@ -68,7 +79,7 @@ match_db <- match_db %>%
     MATCH_TYPE = ifelse(
       test = 
         CH_FLAG == 1L & 
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") > 0,
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") > 0L,
       yes = 0L,
       no = 1L
     ),
@@ -87,10 +98,10 @@ patient_address_match_db <- patient_address_match_db %>%
     MATCH_TYPE = ifelse(
       test = 
         CH_FLAG == 0L & 
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CARE HOME|CARE-HOME|NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME") > 0 &
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0 &
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CARE HOME|CARE-HOME|NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME") > 0L &
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0L &
         # Slightly stricter here
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|RESORT|MARINA|MONASTERY|RECOVERY") == 0,
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|RESORT|MARINA|MONASTERY|RECOVERY") == 0L,
       yes = "KEY WORD",
       no = NA_character_
     ),
