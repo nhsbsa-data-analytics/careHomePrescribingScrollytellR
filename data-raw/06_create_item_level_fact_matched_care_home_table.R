@@ -4,6 +4,20 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
+# Check if the table exists
+exists <- DBI::dbExistsTable(
+  conn = con, 
+  name = "INT615_ITEM_LEVEL_FACT_MATCHED_CARE_HOME"
+)
+
+# Drop any existing table beforehand
+if (exists) {
+  DBI::dbRemoveTable(
+    conn = con, 
+    name = "INT615_ITEM_LEVEL_FACT_MATCHED_CARE_HOME"
+  )
+}
+
 # Initial lazy tables from database
 
 # Create a lazy table from the year month table
