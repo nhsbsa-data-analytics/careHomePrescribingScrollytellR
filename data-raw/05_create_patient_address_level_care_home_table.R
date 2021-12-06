@@ -4,15 +4,25 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Match patient addresses to the AddressBase Plus and CQC care home addresses
+# Initial lazy tables from database
+
+# Create a lazy table from the year month table
+year_month_db <- con %>%
+  tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
+
+# Create a lazy table from the item level FACT table
+item_fact_db <- con %>%
+  tbl(from = in_schema("SB_AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
 
 # Create a lazy table from the AddressBase Plus and CQC care home table
 addressbase_plus_cqc_db <- con %>%
   tbl(from = "INT615_ADDRESSBASE_PLUS_CQC_CARE_HOME")
 
-# Create a lazy table from the from level care home FACT table
+# Create a lazy table from the form level care home FACT table
 fact_db <- con %>%
   tbl(from = "INT615_FORM_LEVEL_FACT_CARE_HOME")
+
+# Match patient addresses to the AddressBase Plus and CQC care home addresses
 
 # Get the distinct postcode and address combinations from the patient data along
 # with some attributes
@@ -62,7 +72,7 @@ match_db <- match_db %>%
     MATCH_TYPE = ifelse(
       test = 
         CH_FLAG == 1L & 
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|HOLIDAY|NO FIXED ABODE") == 1,
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") > 0,
       yes = 0L,
       no = 1L
     ),
@@ -81,8 +91,10 @@ patient_address_match_db <- patient_address_match_db %>%
     MATCH_TYPE = ifelse(
       test = 
         CH_FLAG == 0L & 
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME|CARE HOME|CARE-HOME") > 0 &
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CHILDREN|MOBILE|ABOVE|CARAVAN|RESORT|CONVENT|MONASTERY|HOLIDAY|MARINA|RECOVERY|HOSPITAL|NO FIXED ABODE") == 0,
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CARE HOME|CARE-HOME|NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME") > 0 &
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0 &
+        # Slightly stricter here
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|RESORT|MARINA|MONASTERY|RECOVERY") == 0,
       yes = "KEY WORD",
       no = NA_character_
     ),
@@ -96,15 +108,62 @@ patient_address_match_db <- patient_address_match_db %>%
     MATCH_TYPE = ifelse(
       test = 
         CH_FLAG == 0L & 
-        MAX_MONTHLY_PATIENTS >= 5, #& MONTHS_5PLUS_PATIENTS >= 3
+        MAX_MONTHLY_PATIENTS >= 5L, #& MONTHS_5PLUS_PATIENTS >= 3
       yes = "PATIENT COUNT",
       no = NA_character_
     ),
     CH_FLAG = ifelse(MATCH_TYPE == "PATIENT COUNT", 1L, CH_FLAG)
   )
 
+# Create item level FACT table
+
+# Filter to 2020/2021
+year_month_db <- year_month_db %>%
+  filter(FINANCIAL_YEAR == "2020/2021") %>%
+  select(YEAR_MONTH)
+
+# Filter to elderly patients in 2020/2021 and required columns
+item_fact_db <- item_fact_db %>%
+  filter(
+    # Elderly patients
+    CALC_AGE >= 65L,
+    # Standard exclusions
+    PAY_DA_END == "N", # excludes disallowed items
+    PAY_ND_END == "N", # excludes not dispensed items
+    PAY_RB_END == "N", # excludes referred back items
+    CD_REQ == "N", # excludes controlled drug requisitions 
+    OOHC_IND == 0L, # excludes out of hours dispensing
+    PRIVATE_IND == 0L, # excludes private dispensers
+    IGNORE_FLAG == "N" # excludes LDP dummy forms
+  ) %>%
+  select(
+    YEAR_MONTH,
+    PART_DATE = EPS_PART_DATE,
+    EPM_ID,
+    PF_ID,
+    NHS_NO,
+    EPS_FLAG,
+    CALC_PREC_DRUG_RECORD_ID,
+    ITEM_COUNT,
+    ITEM_PAY_DR_NIC,
+    ITEM_CALC_PAY_QTY
+  )
+
+# Join the postcode and addresses
+item_fact_db <- item_fact_db %>%
+  left_join(y = fact_db)
+
 # Now we join the columns of interest back to the fact table and fill the 
 # care home flag and match type columns
-fact_match_db <- fact_db %>%
+item_fact_match_db <- item_fact_db %>%
   left_join(y = patient_address_match_db) %>%
   tidyr::replace_na(list(CH_FLAG = 0, MATCH_TYPE = "NO MATCH"))
+
+# Write the table back to the DB
+item_fact_match_db %>%
+  nhsbsaR::oracle_create_table(
+    table_name = "INT615_ITEM_LEVEL_FACT_MATCHED_CARE_HOME"
+  )
+
+# Disconnect from database
+DBI::dbDisconnect(con)
