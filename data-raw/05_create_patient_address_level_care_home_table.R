@@ -44,8 +44,7 @@ patient_address_db <- form_fact_db %>%
   group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
   summarise(
     MONTHS_5PLUS_PATIENTS = n_distinct(
-      ifelse(PATIENT_COUNT >= 5L, YEAR_MONTH, NA_integer_),
-      na.rm = TRUE
+      ifelse(PATIENT_COUNT >= 5L, YEAR_MONTH, NA_integer_)
     ),
     MAX_MONTHLY_PATIENTS = max(PATIENT_COUNT, na.rm = TRUE)
   )
