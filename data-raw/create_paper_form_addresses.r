@@ -369,15 +369,16 @@ address_info <- px_data %>%
   )
 
 # Save Address Information
-Sys.time()
 address_info %>%
   nhsbsaR::oracle_create_table(table_name = "CARE_HOME_ADDRESS_INFO")
-Sys.time()
 
 # Disconnect from database
 DBI::dbDisconnect(con)
 
-# Part Six: Form Level Information Data Processing -----------------------------
+# Part 4: Form Level Information Data Processing -------------------------------
+
+# Set up connection to DALP
+con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # 1. Create a lazy table from the year month table
 year_month_db <- con %>%
@@ -420,7 +421,7 @@ final_data <- fact_db %>%
     IGNORE_FLAG == "N" # excludes LDP dummy forms
   ) %>% 
   inner_join(y = year_month_db, by = "YEAR_MONTH") %>% 
-  inner_join(y = address_info, by = c("NHS_NO" = "NHS_NO_CIP", "YEAR_MONTH")) %>% 
+  inner_join(y = address_info_db, by = c("NHS_NO" = "NHS_NO_CIP", "YEAR_MONTH")) %>% 
   select(
     YEAR_MONTH,
     PF_ID,
@@ -436,7 +437,7 @@ final_data <- fact_db %>%
   
 # Save Address Information
 final_data %>%
-  nhsbsaR::oracle_create_table(table_name = "CARE_HOME_PAPER_ADDRESS")
+  nhsbsaR::oracle_create_table(table_name = "CARE_HOME_ADDRESS_PAPER")
 
 # Disconnect from database
 DBI::dbDisconnect(con)
