@@ -19,14 +19,14 @@ addressbase_plus_cqc_db <- con %>%
   tbl(from = "INT615_ADDRESSBASE_PLUS_CQC_CARE_HOME")
 
 # Create a lazy table from the form level care home FACT table
-fact_db <- con %>%
+form_fact_db <- con %>%
   tbl(from = "INT615_FORM_LEVEL_FACT_CARE_HOME")
 
 # Match patient addresses to the AddressBase Plus and CQC care home addresses
 
 # Get the distinct postcode and address combinations from the patient data along
 # with some attributes
-patient_address_db <- fact_db %>%
+patient_address_db <- form_fact_db %>%
   # If the address is NA we don't want to consider it
   filter(!is.na(SINGLE_LINE_ADDRESS)) %>%
   # Add monthly patient count
@@ -151,7 +151,7 @@ item_fact_db <- item_fact_db %>%
 
 # Join the postcode and addresses
 item_fact_db <- item_fact_db %>%
-  left_join(y = fact_db)
+  left_join(y = form_fact_db)
 
 # Now we join the columns of interest back to the fact table and fill the 
 # care home flag and match type columns
