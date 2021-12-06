@@ -492,7 +492,7 @@ final_data <- fact_db %>%
 # Save Address Information
 final_data %>%
   nhsbsaR::oracle_create_table(table_name = "CARE_HOME_ADDRESS_PAPER")
-Sys.time()
+
 # Disconnect from database
 DBI::dbDisconnect(con)
   
