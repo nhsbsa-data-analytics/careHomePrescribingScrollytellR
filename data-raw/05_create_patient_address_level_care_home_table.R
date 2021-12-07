@@ -17,13 +17,9 @@ if (exists) {
 
 # Initial lazy tables from database
 
-# Create a lazy table from the year month table
-year_month_db <- con %>%
-  tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
-
 # Create a lazy table from the item level FACT table
-item_fact_db <- con %>%
-  tbl(from = in_schema("SB_AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
+fact_db <- con %>%
+  tbl(from = "INT615_FORM_LEVEL_FACT_CARE_HOME")
 
 # Create a lazy table from the AddressBase Plus and CQC care home table
 addressbase_plus_cqc_db <- con %>%
@@ -33,7 +29,7 @@ addressbase_plus_cqc_db <- con %>%
 
 # Get the distinct postcode and address combinations from the patient data along
 # with some attributes
-patient_address_db <- form_fact_db %>%
+patient_address_db <- fact_db %>%
   # If the address is NA we don't want to consider it
   filter(!is.na(SINGLE_LINE_ADDRESS)) %>%
   # Add monthly patient count
