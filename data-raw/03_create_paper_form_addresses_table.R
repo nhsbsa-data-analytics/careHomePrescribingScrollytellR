@@ -332,16 +332,16 @@ pds_data <- eps_import_db %>%
 # Left join to PDS data
 pds_left_join = function(df, year_num){
   
-  year_month_col = paste0("YEAR_MONTH_ID", year_num)
-  address_col = paste0("ADDRESS_R", year_num)
-  postcode_col = paste0("POSTCODE_R", year_num)
+  year_month_col <- paste0("YEAR_MONTH_ID", year_num)
+  address_col <- paste0("ADDRESS_R", year_num)
+  postcode_col <- paste0("POSTCODE_R", year_num)
 
   df %>% 
     left_join(
       pds_data %>% 
-        rename_at("ADDRESS_R", ~address_col) %>% 
-        rename_at("POSTCODE_R", ~postcode_col) %>% 
-        rename_at("YEAR_MONTH_ID", ~year_month_col),
+        rename_at("ADDRESS_R", ~ address_col) %>% 
+        rename_at("POSTCODE_R", ~ postcode_col) %>% 
+        rename_at("YEAR_MONTH_ID", ~ year_month_col),
       copy = TRUE
       )
 }
@@ -349,16 +349,16 @@ pds_left_join = function(df, year_num){
 # Left join to ETP data
 etp_left_join = function(df, year_num){
   
-  year_month_col = paste0("YEAR_MONTH_ID", year_num)
-  address_col = paste0("PATIENT_ADDR_FULL", year_num)
-  postcode_col = paste0("PATIENT_ADDR_POSTCODE", year_num)
+  year_month_col <- paste0("YEAR_MONTH_ID", year_num)
+  address_col <- paste0("PATIENT_ADDR_FULL", year_num)
+  postcode_col <- paste0("PATIENT_ADDR_POSTCODE", year_num)
   
   df %>% 
     left_join(
       etp_data %>% 
-        rename_at("PATIENT_ADDR_FULL", ~address_col) %>% 
-        rename_at("PATIENT_ADDR_POSTCODE", ~postcode_col) %>%
-        rename_at("YEAR_MONTH_ID", ~year_month_col),
+        rename_at("PATIENT_ADDR_FULL", ~ address_col) %>% 
+        rename_at("PATIENT_ADDR_POSTCODE", ~ postcode_col) %>%
+        rename_at("YEAR_MONTH_ID", ~ year_month_col),
       copy = TRUE
       )
 }
