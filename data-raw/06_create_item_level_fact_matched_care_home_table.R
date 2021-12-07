@@ -25,8 +25,12 @@ year_month_db <- con %>%
   tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
 
 # Create a lazy table from the item level FACT table
-fact_db <- con %>%
+item_fact_db <- con %>%
   tbl(from = in_schema("SB_AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
+
+# Create a lazy table from the item level FACT table
+form_fact_db <- con %>%
+  tbl(from = "INT615_FORM_LEVEL_FACT_CARE_HOME")
 
 # Create a lazy table from the matched patient address care home table
 patient_address_match_db <- con %>%
@@ -41,7 +45,7 @@ year_month_db <- year_month_db %>%
   select(YEAR_MONTH)
 
 # Filter to elderly patients in 2020/2021 and required columns
-fact_db <- fact_db %>%
+item_fact_db <- item_fact_db %>%
   filter(
     # Elderly patients
     CALC_AGE >= 65L,
@@ -73,7 +77,11 @@ fact_db <- fact_db %>%
 
 # Now we join the columns of interest back to the fact table and fill the 
 # care home flag and match type columns
-fact_db <- fact_db %>%
+item_fact_db <- item_fact_db %>%
+  inner_join(
+    y = form_fact_db,
+    copy = TRUE
+  ) %>%
   left_join(
     y = patient_address_match_db,
     copy = TRUE
@@ -81,7 +89,7 @@ fact_db <- fact_db %>%
   tidyr::replace_na(list(CH_FLAG = 0, MATCH_TYPE = "NO MATCH"))
 
 # Write the table back to the DB
-fact_db %>%
+item_fact_db %>%
   nhsbsaR::oracle_create_table(
     table_name = "INT615_ITEM_LEVEL_FACT_MATCHED_CARE_HOME"
   )
