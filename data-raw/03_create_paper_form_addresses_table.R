@@ -29,18 +29,6 @@ eps_import_db <- eps_import_db %>%
     RECORD_TYPE_R %in% c("20", "30", "33", "40"),
     PART_MONTH >= 201912L & PART_MONTH <= 202104L
   ) %>%
-  select(
-    PART_MONTH,
-    POSTCODE_R,
-    LOCAL_PID_S,
-    TRACE_RESULT_NEW_NHS_NUMBER_R,
-    RECORD_NO,
-    ADDRESS_LINE1_R,
-    ADDRESS_LINE2_R,
-    ADDRESS_LINE3_R,
-    ADDRESS_LINE4_R,
-    ADDRESS_LINE5_R
-  ) %>% 
   mutate(
     NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
     YEAR_MONTH = substr(LOCAL_PID_S, 1, 6),
@@ -51,15 +39,8 @@ eps_import_db <- eps_import_db %>%
       ADDRESS_LINE4_R, 
       ADDRESS_LINE5_R
     )
-  )%>% 
-  select(
-    PART_MONTH,
-    YEAR_MONTH,
-    ADDRESS_R,
-    POSTCODE_R,
-    NHS_NO_PDS,
-    RECORD_NO
-  )
+  ) %>%
+  select(PART_MONTH, YEAR_MONTH, ADDRESS_R, POSTCODE_R, NHS_NO_PDS, RECORD_NO)
 
 # Write the table back to the DB
 eps_import_db %>%
