@@ -47,7 +47,7 @@ eps_import_db %>%
   nhsbsaR::oracle_create_table(table_name = "CARE_HOME_SCD2_IMPORT_FILTER")
 
 # Grant Access
-# grant select on adnsh.CARE_HOME_SCD2_IMPORT_FILTER to DALP_USER;
+# grant select on CARE_HOME_SCD2_IMPORT_FILTER to DALP_USER;
 
 # Disconnect from database
 DBI::dbDisconnect(con)
