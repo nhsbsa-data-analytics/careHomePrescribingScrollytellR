@@ -60,6 +60,7 @@ fact_db <- fact_db %>%
     PART_DATE = EPS_PART_DATE,
     EPM_ID,
     PF_ID,
+    PATIENT_IDENTIFIED,
     NHS_NO,
     EPS_FLAG
   ) %>% 
