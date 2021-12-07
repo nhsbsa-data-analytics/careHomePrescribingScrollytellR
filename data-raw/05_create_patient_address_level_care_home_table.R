@@ -38,8 +38,10 @@ patient_address_db <- form_fact_db %>%
   filter(!is.na(SINGLE_LINE_ADDRESS)) %>%
   # Add monthly patient count
   group_by(YEAR_MONTH, POSTCODE, SINGLE_LINE_ADDRESS) %>%
-  mutate(PATIENT_COUNT = n_distinct(
-    ifelse(IDENTIFIED_PATIENT == "Y", NHS_NO, NA_integer)
+  mutate(
+    PATIENT_COUNT = n_distinct(
+      ifelse(IDENTIFIED_PATIENT == "Y", NHS_NO, NA_integer)
+    )
   ) %>%
   ungroup() %>%
   # Add yearly attributes to the addresses
