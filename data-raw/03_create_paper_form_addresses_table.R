@@ -29,7 +29,7 @@ year_month_db <- con %>%
 
 # Edit Year month table for later join
 year_month_db <- year_month_db %>%
-  filter(YEAR_MONTH >= 201912 & YEAR_MONTH <= 202104) %>%
+  filter(YEAR_MONTH >= 201912L & YEAR_MONTH <= 202104L) %>%
   select(YEAR_MONTH, YEAR_MONTH_ID)
 
 # Create filtered version of eps_import_db
@@ -205,12 +205,12 @@ cip_db <- con %>%
 
 # Filter to several months outside 2020/2021
 year_month_extra_wide_db <- year_month_db %>%
-  filter(YEAR_MONTH >= 201912 & YEAR_MONTH <= 202104) %>%
+  filter(YEAR_MONTH >= 201912L & YEAR_MONTH <= 202104L) %>%
   select(YEAR_MONTH, YEAR_MONTH_ID)
 
 # Filter to several months outside 2020/2021
 year_month_wide_db <- year_month_db %>%
-  filter(YEAR_MONTH >= 202002 & YEAR_MONTH <= 202105) %>%
+  filter(YEAR_MONTH >= 202002L & YEAR_MONTH <= 202105L) %>%
   select(YEAR_MONTH, YEAR_MONTH_ID)
 
 # Filter to 2020/2021
