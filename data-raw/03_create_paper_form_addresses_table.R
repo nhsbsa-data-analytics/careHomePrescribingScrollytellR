@@ -15,8 +15,8 @@ exists <- DBI::dbExistsTable(
 
 # Drop any existing table beforehand
 if (exists) DBI::dbRemoveTable(
-  conn = con, name = 
-    "CARE_HOME_SCD2_IMPORT_FILTER"
+  conn = con, 
+  name = "CARE_HOME_SCD2_IMPORT_FILTER"
 )
 
 # 1. Create a lazy table from SCD2 payload message table 
