@@ -55,12 +55,13 @@ eps_import_db <- eps_import_db %>%
   mutate(
     NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
     YEAR_MONTH = substr(LOCAL_PID_S, 1, 6),
-    ADDRESS_R = upper(trim(paste0(
-      ADDRESS_LINE1_R, ', ',
-      ADDRESS_LINE2_R, ', ',
-      ADDRESS_LINE3_R, ', ',
-      ADDRESS_LINE4_R, ', ',
-      ADDRESS_LINE5_R)))
+    ADDRESS_R = paste(
+      ADDRESS_LINE1_R,
+      ADDRESS_LINE2_R,
+      ADDRESS_LINE3_R,
+      ADDRESS_LINE4_R, 
+      ADDRESS_LINE5_R
+    )
   )%>% 
   select(
     PART_MONTH,
@@ -141,11 +142,12 @@ eps_payload_filter <- eps_payload_db %>%
     PART_DATE
   ) %>% 
   mutate(
-    PATIENT_ADDR_FULL = upper(trim(paste0(
-      PAT_ADDRESS_LINE1, ', ',
-      PAT_ADDRESS_LINE2, ', ',
-      PAT_ADDRESS_LINE3, ', ',
-      PAT_ADDRESS_LINE4))),
+    PATIENT_ADDR_FULL = paste(
+      PAT_ADDRESS_LINE1,
+      PAT_ADDRESS_LINE2,
+      PAT_ADDRESS_LINE3,
+      PAT_ADDRESS_LINE4
+    ),
     YEAR_MONTH = substr(PART_DATE, 1, 6)
   ) %>% 
   inner_join(
