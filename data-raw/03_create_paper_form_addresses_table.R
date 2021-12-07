@@ -2,7 +2,7 @@
 library(dplyr)
 library(dbplyr)
 
-# Part 1.1: Temp Table creation in DWCP ----------------------------------------
+# Create a slim table from DWCP and give access from DALP
 
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DWCP")
@@ -21,7 +21,7 @@ if (exists) DBI::dbRemoveTable(
 
 # 1. Create a lazy table from SCD2 payload message table 
 eps_import_db <- con %>% 
-  tbl(from = in_schema("SCD2", sql("SCD2_EXT_PD_IMPORT_DATA")))
+  tbl(from = in_schema("SCD2", "SCD2_EXT_PD_IMPORT_DATA"))
 
 # 2. Create a lazy table from the year month table
 year_month_db <- con %>%
