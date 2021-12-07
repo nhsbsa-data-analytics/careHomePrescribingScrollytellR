@@ -103,14 +103,6 @@ eps_payload_db <- con %>%
 
 # Filter SCD2
 eps_payload_filter <- eps_payload_db %>% 
-  select(
-    PAT_ADDRESS_LINE1,
-    PAT_ADDRESS_LINE2,
-    PAT_ADDRESS_LINE3,
-    PAT_ADDRESS_LINE4,
-    EPM_ID,
-    PART_DATE
-  ) %>% 
   mutate(
     PATIENT_ADDR_FULL = paste(
       PAT_ADDRESS_LINE1,
@@ -119,12 +111,9 @@ eps_payload_filter <- eps_payload_db %>%
       PAT_ADDRESS_LINE4
     ),
     YEAR_MONTH = substr(PART_DATE, 1, 6)
-  ) %>% 
-  inner_join(
-    y = year_month_wide_db %>% select(YEAR_MONTH),
-    copy = TRUE
-  ) %>% 
-  select(PATIENT_ADDR_FULL, EPM_ID, PART_DATE)
+  ) %>%   
+  filter(YEAR_MONTH >= 202002L & YEAR_MONTH <= 202105L) %>%
+  select(PATIENT_ADDR_FULL, EPM_ID, YEAR_MONTH)
 
 # Save Filtered SCD2
 eps_payload_filter %>%
@@ -248,7 +237,7 @@ etp_multi_address <- fact_db %>%
 
 # ETP data
 etp_data <- fact_db %>% 
-  filter(EPS_FLAG == 'Y') %>% 
+  filter(EPS_FLAG == "Y") %>% 
   select(
     EPM_ID,
     EPS_PART_DATE,
