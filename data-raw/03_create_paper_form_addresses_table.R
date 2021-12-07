@@ -50,7 +50,7 @@ eps_import_db <- eps_import_db %>%
   inner_join(
     y = year_month_db,
     by = c("PART_MONTH" = "YEAR_MONTH"),
-    copy = T
+    copy = TRUE
     ) %>% 
   mutate(
     NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
@@ -153,7 +153,7 @@ eps_payload_filter <- eps_payload_db %>%
   inner_join(
     y = year_month_wide_db %>% select(YEAR_MONTH),
     by = "YEAR_MONTH",
-    copy = T
+    copy = TRUE
   ) %>% 
   select(
     PATIENT_ADDR_FULL,
@@ -244,8 +244,8 @@ px_data <- fact_db %>%
     IGNORE_FLAG == "N" # excludes LDP dummy forms
   ) %>% 
   select(NHS_NO_CIP = NHS_NO, YEAR_MONTH) %>% 
-  inner_join(y = cip_db, copy = T) %>% 
-  inner_join(y = year_month_db, copy = T) %>% 
+  inner_join(y = cip_db, copy = TRUE) %>% 
+  inner_join(y = year_month_db, copy = TRUE) %>% 
   distinct() %>% 
   mutate(
     YEAR_MONTH_ID_M4 = YEAR_MONTH_ID - 4,
@@ -275,7 +275,7 @@ etp_multi_address <- fact_db %>%
     NHS_NO,
     PATIENT_ADDR_POSTCODE
   ) %>% 
-  inner_join(y = year_month_wide_db, copy = T) %>%
+  inner_join(y = year_month_wide_db, copy = TRUE) %>%
   group_by(YEAR_MONTH, NHS_NO) %>% 
   summarise(ADDRESS_COUNT = n_distinct(PATIENT_ADDR_POSTCODE)) %>% 
   ungroup() %>% 
@@ -293,13 +293,13 @@ etp_data <- fact_db %>%
     ITEM_COUNT,
     PATIENT_ADDR_POSTCODE
   ) %>% 
-  inner_join(y = year_month_wide_db, copy = T) %>% 
-  inner_join(y = etp_multi_address, copy = T) %>% 
-  inner_join(y = cip_db, by = c("NHS_NO" = "NHS_NO_CIP"), copy = T) %>% 
+  inner_join(y = year_month_wide_db, copy = TRUE) %>% 
+  inner_join(y = etp_multi_address, copy = TRUE) %>% 
+  inner_join(y = cip_db, by = c("NHS_NO" = "NHS_NO_CIP"), copy = TRUE) %>% 
   inner_join(
     y = eps_payload_db,
     by = c("EPM_ID", "EPS_PART_DATE" = "PART_DATE"),
-    copy = T
+    copy = TRUE
     ) %>% 
   group_by(
     YEAR_MONTH,
@@ -324,7 +324,7 @@ pds_data <- eps_import_db %>%
   mutate(RNK = rank(desc(RECORD_NO))) %>%
   ungroup() %>% 
   filter(RNK == 1) %>% 
-  inner_join(y = year_month_wide_db, copy = T) %>% 
+  inner_join(y = year_month_wide_db, copy = TRUE) %>% 
   select(YEAR_MONTH_ID, NHS_NO_PDS, ADDRESS_R, POSTCODE_R)
 
 # Functions to join and rename columns easily
@@ -342,7 +342,7 @@ pds_left_join = function(df, year_num){
         rename_at("ADDRESS_R", ~address_col) %>% 
         rename_at("POSTCODE_R", ~postcode_col) %>% 
         rename_at("YEAR_MONTH_ID", ~year_month_col),
-      copy = T
+      copy = TRUE
       )
 }
 
@@ -359,7 +359,7 @@ etp_left_join = function(df, year_num){
         rename_at("PATIENT_ADDR_FULL", ~address_col) %>% 
         rename_at("PATIENT_ADDR_POSTCODE", ~postcode_col) %>%
         rename_at("YEAR_MONTH_ID", ~year_month_col),
-      copy = T
+      copy = TRUE
       )
 }
 
@@ -466,11 +466,11 @@ final_data <- fact_db %>%
     PF_ID,
     NHS_NO
     ) %>% 
-  inner_join(y = year_month_db, copy = T) %>% 
+  inner_join(y = year_month_db, copy = TRUE) %>% 
   inner_join(
     y = address_info_db,
     by = c("NHS_NO" = "NHS_NO_CIP", "YEAR_MONTH"),
-    copy = T
+    copy = TRUE
     ) %>% 
   select(
     YEAR_MONTH,
