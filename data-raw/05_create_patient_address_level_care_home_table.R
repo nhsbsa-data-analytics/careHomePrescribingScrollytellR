@@ -82,8 +82,16 @@ match_db <- match_db %>%
       yes = 0L,
       no = CH_FLAG
     ),
-    NURSING_HOME_FLAG = ifelse(CH_FLAG == 0L, NA_integer_, 1L),
-    RESIDENTIAL_HOME_FLAG = ifelse(CH_FLAG == 0L, NA_integer_, 1L)
+    NURSING_HOME_FLAG = ifelse(
+      test = CH_FLAG == 0L, 
+      yes = NA_integer_, 
+      no = NURSING_HOME_FLAG
+    ),
+    RESIDENTIAL_HOME_FLAG = ifelse(
+      test = CH_FLAG == 0L, 
+      yes = NA_integer_, 
+      no = RESIDENTIAL_HOME_FLAG
+    )
   )
 
 # Join the matches back to the patient addresses
@@ -102,7 +110,7 @@ patient_address_match_db <- patient_address_match_db %>%
         # Slightly stricter here
         REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|RESORT|MARINA|MONASTERY|RECOVERY") == 0L,
       yes = "KEY WORD",
-      no = NA_character_
+      no = MATCH_TYPE
     ),
     CH_FLAG = ifelse(MATCH_TYPE == "KEY WORD", 1L, CH_FLAG)
   )
@@ -127,7 +135,7 @@ patient_address_match_db <- patient_address_match_db %>%
         CH_POSTCODE == 1L &
         MAX_MONTHLY_PATIENTS >= 5L, #& MONTHS_5PLUS_PATIENTS >= 3
       yes = "PATIENT COUNT",
-      no = NA_character_
+      no = MATCH_TYPE
     ),
     CH_FLAG = ifelse(MATCH_TYPE == "PATIENT COUNT", 1L, CH_FLAG)
   ) %>%
