@@ -19,22 +19,16 @@ if (exists) DBI::dbRemoveTable(
   name = "CARE_HOME_SCD2_IMPORT_FILTER"
 )
 
-# 1. Create a lazy table from SCD2 payload message table 
+# Create a lazy table from SCD2 payload message table 
 eps_import_db <- con %>% 
   tbl(from = in_schema("SCD2", "SCD2_EXT_PD_IMPORT_DATA"))
 
-# 2. Create a lazy table from the year month table
-year_month_db <- con %>%
-  tbl(from = in_schema("DIM", "YEAR_MONTH_DIM"))
-
-# Edit Year month table for later join
-year_month_db <- year_month_db %>%
-  filter(YEAR_MONTH >= 201912L & YEAR_MONTH <= 202104L) %>%
-  select(YEAR_MONTH, YEAR_MONTH_ID)
-
 # Create filtered version of eps_import_db
 eps_import_db <- eps_import_db %>% 
-  filter(RECORD_TYPE_R %in% c("20", "30", "33", "40")) %>%
+  filter(
+    RECORD_TYPE_R %in% c("20", "30", "33", "40"),
+    PART_MONTH >= 201912L & PART_MONTH <= 202104L
+  ) %>%
   select(
     PART_MONTH,
     POSTCODE_R,
@@ -46,10 +40,6 @@ eps_import_db <- eps_import_db %>%
     ADDRESS_LINE3_R,
     ADDRESS_LINE4_R,
     ADDRESS_LINE5_R
-  ) %>% 
-  inner_join(
-    y = year_month_db %>% select(PART_MONTH = YEAR_MONTH),
-    copy = TRUE
   ) %>% 
   mutate(
     NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
