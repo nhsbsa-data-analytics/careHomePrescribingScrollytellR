@@ -108,7 +108,7 @@ patient_address_match_db <- patient_address_match_db %>%
   )
 
 # Get postcodes where there is a care home
-care_home_postcodes_db <- addressbase_plus_db %>%
+care_home_postcodes_db <- addressbase_plus_cqc_db %>%
   filter(CH_FLAG == 1L) %>%
   distinct(POSTCODE)
 
