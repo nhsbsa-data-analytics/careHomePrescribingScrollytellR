@@ -48,10 +48,9 @@ eps_import_db <- eps_import_db %>%
     ADDRESS_LINE5_R
   ) %>% 
   inner_join(
-    y = year_month_db,
-    by = c("PART_MONTH" = "YEAR_MONTH"),
+    y = year_month_db %>% select(PART_MONTH = YEAR_MONTH),
     copy = TRUE
-    ) %>% 
+  ) %>% 
   mutate(
     NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
     YEAR_MONTH = substr(LOCAL_PID_S, 1, 6),
@@ -152,14 +151,9 @@ eps_payload_filter <- eps_payload_db %>%
   ) %>% 
   inner_join(
     y = year_month_wide_db %>% select(YEAR_MONTH),
-    by = "YEAR_MONTH",
     copy = TRUE
   ) %>% 
-  select(
-    PATIENT_ADDR_FULL,
-    EPM_ID,
-    PART_DATE
-  )
+  select(PATIENT_ADDR_FULL, EPM_ID, PART_DATE)
 
 # Save Filtered SCD2
 eps_payload_filter %>%
@@ -244,8 +238,14 @@ px_data <- fact_db %>%
     IGNORE_FLAG == "N" # excludes LDP dummy forms
   ) %>% 
   select(NHS_NO_CIP = NHS_NO, YEAR_MONTH) %>% 
-  inner_join(y = cip_db, copy = TRUE) %>% 
-  inner_join(y = year_month_db, copy = TRUE) %>% 
+  inner_join(
+    y = cip_db, 
+    copy = TRUE
+  ) %>% 
+  inner_join(
+    y = year_month_db, 
+    copy = TRUE
+  ) %>% 
   distinct() %>% 
   mutate(
     YEAR_MONTH_ID_M4 = YEAR_MONTH_ID - 4,
@@ -270,12 +270,11 @@ etp_multi_address <- fact_db %>%
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
   ) %>% 
-  select(
-    YEAR_MONTH,
-    NHS_NO,
-    PATIENT_ADDR_POSTCODE
-  ) %>% 
-  inner_join(y = year_month_wide_db, copy = TRUE) %>%
+  select(YEAR_MONTH, NHS_NO, PATIENT_ADDR_POSTCODE) %>% 
+  inner_join(
+    y = year_month_wide_db, 
+    copy = TRUE
+  ) %>%
   group_by(YEAR_MONTH, NHS_NO) %>% 
   summarise(ADDRESS_COUNT = n_distinct(PATIENT_ADDR_POSTCODE)) %>% 
   ungroup() %>% 
@@ -342,7 +341,7 @@ pds_left_join = function(df, year_num){
         rename_at("POSTCODE_R", ~ postcode_col) %>% 
         rename_at("YEAR_MONTH_ID", ~ year_month_col),
       copy = TRUE
-      )
+    )
 }
 
 # Left join to ETP data
@@ -359,22 +358,22 @@ etp_left_join = function(df, year_num){
         rename_at("PATIENT_ADDR_POSTCODE", ~ postcode_col) %>%
         rename_at("YEAR_MONTH_ID", ~ year_month_col),
       copy = TRUE
-      )
+    )
 }
 
 # Address and Postcode Final Derivation
 address_info <- px_data %>% 
   # Function joins
-  pds_left_join(., year_num = "_M4") %>%
-  pds_left_join(., year_num = "_M3") %>% 
-  pds_left_join(., year_num = "_M2") %>% 
-  pds_left_join(., year_num = "_M1") %>% 
-  pds_left_join(., year_num = "_0") %>% 
-  etp_left_join(., year_num = "_M2") %>% 
-  etp_left_join(., year_num = "_M1") %>% 
-  etp_left_join(., year_num = "_0") %>% 
-  etp_left_join(., year_num = "_P1") %>%
-  etp_left_join(., year_num = "_P2") %>%
+  pds_left_join(year_num = "_M4") %>%
+  pds_left_join(year_num = "_M3") %>% 
+  pds_left_join(year_num = "_M2") %>% 
+  pds_left_join(year_num = "_M1") %>% 
+  pds_left_join(year_num = "_0") %>% 
+  etp_left_join(year_num = "_M2") %>% 
+  etp_left_join(year_num = "_M1") %>% 
+  etp_left_join(year_num = "_0") %>% 
+  etp_left_join(year_num = "_P1") %>%
+  etp_left_join(year_num = "_P2") %>%
   # Coalesce data
   mutate(
     ADDRESS = coalesce(
@@ -403,13 +402,7 @@ address_info <- px_data %>%
     )
   ) %>% 
   # Final cols
-  select(
-    YEAR_MONTH,
-    NHS_NO_CIP,
-    NHS_NO_PDS,
-    ADDRESS,
-    POSTCODE
-  )
+  select(YEAR_MONTH, NHS_NO_CIP, NHS_NO_PDS, ADDRESS, POSTCODE)
 
 # Save Address Information
 address_info %>%
@@ -459,26 +452,18 @@ final_data <- fact_db %>%
     OOHC_IND == 0L, # excludes out of hours dispensing
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
-    ) %>% 
-  select(
-    YEAR_MONTH,
-    PF_ID,
-    NHS_NO
-    ) %>% 
-  inner_join(y = year_month_db, copy = TRUE) %>% 
+  ) %>% 
+  select(YEAR_MONTH, PF_ID, NHS_NO) %>% 
+  inner_join(
+    y = year_month_db, 
+    copy = TRUE
+  ) %>% 
   inner_join(
     y = address_info_db,
     by = c("NHS_NO" = "NHS_NO_CIP", "YEAR_MONTH"),
     copy = TRUE
-    ) %>% 
-  select(
-    YEAR_MONTH,
-    PF_ID,
-    NHS_NO,
-    NHS_NO_PDS,
-    ADDRESS,
-    POSTCODE
-    ) %>% 
+  ) %>% 
+  select(YEAR_MONTH, PF_ID, NHS_NO, NHS_NO_PDS, ADDRESS, POSTCODE) %>% 
   # Filter NA addresses 
   filter(!is.na(ADDRESS)) %>% 
   distinct() %>% 
