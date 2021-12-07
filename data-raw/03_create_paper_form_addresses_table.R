@@ -321,9 +321,8 @@ etp_data <- fact_db %>%
 # PDS Data
 pds_data <- eps_import_db %>% 
   group_by(PART_MONTH, NHS_NO_PDS) %>% 
-  mutate(RNK = rank(desc(RECORD_NO))) %>%
+  slice_min(order_by = RECORD_NO, with_ties = FALSE) %>%
   ungroup() %>% 
-  filter(RNK == 1) %>% 
   inner_join(y = year_month_wide_db, copy = TRUE) %>% 
   select(YEAR_MONTH_ID, NHS_NO_PDS, ADDRESS_R, POSTCODE_R)
 
