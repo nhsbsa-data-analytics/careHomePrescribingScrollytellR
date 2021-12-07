@@ -75,12 +75,12 @@ match_db <- match_db %>%
 # the property is not a care home for the elderly
 match_db <- match_db %>%
   mutate(
-    MATCH_TYPE = ifelse(
+    CH_FLAG = ifelse(
       test = 
         CH_FLAG == 1L & 
         REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") > 0L,
       yes = 0L,
-      no = 1L
+      no = CH_FLAG
     ),
     NURSING_HOME_FLAG = ifelse(CH_FLAG == 0L, NA_integer_, 1L),
     RESIDENTIAL_HOME_FLAG = ifelse(CH_FLAG == 0L, NA_integer_, 1L)
