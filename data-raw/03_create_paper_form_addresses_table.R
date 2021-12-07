@@ -34,12 +34,7 @@ year_month_db <- year_month_db %>%
 
 # Create filtered version of eps_import_db
 eps_import_db2 <- eps_import_db %>% 
-  filter(
-    RECORD_TYPE_R == '20' |
-      RECORD_TYPE_R == '30' |
-      RECORD_TYPE_R == '40' |
-      RECORD_TYPE_R == '33'
-  ) %>% 
+  filter(RECORD_TYPE_R %in% c("20", "30", "33", "40")) %>%
   select(
     PART_MONTH,
     POSTCODE_R,
