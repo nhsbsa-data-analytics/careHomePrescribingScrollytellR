@@ -36,7 +36,7 @@ patient_address_db <- fact_db %>%
   group_by(YEAR_MONTH, POSTCODE, SINGLE_LINE_ADDRESS) %>%
   mutate(
     PATIENT_COUNT = n_distinct(
-      ifelse(IDENTIFIED_PATIENT == "Y", NHS_NO, NA_integer_)
+      ifelse(PATIENT_IDENTIFIED == "Y", NHS_NO, NA_integer_)
     )
   ) %>%
   ungroup() %>%
