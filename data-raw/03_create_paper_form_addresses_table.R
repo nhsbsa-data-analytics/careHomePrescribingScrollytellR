@@ -466,8 +466,7 @@ final_data <- fact_db %>%
   select(YEAR_MONTH, PF_ID, NHS_NO, NHS_NO_PDS, ADDRESS, POSTCODE) %>% 
   # Filter NA addresses 
   filter(!is.na(ADDRESS)) %>% 
-  distinct() %>% 
-  mutate(ADDRESS = trimws(REGEXP_REPLACE(REPLACE(ADDRESS, ',', ' '), '( ){2,}', ' '))) 
+  distinct()
   
 # Save Address Information
 final_data %>%
