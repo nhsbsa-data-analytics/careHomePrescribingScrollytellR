@@ -195,11 +195,9 @@ cip_db <- cip_db %>%
 
 # Part 3.3: Address Level Information Data Processing -------------------------
 
-# Subset of data to check if PDS data can be aligned
-px_data <- fact_db %>% 
+# Filter FACT table by common exclusions
+fact_db <- fact_db %>%
   filter(
-    # EPS Flag
-    EPS_FLAG == 'N',    # paper prescriptions only
     PAY_DA_END == "N", # excludes disallowed items
     PAY_ND_END == "N", # excludes not dispensed items
     PAY_RB_END == "N", # excludes referred back items
@@ -207,7 +205,12 @@ px_data <- fact_db %>%
     OOHC_IND == 0L, # excludes out of hours dispensing
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
-  ) %>% 
+  )
+
+# Subset of data to check if PDS data can be aligned
+px_data <- fact_db %>% 
+  # Paper only
+  filter(EPS_FLAG == "N") %>% 
   select(NHS_NO_CIP = NHS_NO, YEAR_MONTH) %>% 
   inner_join(
     y = cip_db, 
@@ -230,17 +233,8 @@ px_data <- fact_db %>%
 
 # Find Single ETP Addresses per Month Instances
 etp_multi_address <- fact_db %>% 
-  filter(
-    # EPS Flag & standard exclusions
-    EPS_FLAG == 'Y',   # Electronic prescriptions only
-    PAY_DA_END == "N", # excludes disallowed items
-    PAY_ND_END == "N", # excludes not dispensed items
-    PAY_RB_END == "N", # excludes referred back items
-    CD_REQ == "N",     # excludes controlled drug requisitions 
-    OOHC_IND == 0L,    # excludes out of hours dispensing
-    PRIVATE_IND == 0L, # excludes private dispensers
-    IGNORE_FLAG == "N" # excludes LDP dummy forms
-  ) %>% 
+  # Electronic only
+  filter(EPS_FLAG == "Y") %>% 
   select(YEAR_MONTH, NHS_NO, PATIENT_ADDR_POSTCODE) %>% 
   inner_join(
     y = year_month_wide_db, 
@@ -270,7 +264,7 @@ etp_data <- fact_db %>%
     y = eps_payload_db,
     by = c("EPM_ID", "EPS_PART_DATE" = "PART_DATE"),
     copy = TRUE
-    ) %>% 
+  ) %>% 
   group_by(
     YEAR_MONTH,
     YEAR_MONTH_ID,
