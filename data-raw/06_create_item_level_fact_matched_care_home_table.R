@@ -36,7 +36,6 @@ form_fact_db <- con %>%
 patient_address_match_db <- con %>%
   tbl(from = "INT615_ADDRESS_MATCHED_CARE_HOME")
 
-
 # Create item level FACT table
 
 # Filter to 2020/2021
@@ -83,7 +82,8 @@ item_fact_db <- item_fact_db %>%
     copy = TRUE
   ) %>%
   left_join(
-    y = patient_address_match_db,
+    y = patient_address_match_db %>% 
+      select(-c(MONTHS_5PLUS_PATIENTS, MAX_MONTHLY_PATIENTS)),
     copy = TRUE
   ) %>%
   tidyr::replace_na(list(CH_FLAG = 0, MATCH_TYPE = "NO MATCH"))
