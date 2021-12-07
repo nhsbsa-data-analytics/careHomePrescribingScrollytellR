@@ -33,7 +33,7 @@ year_month_db <- year_month_db %>%
   select(YEAR_MONTH, YEAR_MONTH_ID)
 
 # Create filtered version of eps_import_db
-eps_import_db2 <- eps_import_db %>% 
+eps_import_db <- eps_import_db %>% 
   filter(RECORD_TYPE_R %in% c("20", "30", "33", "40")) %>%
   select(
     PART_MONTH,
@@ -69,8 +69,7 @@ eps_import_db2 <- eps_import_db %>%
     POSTCODE_R,
     NHS_NO_PDS,
     RECORD_NO
-  ) %>% 
-  show_query()
+  )
 
 # Write the table back to the DB
 eps_import_db %>%
