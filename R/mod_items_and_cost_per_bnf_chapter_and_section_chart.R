@@ -144,6 +144,8 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
 
   output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
     req(input$metric)
+    # similar to dumbbell chart, make title to dynamic
+    title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
 
     # NOTE: Not sure how to deal with if statemetn with tooltip so here I am splitting two ways.... (It could improve using JS)
     if (input$metric == "Items") {
@@ -174,6 +176,11 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
               dataLabels = list(enabled = FALSE)
             )
           )
+        ) %>%
+        theme_nhsbsa() %>% 
+        highcharter::hc_title(
+          text = glue::glue("Number and % of {title} by BNF Section and Chapter"),
+          align = "left"
         ) %>%
         # useful: https://www.titanwolf.org/Network/q/9ba6af5e-1a32-404f-aefb-bc9ce6daf227/y (wrap around highcharts.numberFormat)
         highcharter::hc_tooltip(
@@ -220,6 +227,11 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
               dataLabels = list(enabled = FALSE)
             )
           )
+        ) %>%
+        theme_nhsbsa() %>% 
+        highcharter::hc_title(
+          text = glue::glue("Number and % of {title} by BNF Section and Chapter"),
+          align = "left"
         ) %>%
         highcharter::hc_tooltip(
           useHTML = TRUE,
