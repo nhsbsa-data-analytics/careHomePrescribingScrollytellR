@@ -73,23 +73,23 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   ns <- session$ns
 
   # Radio button added as we cannot add two values in one sequence for the hc_motion
-  
+
   metric_selection <- reactiveValues(v = NULL)
-  
+
   observe({
     metric_selection$v <- input$number_perc
   })
-  
+
   # create as reactive value - now it holds selected value
-  
+
   input_metric <- reactive(metric_selection$v)
-  
+
   # Filter to relevant data for this chart
   patients_by_geography_and_gender_and_age_band_df <-
     careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
     dplyr::filter(dplyr::across(c(LEVEL, GEOGRAPHY, GENDER), not_na))
 
-  
+
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
   # Filter the data based on the level
@@ -113,14 +113,14 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   # Filter the data based on the level and format for the plot
   plot_df <- reactive({
     req(input$geography)
-    if(input$number_perc == "Percentage"){
+    if (input$number_perc == "Percentage") {
       level_df() %>%
         dplyr::filter(GEOGRAPHY == input$geography) %>%
         dplyr::group_by(YEAR_MONTH) %>%
         dplyr::mutate(value = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1))
-    }else{
+    } else if (input$number_perc == "Counts") {
       level_df() %>%
         dplyr::filter(GEOGRAPHY == input$geography) %>%
         dplyr::group_by(YEAR_MONTH) %>%
@@ -128,7 +128,6 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
         dplyr::ungroup() %>%
         dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1))
     }
-    
   })
 
   # Pull the max p
@@ -138,8 +137,8 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   })
 
   # Format for highcharter animation
-  # unfortunately, tooltip with two different values doesn't work. 
-  # have to try with animation bar... using shiny slider
+  # unfortunately, tooltip with two different values doesn't work.
+  # change to toggle
   plot_series_list <- reactive({
     req(input$geography)
     plot_df() %>%
@@ -158,7 +157,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   # Pyramid plot for age band and gender
   output$patients_by_geography_and_gender_and_age_band_chart <- highcharter::renderHighchart({
     req(input$geography)
-    if(input$number_perc == "Percentage"){
+    if (input$number_perc == "Percentage") {
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
         highcharter::hc_add_series_list(x = plot_series_list()) %>%
@@ -182,12 +181,15 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
         ) %>%
         highcharter::hc_tooltip(
           shared = FALSE,
-          formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Percentage: </b>' + Math.abs(Math.round(this.point.y * 10) / 10) + '%';}")
+          formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Percentage: </b>' + Math.abs(this.point.y).toFixed(1) + '%';}")
         )
-    }else{
+    } else {
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
         highcharter::hc_add_series_list(x = plot_series_list()) %>%
+        highcharter::hc_subtitle(
+          text = "Note: Counts rounded to nearest ten (e.g. 12 rounded to 10) "
+        ) %>%
         highcharter::hc_motion(
           labels = unique(plot_df()$YEAR_MONTH),
           series = c(0, 1)
@@ -208,11 +210,9 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
         ) %>%
         highcharter::hc_tooltip(
           shared = FALSE,
-          formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Percentage: </b>' + Math.abs((Math.round(this.point.y / 500) * 500 / 1000)).toFixed(1) + 'k';}")
+          formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Number of patients: </b>' + Math.abs(Math.round(this.point.y /10)*10) ;}")
         )
     }
-
-   
   })
 }
 
