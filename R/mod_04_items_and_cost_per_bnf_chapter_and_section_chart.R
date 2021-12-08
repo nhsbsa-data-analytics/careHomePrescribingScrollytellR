@@ -1,4 +1,4 @@
-#' items_and_cost_per_bnf_chapter_and_section_chart UI Function
+#' 04_items_and_cost_per_bnf_chapter_and_section_chart UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
+mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h3("Commonly prescribed drugs"),
@@ -49,7 +49,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
 #' items_and_cost_per_bnf_chapter_and_section_chart Server Function
 #'
 #' @noRd
-mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
+mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
                                                                         output,
                                                                         session) {
   ns <- session$ns
@@ -333,7 +333,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
 }
 
 ## To be copied in the UI
-# mod_items_and_cost_per_bnf_chapter_and_section_chart_ui("items_and_cost_per_bnf_chapter_and_section_chart_1")
+# mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui("items_and_cost_per_bnf_chapter_and_section_chart_1")
 
 ## To be copied in the server
-# callModule(mod_items_and_cost_per_bnf_chapter_and_section_chart_server, "items_and_cost_per_bnf_chapter_and_section_chart_1")
+# callModule(mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server, "04_items_and_cost_per_bnf_chapter_and_section_chart_1")

@@ -1,4 +1,4 @@
-#' patients_by_geography_and_gender_and_age_band_chart UI Function
+#' 02_patients_by_geography_and_gender_and_age_band_chart UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,13 +7,17 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
+mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Demographic estimates for older care home patients receiving prescriptions"),
     p(
-      tags$b("Two thirds"), " are ", tags$b("female"), "(66%) and", tags$b("one quarter"), "are", tags$b("female aged 90+ years"), ". This is",
-      "reasonably consistent across local authorities and STPs."
+      "Overall, we estimate a monthly average of ", tags$b("284 thousand care home patients,"),
+      " aged 65+ years receiving prescriptions each month, which accounts for around", tags$b("X%"), "of patients aged 65+ ",
+      "years receiving prescription items."
+    ),
+    p(
+      "Overall, ", tags$b("two thirds"), " are ", tags$b("female"), "(66%) and", tags$b("44%"), "are", tags$b("female aged 85+ years.")
     ),
     p(
       "The age and gender profile is broadly comparable to",
@@ -60,6 +64,19 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
         height = "500px",
         width = "800px"
       )
+    ),
+    br(),
+    br(),
+    p(
+      "We have used CQC data to identify residential care homes and nursing homes. On average we ",
+      "estimate there around each month are similar numbers of older patients in residential (113 thousand) ",
+      "and nursing (106 thousand) homes, with a small number of care home patients appearing in both (6.9 thousand) ",
+      "during 2020/21."
+    ),
+    p(
+      "Care home patient's prescription were allocated an IMD and associated decile/quintile based on area in which ",
+      "the care home is located. On average, the proportion of XXX in each decile/quintile ",
+      "is broadly in line with expected proportions. (note: will change depends on decile/quintile)"
     )
   )
 }
@@ -67,7 +84,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
 #' patients_by_geography_and_gender_and_age_band_chart Server Function
 #'
 #' @noRd
-mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input,
+mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(input,
                                                                            output,
                                                                            session) {
   ns <- session$ns
@@ -217,7 +234,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
 }
 
 ## To be copied in the UI
-# mod_patients_by_geography_and_gender_and_age_band_chart_ui("patients_by_geography_and_gender_and_age_band_chart_1")
+# mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_1")
 
 ## To be copied in the server
-# callModule(mod_patients_by_geography_and_gender_and_age_band_chart_server, "patients_by_geography_and_gender_and_age_band_chart_1")
+# callModule(mod_02_patients_by_geography_and_gender_and_age_band_chart_server, "02_patients_by_geography_and_gender_and_age_band_chart_1")

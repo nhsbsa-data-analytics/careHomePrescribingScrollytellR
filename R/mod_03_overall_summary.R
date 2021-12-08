@@ -1,4 +1,4 @@
-#' 02_overall_summary UI Function
+#' 03_overall_summary UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_02_overall_summary_ui <- function(id) {
+mod_03_overall_summary_ui <- function(id) {
   ns <- NS(id)
 
   # Pull dataframes for valueBox
@@ -54,7 +54,7 @@ mod_02_overall_summary_ui <- function(id) {
     dplyr::mutate(ICON = "pills")
 
   tagList(
-    h3("Estimated prescribing patterns of care home residents and older care home residents"),
+    h3("Estimated prescribing patterns for older care home residents and older care home residents"),
     br(),
     p(
       "Care home patients receive more prescription items than non-care home patients",
@@ -193,15 +193,15 @@ mod_02_overall_summary_ui <- function(id) {
   )
 }
 
-#' 02_overall_summary Server Function
+#' 03_overall_summary Server Function
 #'
 #' @noRd
-mod_02_overall_summary_server <- function(input, output, session) {
+mod_03_overall_summary_server <- function(input, output, session) {
   ns <- session$ns
 }
 
 ## To be copied in the UI
-# mod_02_overall_summary_ui("02_overall_summary_1")
+# mod_03_overall_summary_ui("03_overall_summary_1")
 
 ## To be copied in the server
-# callModule(mod_02_overall_summary_server, "02_overall_summary_1")
+# callModule(mod_03_overall_summary_server, "03_overall_summary_1")
