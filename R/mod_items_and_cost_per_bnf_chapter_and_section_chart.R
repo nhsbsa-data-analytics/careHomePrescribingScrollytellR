@@ -11,7 +11,14 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h3("Commonly prescribed drugs"),
-    p("Text will be added."),
+    p(
+      "We will add text here about ",
+      tippy(
+        text = "BNF Chapter.",
+        tooltip = tooltip_text$bnf_code
+      )
+    ),
+    br(),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
@@ -156,7 +163,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           allowDrillToNode = TRUE,
           levelIsConstant = FALSE,
           textOverflow = "clip",
-          drillUpButton = list(text = '<< Back BNF Chapter'),
+          drillUpButton = list(text = "<< Back BNF Chapter"),
           dataLabels = list(color = "white"),
           levels = list(
             list(
@@ -178,9 +185,9 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             )
           )
         ) %>%
-        theme_nhsbsa() %>% 
+        theme_nhsbsa() %>%
         highcharter::hc_title(
-          text = glue::glue("Number and % of {title} by BNF Section and Chapter"),
+          text = glue::glue("Number and % of {title} by BNF Chapter and Section"),
           align = "left"
         ) %>%
         # useful: https://www.titanwolf.org/Network/q/9ba6af5e-1a32-404f-aefb-bc9ce6daf227/y (wrap around highcharts.numberFormat)
@@ -208,7 +215,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           allowDrillToNode = TRUE,
           levelIsConstant = FALSE,
           textOverflow = "clip",
-          drillUpButton = list(text = '<< Back BNF Chapter'),
+          drillUpButton = list(text = "<< Back BNF Chapter"),
           dataLabels = list(color = "white"),
           levels = list(
             list(
@@ -230,7 +237,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             )
           )
         ) %>%
-        theme_nhsbsa() %>% 
+        theme_nhsbsa() %>%
         highcharter::hc_title(
           text = glue::glue("Number and % of {title} by BNF Section and Chapter"),
           align = "left"
@@ -269,7 +276,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
     req(input$metric)
 
     title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
-    axis_title <- ifelse(input$metric == "Drug Cost", "Drug cost as a % of total drug cost per patient group","Number of items as a % of all items per patient group") # totally different title so keep it like this..
+    axis_title <- ifelse(input$metric == "Drug Cost", "Drug cost as a % of total drug cost per patient group", "Number of items as a % of all items per patient group") # totally different title so keep it like this..
 
     highcharter::highchart() %>%
       highcharter::hc_add_series(
@@ -294,7 +301,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       theme_nhsbsa() %>%
       highcharter::hc_title(
         text = glue::glue("Top 20 medicines by % of {title} per patient group"),
-        align = 'left'
+        align = "left"
       ) %>%
       highcharter::hc_xAxis(
         categories = unique(items_and_cost_top_20_df()$BNF_PARAGRAPH),
