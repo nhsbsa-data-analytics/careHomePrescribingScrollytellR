@@ -11,21 +11,35 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h3("Commonly prescribed drugs"),
-    p("Text will be added."),
+    p(
+      "We will add text here about ",
+      tippy(
+        text = "BNF Chapter.",
+        tooltip = tooltip_text$bnf_code
+      )
+    ),
+    br(),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      h6("Drugs prescribed to older care home patients in England (2020/21)"),
+      h6("Medicines prescribed to older care home patients in England (2020/21)"),
       radioButtons(
         inputId = ns("metric"),
-        label = "Metric",
-        choices = c("Items", "Cost"),
+        label = "",
+        choices = c("Items", "Drug Cost"),
         inline = TRUE,
         width = "100%"
       ),
       highcharter::highchartOutput(
         outputId = ns("items_and_cost_per_bnf_chapter_and_section_chart"),
         height = "500px",
+        width = "800px"
+      ),
+      br(),
+      br(),
+      highcharter::highchartOutput(
+        outputId = ns("items_and_cost_top_ch_para_chart"),
+        height = "600px",
         width = "800px"
       )
     )
@@ -137,6 +151,8 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
 
   output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
     req(input$metric)
+    # similar to dumbbell chart, make title to dynamic
+    title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
 
     # NOTE: Not sure how to deal with if statemetn with tooltip so here I am splitting two ways.... (It could improve using JS)
     if (input$metric == "Items") {
@@ -147,6 +163,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           allowDrillToNode = TRUE,
           levelIsConstant = FALSE,
           textOverflow = "clip",
+          drillUpButton = list(text = "<< Back BNF Chapter"),
           dataLabels = list(color = "white"),
           levels = list(
             list(
@@ -168,6 +185,11 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             )
           )
         ) %>%
+        theme_nhsbsa() %>%
+        highcharter::hc_title(
+          text = glue::glue("Number and % of {title} by BNF Chapter and Section"),
+          align = "left"
+        ) %>%
         # useful: https://www.titanwolf.org/Network/q/9ba6af5e-1a32-404f-aefb-bc9ce6daf227/y (wrap around highcharts.numberFormat)
         highcharter::hc_tooltip(
           useHTML = TRUE,
@@ -175,10 +197,10 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             "
             function(){
             if (this.point.parent == null) {
-            outHTML = '<b> % of total items: </b>' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000) ,0) + 'K'
+            outHTML = '<b> % of total items: </b>' + (Math.round(this.point.value*100)).toFixed(1) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000) ,0) + 'K'
             return(outHTML)
             } else {
-            outHTML = '<b> % of total items in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000),0) + 'K'
+            outHTML = '<b> % of total items in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + (Math.round(this.point.value*100)).toFixed(1) + '%' + '<br>' + '<b> Number of items: </b>' + Highcharts.numberFormat(Math.round(this.point.value_total/ 1000),0) + 'K'
             return(outHTML)
             }
             }
@@ -193,6 +215,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           allowDrillToNode = TRUE,
           levelIsConstant = FALSE,
           textOverflow = "clip",
+          drillUpButton = list(text = "<< Back BNF Chapter"),
           dataLabels = list(color = "white"),
           levels = list(
             list(
@@ -214,16 +237,21 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
             )
           )
         ) %>%
+        theme_nhsbsa() %>%
+        highcharter::hc_title(
+          text = glue::glue("Number and % of {title} by BNF Section and Chapter"),
+          align = "left"
+        ) %>%
         highcharter::hc_tooltip(
           useHTML = TRUE,
           formatter = htmlwidgets::JS(
             "
             function(){
             if (this.point.parent == null) {
-            outHTML = '<b> % of total Net Ingredient Cost (NIC (£)): </b>' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/ 100000),0) + 'M'
+            outHTML = '<b> % of total Net Ingredient Cost (NIC (£)): </b>' + (Math.round(this.point.value*100)).toFixed(1) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/ 100000),0) + 'M'
             return(outHTML)
             } else {
-            outHTML = '<b> % of total NIC in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + Math.round(this.point.value*100) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/100000),0) + 'M'
+            outHTML = '<b> % of total NIC in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + (Math.round(this.point.value*100)).toFixed(1) + '%' + '<br>' + '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(Math.round(this.point.value_total/100000),0) + 'M'
             return(outHTML)
             }
             }
@@ -231,6 +259,76 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           )
         )
     }
+  })
+
+
+  #### Process for the dumbbell chart
+  items_and_cost_top_20_df <- reactive({
+    careHomePrescribingScrollytellR::top20_df %>%
+      dplyr::filter(METRIC == input_metric()) %>%
+      dplyr::arrange(desc(CH_P))
+  })
+
+
+  # Need to work on it
+
+  output$items_and_cost_top_ch_para_chart <- highcharter::renderHighchart({
+    req(input$metric)
+
+    title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
+    axis_title <- ifelse(input$metric == "Drug Cost", "Drug cost as a % of total drug cost per patient group", "Number of items as a % of all items per patient group") # totally different title so keep it like this..
+
+    highcharter::highchart() %>%
+      highcharter::hc_add_series(
+        data = items_and_cost_top_20_df(),
+        type = "dumbbell",
+        highcharter::hcaes(
+          low = NONE_CH_P * 100,
+          high = CH_P * 100
+        ),
+        lowColor = "#768692",
+        color = "#768692",
+        marker = list(fillColor = "#005EB8")
+      ) %>%
+      highcharter::hc_subtitle(
+        useHTML = TRUE,
+        text = '<span style = "color:#005EB8; font-size: 20px"> &bull; </span> <b>
+      <span style = font-size: 35px"> older care home patients </span>
+      </b> <span style = "color:#768692; font-size: 20px"> &bull;
+      </span> <b> <span style = font-size: 35px"> older non-care home patients </span>'
+      ) %>%
+      highcharter::hc_chart(inverted = TRUE) %>%
+      theme_nhsbsa() %>%
+      highcharter::hc_title(
+        text = glue::glue("Top 20 medicines by % of {title} per patient group"),
+        align = "left"
+      ) %>%
+      highcharter::hc_xAxis(
+        categories = unique(items_and_cost_top_20_df()$BNF_PARAGRAPH),
+        style = list(
+          fontSize = 15
+        ),
+        title = list(text = "BNF Paragraph")
+      ) %>%
+      highcharter::hc_yAxis(
+        labels = list(
+          format = "{value}%"
+        ),
+        min = 0,
+        title = list(text = axis_title)
+      ) %>%
+      highcharter::hc_legend(enabled = FALSE) %>%
+      highcharter::hc_tooltip(
+        # shared = TRUE,
+        useHTML = TRUE,
+        formatter = htmlwidgets::JS(
+          "function(){
+            outHTML = '<b>' + this.point.BNF_PARAGRAPH + '</b> <br>' + 'Older care home patients: ' + '<b>' + this.point.high.toFixed(1) + ' %' + '</b> <br>' + 'Older non-care home patients: ' + '<b>' + this.point.low.toFixed(1) + ' %' + '</b>'
+            return(outHTML)
+          }
+         "
+        )
+      )
   })
 }
 
