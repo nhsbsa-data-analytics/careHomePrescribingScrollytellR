@@ -269,6 +269,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
     req(input$metric)
 
     title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
+    axis_title <- ifelse(input$metric == "Drug Cost", "Drug cost as a % of total drug cost per patient group","Number of items as a % of all items per patient group") # totally different title so keep it like this..
 
     highcharter::highchart() %>%
       highcharter::hc_add_series(
@@ -297,16 +298,17 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       ) %>%
       highcharter::hc_xAxis(
         categories = unique(items_and_cost_top_20_df()$BNF_PARAGRAPH),
-        text = "Top 20 medicines prescribed in older care home",
         style = list(
           fontSize = 15
-        )
+        ),
+        title = list(text = "BNF Paragraph")
       ) %>%
       highcharter::hc_yAxis(
         labels = list(
           format = "{value}%"
         ),
-        min = 0
+        min = 0,
+        title = list(text = axis_title)
       ) %>%
       highcharter::hc_legend(enabled = FALSE) %>%
       highcharter::hc_tooltip(
