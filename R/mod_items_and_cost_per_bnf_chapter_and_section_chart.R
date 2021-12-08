@@ -15,11 +15,11 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      h6("Drugs prescribed to older care home patients in England (2020/21)"),
+      h6("Medicines prescribed to older care home patients in England (2020/21)"),
       radioButtons(
         inputId = ns("metric"),
-        label = "Metric",
-        choices = c("Items", "Cost"),
+        label = "",
+        choices = c("Items", "Drug Cost"),
         inline = TRUE,
         width = "100%"
       ),
@@ -254,7 +254,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
   output$items_and_cost_top_ch_para_chart <- highcharter::renderHighchart({
     req(input$metric)
 
-    title <- ifelse(input$metric == "Cost", "drug cost", "items prescribed")
+    title <- ifelse(input$metric == "Drug Cost", "drug cost", "items prescribed")
 
     highcharter::highchart() %>%
       highcharter::hc_add_series(

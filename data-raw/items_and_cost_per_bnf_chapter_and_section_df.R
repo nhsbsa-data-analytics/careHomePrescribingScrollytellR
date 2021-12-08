@@ -53,7 +53,7 @@ items_and_cost_per_bnf_chapter_and_section_df <- fact_db %>%
   group_by(BNF_CHAPTER, BNF_SECTION) %>%
   summarise(
     Items = sum(ITEM_COUNT),
-    Cost = sum(ITEM_PAY_DR_NIC * 0.01)
+    `Drug Cost` = sum(ITEM_PAY_DR_NIC * 0.01)
   ) %>%
   ungroup() %>%
   tidyr::pivot_longer(
@@ -113,14 +113,14 @@ ch_items_and_cost_per_bnf_para_df <- fact_db %>%
   group_by(CH_FLAG, BNF_PARAGRAPH) %>%
   summarise(
     Items = sum(ITEM_COUNT),
-    Cost = sum(ITEM_PAY_DR_NIC * 0.01)
+    `Drug Cost` = sum(ITEM_PAY_DR_NIC * 0.01)
   ) %>%
   ungroup() %>%
   collect() %>%
   group_by(CH_FLAG) %>%
   mutate(
     Items_p = Items / sum(Items),
-    Cost_p = Cost / sum(Cost)
+    Cost_p = `Drug Cost` / sum(`Drug Cost`)
   ) %>%
   ungroup()
 
@@ -180,7 +180,7 @@ top20_cost_df <- ch_nic_top_20_df %>%
     y = none_ch_cost_20_df,
     by = "BNF_PARAGRAPH"
   ) %>%
-  mutate(METRIC = "Cost")
+  mutate(METRIC = "Drug Cost")
 
 # stack them
 top20_df <- bind_rows(top20_cost_df, top20_item_df)
