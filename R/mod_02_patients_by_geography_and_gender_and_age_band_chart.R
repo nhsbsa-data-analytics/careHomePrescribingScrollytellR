@@ -85,9 +85,13 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
 #'
 #' @noRd
 mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(input,
-                                                                           output,
-                                                                           session) {
+                                                                              output,
+                                                                              session) {
   ns <- session$ns
+
+  hcoptslang <- getOption("highcharter.lang")
+  hcoptslang$thousandsSep <- ","
+  options(highcharter.lang = hcoptslang)
 
   # Radio button added as we cannot add two values in one sequence for the hc_motion
 

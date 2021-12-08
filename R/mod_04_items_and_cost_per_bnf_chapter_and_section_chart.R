@@ -10,19 +10,22 @@
 mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Commonly prescribed drugs"),
+    h4("Commonly prescribed medicines"),
     p(
-      "We will add text here about ",
+      "Around one in four items (24%) prescribed to care home patients are from the central nervous system",
       tippy(
-        text = "BNF Chapter.",
+        text = "BNF",
         tooltip = tooltip_text$bnf_code
-      )
+      ),
+      "chapter. This chapter also accounts for 24% of drug cost. Analgesics is the most common",
+      "BNF section within...."
     ),
     br(),
+    br(),
+    h6("Medicines prescribed to older care home patients in England (2020/21)"),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      h6("Medicines prescribed to older care home patients in England (2020/21)"),
       radioButtons(
         inputId = ns("metric"),
         label = "",
@@ -50,8 +53,8 @@ mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
 #'
 #' @noRd
 mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
-                                                                        output,
-                                                                        session) {
+                                                                           output,
+                                                                           session) {
   ns <- session$ns
   # comma separate setting. (otherwise comma didn't show)
   hcoptslang <- getOption("highcharter.lang")
@@ -163,6 +166,7 @@ mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input
           allowDrillToNode = TRUE,
           levelIsConstant = FALSE,
           textOverflow = "clip",
+          # drillDownButton = list(text = "<< Goto BNF Section"), #didn't work
           drillUpButton = list(text = "<< Back BNF Chapter"),
           dataLabels = list(color = "white"),
           levels = list(
