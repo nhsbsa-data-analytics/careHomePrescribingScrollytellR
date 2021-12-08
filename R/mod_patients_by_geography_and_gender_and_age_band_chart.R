@@ -48,6 +48,13 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
           width = "100%"
         )
       ),
+      radioButtons(
+        inputId = ns("number_perc"),
+        label = "",
+        choices = c("Percentage", "Counts"),
+        inline = TRUE,
+        width = "100%"
+      ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
         height = "500px",
@@ -65,11 +72,24 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
                                                                            session) {
   ns <- session$ns
 
+  # Radio button added as we cannot add two values in one sequence for the hc_motion
+  
+  metric_selection <- reactiveValues(v = NULL)
+  
+  observe({
+    metric_selection$v <- input$number_perc
+  })
+  
+  # create as reactive value - now it holds selected value
+  
+  input_metric <- reactive(metric_selection$v)
+  
   # Filter to relevant data for this chart
   patients_by_geography_and_gender_and_age_band_df <-
     careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
     dplyr::filter(dplyr::across(c(LEVEL, GEOGRAPHY, GENDER), not_na))
 
+  
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
   # Filter the data based on the level
@@ -93,21 +113,33 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   # Filter the data based on the level and format for the plot
   plot_df <- reactive({
     req(input$geography)
-    level_df() %>%
-      dplyr::filter(GEOGRAPHY == input$geography) %>%
-      dplyr::group_by(YEAR_MONTH) %>%
-      dplyr::mutate(p = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(p = p * ifelse(GENDER == "Male", 1, -1))
+    if(input$number_perc == "Percentage"){
+      level_df() %>%
+        dplyr::filter(GEOGRAPHY == input$geography) %>%
+        dplyr::group_by(YEAR_MONTH) %>%
+        dplyr::mutate(value = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1))
+    }else{
+      level_df() %>%
+        dplyr::filter(GEOGRAPHY == input$geography) %>%
+        dplyr::group_by(YEAR_MONTH) %>%
+        dplyr::mutate(value = TOTAL_PATIENTS) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1))
+    }
+    
   })
 
   # Pull the max p
   max_p <- reactive({
     req(input$geography)
-    max(abs(plot_df()$p))
+    max(abs(plot_df()$value))
   })
 
   # Format for highcharter animation
+  # unfortunately, tooltip with two different values doesn't work. 
+  # have to try with animation bar... using shiny slider
   plot_series_list <- reactive({
     req(input$geography)
     plot_df() %>%
@@ -115,7 +147,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
         fill = list(value = 0)
       ) %>%
       dplyr::group_by(AGE_BAND, GENDER) %>%
-      dplyr::do(data = list(sequence = .$p)) %>%
+      dplyr::do(data = list(sequence = .$value)) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(GENDER) %>%
       dplyr::do(data = .$data) %>%
@@ -126,32 +158,61 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(input
   # Pyramid plot for age band and gender
   output$patients_by_geography_and_gender_and_age_band_chart <- highcharter::renderHighchart({
     req(input$geography)
-
-    highcharter::highchart() %>%
-      highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
-      highcharter::hc_add_series_list(x = plot_series_list()) %>%
-      highcharter::hc_motion(
-        labels = unique(plot_df()$YEAR_MONTH),
-        series = c(0, 1)
-      ) %>%
-      theme_nhsbsa(palette = "gender") %>%
-      highcharter::hc_xAxis(
-        title = list(text = "Age group"),
-        categories = sort(unique(plot_df()$AGE_BAND)),
-        reversed = FALSE
-      ) %>%
-      highcharter::hc_yAxis(
-        title = list(text = "Number of care home patients as percentage of all care home patients (%)"),
-        min = -ceiling(max_p() / 5) * 5,
-        max = ceiling(max_p() / 5) * 5,
-        labels = list(
-          formatter = highcharter::JS("function(){ return Math.abs(this.value);}")
+    if(input$number_perc == "Percentage"){
+      highcharter::highchart() %>%
+        highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
+        highcharter::hc_add_series_list(x = plot_series_list()) %>%
+        highcharter::hc_motion(
+          labels = unique(plot_df()$YEAR_MONTH),
+          series = c(0, 1)
+        ) %>%
+        theme_nhsbsa(palette = "gender") %>%
+        highcharter::hc_xAxis(
+          title = list(text = "Age group"),
+          categories = sort(unique(plot_df()$AGE_BAND)),
+          reversed = FALSE
+        ) %>%
+        highcharter::hc_yAxis(
+          title = list(text = "Number of care home patients as percentage of all care home patients (%)"),
+          min = -ceiling(max_p() / 5) * 5,
+          max = ceiling(max_p() / 5) * 5,
+          labels = list(
+            formatter = highcharter::JS("function(){ return Math.abs(this.value);}")
+          )
+        ) %>%
+        highcharter::hc_tooltip(
+          shared = FALSE,
+          formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Percentage: </b>' + Math.abs(Math.round(this.point.y * 10) / 10) + '%';}")
         )
-      ) %>%
-      highcharter::hc_tooltip(
-        shared = FALSE,
-        formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Percentage: </b>' + Math.abs(Math.round(this.point.y * 10) / 10) + '%';}")
-      )
+    }else{
+      highcharter::highchart() %>%
+        highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
+        highcharter::hc_add_series_list(x = plot_series_list()) %>%
+        highcharter::hc_motion(
+          labels = unique(plot_df()$YEAR_MONTH),
+          series = c(0, 1)
+        ) %>%
+        theme_nhsbsa(palette = "gender") %>%
+        highcharter::hc_xAxis(
+          title = list(text = "Age group"),
+          categories = sort(unique(plot_df()$AGE_BAND)),
+          reversed = FALSE
+        ) %>%
+        highcharter::hc_yAxis(
+          title = list(text = "Number of care home patients"),
+          min = -ceiling(max_p() / 5) * 5,
+          max = ceiling(max_p() / 5) * 5,
+          labels = list(
+            formatter = highcharter::JS("function(){ return Math.abs(this.value);}")
+          )
+        ) %>%
+        highcharter::hc_tooltip(
+          shared = FALSE,
+          formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Percentage: </b>' + Math.abs((Math.round(this.point.y / 500) * 500 / 1000)).toFixed(1) + 'k';}")
+        )
+    }
+
+   
   })
 }
 
