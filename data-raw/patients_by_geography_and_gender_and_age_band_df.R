@@ -10,7 +10,7 @@ postcode_db <- con %>%
 
 # Subset the columns
 postcode_db <- postcode_db %>%
-  mutate(OVERALL = NA_character_) %>% # dummy col so aggregation is easier
+  mutate(OVERALL = "Overall") %>% # dummy col so aggregation is easier
   select(
     PCD_NO_SPACES = POSTCODE, 
     OVERALL,
@@ -88,9 +88,11 @@ for (
   tmp_df <-
     
     union_all(
-      # Overall
+      
+      # Monthly total patients
       x = fact_db %>%
         group_by(
+          YEAR_MONTH = as.character(YEAR_MONTH), 
           GEOGRAPHY = geography, 
           SUB_GEOGRAPHY = !!dplyr::sym(geography),
           GENDER, 
@@ -98,10 +100,11 @@ for (
         ) %>%
         summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
         ungroup(),
-      # By year month
+      
+      # Overall total patients
       y = fact_db %>%
         group_by(
-          YEAR_MONTH, 
+          YEAR_MONTH = "Overall",
           GEOGRAPHY = geography, 
           SUB_GEOGRAPHY = !!dplyr::sym(geography),
           GENDER, 
@@ -109,20 +112,17 @@ for (
         ) %>%
         summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
         ungroup()
-      ) %>%
-      # Any NAs are overall figures 
-      mutate(
-        across(
-          .cols = c(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY), 
-          .fns = ~ ifelse(is.na(.x), "Overall", as.character(.x))
-        )
+      
       )
   
+  # Either create the table or append to it
   if (geography == "OVERALL") {
+    
     # On the first iteration initialise the table
     patients_by_geography_and_gender_and_age_band_db <- tmp_df
     
   } else {
+    
     # Union results to initialised table
     patients_by_geography_and_gender_and_age_band_db <- union_all(
       x = patients_by_geography_and_gender_and_age_band_db,
@@ -145,19 +145,27 @@ patients_by_geography_and_gender_and_age_band_db <-
     )
   )
 
-# Collect and format for highcharter
+# Sort as is (not geography as we do that later) and collect
 patients_by_geography_and_gender_and_age_band_df <- 
   patients_by_geography_and_gender_and_age_band_db %>%
-  arrange(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY, GENDER, AGE_BAND) %>%
-  collect() %>%
-  # Format for highcharter
+  # Sort as is and collect (not geography as we do that later)
+  arrange(YEAR_MONTH, SUB_GEOGRAPHY, GENDER, AGE_BAND) %>%
+  collect()
+
+# Format for highcharter
+patients_by_geography_and_gender_and_age_band_df <- 
+  patients_by_geography_and_gender_and_age_band_df %>%
+  # Tweak the factors
   mutate(
+    # Move overall to first category
     across(
       .cols = c(YEAR_MONTH, SUB_GEOGRAPHY),
       .fns = ~ forcats::fct_relevel(.x, "Overall")
     ),
+    # Factor is a heirachy
     GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, "Overall", "Region", "STP")
   ) %>%
+  # Sort final dataframe by new factors
   arrange(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY)
 
 # Add to data-raw/
