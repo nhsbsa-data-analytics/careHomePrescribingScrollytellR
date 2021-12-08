@@ -200,7 +200,7 @@ fact_db <- fact_db %>%
 px_data <- fact_db %>% 
   # Paper only
   filter(EPS_FLAG == "N") %>% 
-  select(NHS_NO_CIP = NHS_NO, YEAR_MONTH) %>% 
+  select(YEAR_MONTH, NHS_NO_CIP = NHS_NO) %>% 
   inner_join(
     y = cip_db, 
     copy = TRUE
