@@ -268,7 +268,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
   output$items_and_cost_top_ch_para_chart <- highcharter::renderHighchart({
     req(input$metric)
 
-    title <- ifelse(input$metric == "Drug Cost", "drug cost", "items prescribed")
+    title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
 
     highcharter::highchart() %>%
       highcharter::hc_add_series(
@@ -292,8 +292,8 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
       highcharter::hc_chart(inverted = TRUE) %>%
       theme_nhsbsa() %>%
       highcharter::hc_title(
-        text = glue::glue("Most common medicines prescribed to care home patients.<br>
-                          Total {title} compared to older non-care home patients")
+        text = glue::glue("Top 20 medicines by % of {title} per patient group"),
+        align = 'left'
       ) %>%
       highcharter::hc_xAxis(
         categories = unique(items_and_cost_top_20_df()$BNF_PARAGRAPH),
