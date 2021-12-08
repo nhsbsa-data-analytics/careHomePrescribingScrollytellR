@@ -156,6 +156,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           allowDrillToNode = TRUE,
           levelIsConstant = FALSE,
           textOverflow = "clip",
+          drillUpButton = list(text = '<< Back BNF Chapter'),
           dataLabels = list(color = "white"),
           levels = list(
             list(
@@ -207,6 +208,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           allowDrillToNode = TRUE,
           levelIsConstant = FALSE,
           textOverflow = "clip",
+          drillUpButton = list(text = '<< Back BNF Chapter'),
           dataLabels = list(color = "white"),
           levels = list(
             list(
