@@ -11,9 +11,9 @@ mod_01_intro_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4(
-      "Primary care prescribing patterns for " ,
+      "Primary care prescribing patterns for ",
       tippy(
-        text = "older care home patients", 
+        text = "older care home patients",
         tooltip = tooltip_text$care_home
       ),
       " in England"
@@ -23,29 +23,29 @@ mod_01_intro_ui <- function(id) {
       "In this article we provide unique insight into primary care ",
       "prescribing patterns for ",
       tippy(
-        text = "older care home patients", 
+        text = "older care home patients",
         tooltip = tooltip_text$care_home
       ),
       " in England during 2020/21."
     ),
     br(),
     p(
-      "We estimate that there was a monthly average of", tags$b("284 thousand"), 
+      "We estimate that there was a monthly average of", tags$b("284 thousand"),
       "patients recieving prescriptions each month in 2020/21 and they ",
-      "received an estimated 34 million prescription items at a cost of", 
+      "received an estimated 34 million prescription items at a cost of",
       tags$b("£318 million.")
     ),
     br(),
     p(
       "This accounts for around", tags$b("X%"), "of ",
       tippy(
-        text = "older patients", 
+        text = "older patients",
         tooltip = tooltip_text$older
       ),
       "receiving prescription items and", tags$b("X%"), "of the total primary ",
       "care drug spend for ",
       tippy(
-        text = "older patients", 
+        text = "older patients",
         tooltip = tooltip_text$older
       ),
       "during 2020/21."
@@ -54,15 +54,15 @@ mod_01_intro_ui <- function(id) {
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
       "matches primary care prescription address data to care home addresses ",
-      "in ", 
+      "in ",
       enurl(
-        url = "https://www.ordnancesurvey.co.uk/business-government/products/addressbase", 
+        url = "https://www.ordnancesurvey.co.uk/business-government/products/addressbase",
         text = "AddressBase Plus"
-      ), 
+      ),
       "to create a prescribing dataset. The matching method has been ",
       "available as an ",
       enurl(
-        url = "https://github.com/nhsbsa-data-analytics/addressMatchR", 
+        url = "https://github.com/nhsbsa-data-analytics/addressMatchR",
         text = "R package"
       ),
       "."

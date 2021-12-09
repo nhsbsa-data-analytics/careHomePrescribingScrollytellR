@@ -42,7 +42,7 @@ h4 { font-size: 22pt; }
 h5 { font-size: 20pt; }
 h6 { font-size: 18pt; }
 p  { font-size: 16pt; }
-li { font-size: 16pt; }
+/*li { font-size: 16pt; }*/ /*tooltip requires and too many to change by span so remove for now*/
 a  { font-size: 16pt; }
 em { font-size: 16pt; }
 
@@ -52,6 +52,17 @@ a {
   color: var(--nhs-blue); 
   text-decoration: underline
 }
+
+/* hover BNF reduce space */
+ul.frames {
+  font-size: 0;
+}
+
+ul.frames li {
+  font-size: 14px; font-size:1.4rem;
+  display: inline;
+}
+
 
 /* General shiny stuff */
 

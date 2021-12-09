@@ -6,7 +6,7 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Create a lazy table from the geography lookup table (Region, STP and LA)
 postcode_db <- con %>%
-  tbl(from = in_schema("ADAIV", "INT615_PCD_REF"))
+  tbl(from = "INT615_POSTCODE_LOOKUP")
 
 # Subset the columns
 postcode_db <- postcode_db %>%
@@ -169,7 +169,7 @@ patients_by_geography_and_gender_and_age_band_df <-
 
 # Add to data-raw/
 usethis::use_data(
-  patients_by_geography_and_gender_and_age_band_df, 
+  patients_by_geography_and_gender_and_age_band_df,
   overwrite = TRUE
 )
 
