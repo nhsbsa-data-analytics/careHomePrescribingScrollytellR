@@ -45,7 +45,10 @@ Imports:
     tippy,
     tinter,
     cqcr,
-    glue
+    glue,
+    sf,
+    geojsonsf,
+    jsonlite
 Remotes:
     nhsbsa-data-analytics/nhsbsaR,
     nhsbsa-data-analytics/addressMatchR,

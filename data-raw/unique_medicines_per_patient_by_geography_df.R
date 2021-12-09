@@ -8,15 +8,6 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 postcode_db <- con %>%
   tbl(from = "INT615_POSTCODE_LOOKUP")
 
-# Subset the columns
-postcode_db <- postcode_db %>%
-  select(
-    PCD_NO_SPACES = POSTCODE, # to join to FACT table
-    PCD_REGION_NAME, 
-    PCD_STP_NAME, 
-    PCD_LAD_NAME
-  )
-
 # Create a lazy table from the year month table
 year_month_db <- con %>%
   tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
@@ -48,7 +39,7 @@ fact_db <- fact_db %>%
     by = c("YEAR_MONTH", "CALC_PREC_DRUG_RECORD_ID" = "RECORD_ID")
   ) %>%
   left_join(
-    y = postcode_db, 
+    y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE), 
     copy = TRUE
   ) %>%
   mutate(OVERALL = "Overall") # dummy col so aggregation is easier

@@ -8,15 +8,6 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 postcode_db <- con %>%
   tbl(from = "INT615_POSTCODE_LOOKUP")
 
-# Subset the columns
-postcode_db <- postcode_db %>%
-  select(
-    PCD_NO_SPACES = POSTCODE, # To join to FACT table
-    PCD_REGION_NAME, 
-    PCD_STP_NAME, 
-    PCD_LAD_NAME
-  )
-
 # Create a lazy table from the care home FACT table
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
@@ -25,7 +16,7 @@ fact_db <- con %>%
 fact_db <- fact_db %>%
   filter(CH_FLAG == 1) %>%
   left_join(
-    y = postcode_db, 
+    y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE), 
     copy = TRUE
   ) %>%
   mutate(OVERALL = "Overall") # dummy col so aggregation is easier
