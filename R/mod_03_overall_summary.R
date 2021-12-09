@@ -32,15 +32,6 @@ mod_03_overall_summary_ui <- function(id) {
     p("Correspondingly the estimated volumne and number of medicines per patient per month is higher."),
     br(),
     fluidRow(
-      col_3(
-        offset = 6,
-        h6("Care home")
-      ),
-      col_3(
-        h6("Non-care home")
-      )
-    ),
-    fluidRow(
       style = "background-color: #FFFFFF;",
       col_6(
         selectInput(
@@ -73,10 +64,10 @@ mod_03_overall_summary_ui <- function(id) {
   )
 }
 
-#' 02_overall_summary Server Function
+#' 03_overall_summary Server Function
 #'
 #' @noRd
-mod_02_overall_summary_server <- function(input, output, session) {
+mod_03_overall_summary_server <- function(input, output, session) {
   ns <- session$ns
   
   # Join the 3 datasets together
@@ -266,8 +257,6 @@ mod_02_overall_summary_server <- function(input, output, session) {
     
   })
   
-  
-  )
 }
 
 ## To be copied in the UI

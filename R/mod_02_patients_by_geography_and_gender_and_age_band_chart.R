@@ -53,9 +53,9 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
         )
       ),
       radioButtons(
-        inputId = ns("number_perc"),
+        inputId = ns("count_or_percentage"),
         label = "",
-        choices = c("Percentage", "Counts"),
+        choices = c("Percentage", "Count"),
         inline = TRUE,
         width = "100%"
       ),
@@ -98,16 +98,11 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   metric_selection <- reactiveValues(v = NULL)
 
   observe({
-    metric_selection$v <- input$number_perc
+    metric_selection$v <- input$count_or_percentage
   })
 
   # create as reactive value - now it holds selected value
   input_metric <- reactive(metric_selection$v)
-
-  # Only interested in overall period
-  patients_by_geography_and_gender_and_age_band_df <- 
-    careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-    dplyr::filter(YEAR_MONTH == "Overall")
   
   # Filter to relevant data for this chart
   patients_by_geography_and_gender_and_age_band_df <- 
@@ -138,26 +133,41 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   
   # Filter the data based on the sub geography and format for the plot
   plot_df <- reactive({
+    req(input$geography)
     req(input$sub_geography)
-    geography_df() %>%
-      dplyr::filter(SUB_GEOGRAPHY == input$sub_geography) %>%
-      dplyr::group_by(YEAR_MONTH) %>%
-      dplyr::mutate(p = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(p = p * ifelse(GENDER == "Male", 1, -1))
+    req(input$count_or_percentage)
+    if (input$count_or_percentage == "Percentage") {
+      geography_df() %>%
+        dplyr::filter(SUB_GEOGRAPHY == input$sub_geography) %>%
+        dplyr::group_by(YEAR_MONTH) %>%
+        dplyr::mutate(value = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1))
+    } else if (input$count_or_percentage == "Count") {
+      geography_df() %>%
+        dplyr::filter(SUB_GEOGRAPHY == input$sub_geography) %>%
+        dplyr::group_by(YEAR_MONTH) %>%
+        dplyr::mutate(value = TOTAL_PATIENTS) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1))
+    }
   })
 
-  # Pull the max p
-  max_p <- reactive({
+  # Pull the max value
+  max_value <- reactive({
     req(input$geography)
-    max(abs(plot_df()$value))
+    req(input$sub_geography)
+    req(input$count_or_percentage)
+    max(abs(plot_df()$value), na.rm = TRUE)
   })
 
   # Format for highcharter animation
   # unfortunately, tooltip with two different values doesn't work.
   # change to toggle
   plot_series_list <- reactive({
+    req(input$geography)
     req(input$sub_geography)
+    req(input$count_or_percentage)
     plot_df() %>%
       tidyr::complete(YEAR_MONTH, AGE_BAND, GENDER,
         fill = list(value = 0)
@@ -174,7 +184,9 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   # Pyramid plot for age band and gender
   output$patients_by_geography_and_gender_and_age_band_chart <- highcharter::renderHighchart({
     req(input$geography)
-    if (input$number_perc == "Percentage") {
+    req(input$geography)
+    req(input$count_or_percentage)
+    if (input$count_or_percentage == "Percentage") {
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
         highcharter::hc_add_series_list(x = plot_series_list()) %>%
@@ -190,8 +202,8 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
         ) %>%
         highcharter::hc_yAxis(
           title = list(text = "Number of care home patients as percentage of all care home patients (%)"),
-          min = -ceiling(max_p() / 5) * 5,
-          max = ceiling(max_p() / 5) * 5,
+          min = -ceiling(max_value() / 5) * 5,
+          max = ceiling(max_value() / 5) * 5,
           labels = list(
             formatter = highcharter::JS("function(){ return Math.abs(this.value);}")
           )
@@ -219,8 +231,8 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
         ) %>%
         highcharter::hc_yAxis(
           title = list(text = "Number of care home patients"),
-          min = -ceiling(max_p() / 5) * 5,
-          max = ceiling(max_p() / 5) * 5,
+          min = -ceiling(max_value() / 5) * 5,
+          max = ceiling(max_value() / 5) * 5,
           labels = list(
             formatter = htmlwidgets::JS("function(){ return Math.abs(this.value)/1000 + 'K';}")
           )
