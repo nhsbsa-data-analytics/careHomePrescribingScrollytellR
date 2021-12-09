@@ -38,7 +38,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       ),
       col_6(
         selectInput(
-          inputId = ns("level"),
+          inputId = ns("geography"),
           label = "Geography",
           choices = c("Overall", "Region", "STP", "Local Authority"),
           width = "100%"
@@ -46,16 +46,16 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       ),
       col_6(
         selectInput(
-          inputId = ns("geography"),
+          inputId = ns("sub_geography"),
           label = "Sub Geography",
           choices = NULL, # dynamically generated
           width = "100%"
         )
       ),
       radioButtons(
-        inputId = ns("number_perc"),
+        inputId = ns("count_or_percentage"),
         label = "",
-        choices = c("Percentage", "Counts"),
+        choices = c("Percentage", "Count"),
         inline = TRUE,
         width = "100%"
       ),
@@ -98,52 +98,54 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   metric_selection <- reactiveValues(v = NULL)
 
   observe({
-    metric_selection$v <- input$number_perc
+    metric_selection$v <- input$count_or_percentage
   })
 
   # create as reactive value - now it holds selected value
-
   input_metric <- reactive(metric_selection$v)
-
+  
   # Filter to relevant data for this chart
-  patients_by_geography_and_gender_and_age_band_df <-
-    careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-    dplyr::filter(dplyr::across(c(LEVEL, GEOGRAPHY, GENDER), not_na))
-
-
-  # Handy resource: https://mastering-shiny.org/action-dynamic.html
-
-  # Filter the data based on the level
-  level_df <- reactive({
-    req(input$level)
+  patients_by_geography_and_gender_and_age_band_df <- 
     patients_by_geography_and_gender_and_age_band_df %>%
-      dplyr::filter(LEVEL == input$level)
+    dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY, GENDER), not_na))
+    
+  # Handy resource: https://mastering-shiny.org/action-dynamic.html
+  
+  # Filter the data based on the geography
+  geography_df <- reactive({
+    req(input$geography)
+    patients_by_geography_and_gender_and_age_band_df %>%
+      dplyr::filter(GEOGRAPHY == input$geography)
+    
   })
-
-  # Update the list of choices for geography from the rows in level dataframe
+  
+  # Update the list of choices for sub geography from the rows in the geography 
+  # dataframe
   observeEvent(
-    eventExpr = level_df(),
+    eventExpr = geography_df(), 
     handlerExpr = {
       updateSelectInput(
-        inputId = "geography",
-        choices = unique(level_df()$GEOGRAPHY)
-      )
+        inputId = "sub_geography", 
+        choices = unique(geography_df()$SUB_GEOGRAPHY)
+      ) 
     }
   )
-
-  # Filter the data based on the level and format for the plot
+  
+  # Filter the data based on the sub geography and format for the plot
   plot_df <- reactive({
     req(input$geography)
-    if (input$number_perc == "Percentage") {
-      level_df() %>%
-        dplyr::filter(GEOGRAPHY == input$geography) %>%
+    req(input$sub_geography)
+    req(input$count_or_percentage)
+    if (input$count_or_percentage == "Percentage") {
+      geography_df() %>%
+        dplyr::filter(SUB_GEOGRAPHY == input$sub_geography) %>%
         dplyr::group_by(YEAR_MONTH) %>%
         dplyr::mutate(value = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1))
-    } else if (input$number_perc == "Counts") {
-      level_df() %>%
-        dplyr::filter(GEOGRAPHY == input$geography) %>%
+    } else if (input$count_or_percentage == "Count") {
+      geography_df() %>%
+        dplyr::filter(SUB_GEOGRAPHY == input$sub_geography) %>%
         dplyr::group_by(YEAR_MONTH) %>%
         dplyr::mutate(value = TOTAL_PATIENTS) %>%
         dplyr::ungroup() %>%
@@ -151,10 +153,12 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
     }
   })
 
-  # Pull the max p
-  max_p <- reactive({
+  # Pull the max value
+  max_value <- reactive({
     req(input$geography)
-    max(abs(plot_df()$value))
+    req(input$sub_geography)
+    req(input$count_or_percentage)
+    max(abs(plot_df()$value), na.rm = TRUE)
   })
 
   # Format for highcharter animation
@@ -162,6 +166,8 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   # change to toggle
   plot_series_list <- reactive({
     req(input$geography)
+    req(input$sub_geography)
+    req(input$count_or_percentage)
     plot_df() %>%
       tidyr::complete(YEAR_MONTH, AGE_BAND, GENDER,
         fill = list(value = 0)
@@ -178,7 +184,9 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   # Pyramid plot for age band and gender
   output$patients_by_geography_and_gender_and_age_band_chart <- highcharter::renderHighchart({
     req(input$geography)
-    if (input$number_perc == "Percentage") {
+    req(input$geography)
+    req(input$count_or_percentage)
+    if (input$count_or_percentage == "Percentage") {
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
         highcharter::hc_add_series_list(x = plot_series_list()) %>%
@@ -194,8 +202,8 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
         ) %>%
         highcharter::hc_yAxis(
           title = list(text = "Number of care home patients as percentage of all care home patients (%)"),
-          min = -ceiling(max_p() / 5) * 5,
-          max = ceiling(max_p() / 5) * 5,
+          min = -ceiling(max_value() / 5) * 5,
+          max = ceiling(max_value() / 5) * 5,
           labels = list(
             formatter = highcharter::JS("function(){ return Math.abs(this.value);}")
           )
@@ -223,8 +231,8 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
         ) %>%
         highcharter::hc_yAxis(
           title = list(text = "Number of care home patients"),
-          min = -ceiling(max_p() / 5) * 5,
-          max = ceiling(max_p() / 5) * 5,
+          min = -ceiling(max_value() / 5) * 5,
+          max = ceiling(max_value() / 5) * 5,
           labels = list(
             formatter = htmlwidgets::JS("function(){ return Math.abs(this.value)/1000 + 'K';}")
           )
