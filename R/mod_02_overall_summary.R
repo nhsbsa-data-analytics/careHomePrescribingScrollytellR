@@ -10,49 +10,6 @@
 mod_02_overall_summary_ui <- function(id) {
   ns <- NS(id)
 
-  # Pull dataframes for valueBox
-  items_per_patient_df <-
-    careHomePrescribingScrollytellR::items_per_patient_df %>%
-    dplyr::filter(is.na(YEAR_MONTH)) %>%
-    dplyr::mutate(ITEMS_PER_PATIENT = round(ITEMS_PER_PATIENT, 0)) %>%
-    tidyr::pivot_wider(
-      names_from = CH_FLAG, values_from = ITEMS_PER_PATIENT
-    ) %>%
-    dplyr::mutate(ICON = "prescription")
-
-  cost_per_patient_df <-
-    careHomePrescribingScrollytellR::cost_per_patient_df %>%
-    dplyr::filter(is.na(YEAR_MONTH)) %>%
-    dplyr::mutate(
-      COST_PER_PATIENT = paste0("£", round(COST_PER_PATIENT, 0))
-    ) %>%
-    tidyr::pivot_wider(names_from = CH_FLAG, values_from = COST_PER_PATIENT) %>%
-    dplyr::mutate(ICON = "coins")
-
-  unique_medicines_per_patient_df <-
-    careHomePrescribingScrollytellR::unique_medicines_per_patient_df %>%
-    dplyr::filter(is.na(YEAR_MONTH)) %>%
-    dplyr::mutate(
-      UNIQUE_MEDICINES_PER_PATIENT = round(UNIQUE_MEDICINES_PER_PATIENT, 0)
-    ) %>%
-    tidyr::pivot_wider(
-      names_from = CH_FLAG,
-      values_from = UNIQUE_MEDICINES_PER_PATIENT
-    ) %>%
-    dplyr::mutate(ICON = "pills")
-  
-  ten_or_more_unique_medicines_per_patient_df <-
-    careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_df %>%
-    dplyr::filter(is.na(YEAR_MONTH)) %>%
-    dplyr::mutate(
-      PCT_PATIENTS_TEN_OR_MORE = paste0(round(PCT_PATIENTS_TEN_OR_MORE, 0), "%")
-    ) %>%
-    tidyr::pivot_wider(
-      names_from = CH_FLAG,
-      values_from = PCT_PATIENTS_TEN_OR_MORE
-    ) %>%
-    dplyr::mutate(ICON = "pills")
-
   tagList(
     h4(
       "Estimated prescribing patterns of ",
@@ -67,119 +24,35 @@ mod_02_overall_summary_ui <- function(id) {
       ),
       "."
     ),
-    br(),
     fluidRow(
-      col_3(
-        offset = 6,
-        h6("Care home")
-      ),
-      col_3(
-        h6("Non-care home")
-      )
-    ),
-    fluidRow(
+      style = "background-color: #FFFFFF;",
       col_6(
-        p(
-          tippy(
-            text = "Number of prescription items", 
-            tooltip = tooltip_text$items
-          )
+        selectInput(
+          inputId = ns("geography"),
+          label = "Geography",
+          choices = c("Overall", "Region", "STP", "Local Authority"),
+          width = "100%"
         )
       ),
-      col_3(
-        mod_value_box_ui(
-          id = "1",
-          care_home = TRUE,
-          value = items_per_patient_df$`Care home`,
-          icon = items_per_patient_df$ICON
+      col_6(
+        selectInput(
+          inputId = ns("sub_geography"),
+          label = "Sub Geography",
+          choices = NULL, # dynamically generated
+          width = "100%"
+        )
+      ),
+      br(),
+      fluidRow(
+        col_3(
+          offset = 6,
+          h6("Care home")
         ),
-      ),
-      col_3(
-        mod_value_box_ui(
-          id = "2",
-          care_home = FALSE,
-          value = items_per_patient_df$`Non care home`,
-          icon = items_per_patient_df$ICON
-        )
-      )
-    ),
-    fluidRow(
-      col_6(
-        p(
-          tippy(
-            text = "Total drug cost", 
-            tooltip = tooltip_text$cost
-          )
+        col_3(
+          h6("Non-care home")
         )
       ),
-      col_3(
-        mod_value_box_ui(
-          id = "3",
-          care_home = TRUE,
-          value = cost_per_patient_df$`Care home`,
-          icon = cost_per_patient_df$ICON
-        )
-      ),
-      col_3(
-        mod_value_box_ui(
-          id = "4",
-          care_home = FALSE,
-          value = cost_per_patient_df$`Non care home`,
-          icon = cost_per_patient_df$ICON
-        )
-      )
-    ),
-    fluidRow(
-      col_6(
-        p(
-          tippy(
-            text = "Number of unique medicines", 
-            tooltip = tooltip_text$unique_medicines
-          )
-        )
-      ),
-      col_3(
-        mod_value_box_ui(
-          id = "5",
-          care_home = TRUE,
-          value = unique_medicines_per_patient_df$`Care home`,
-          icon = unique_medicines_per_patient_df$ICON
-        )
-      ),
-      col_3(
-        mod_value_box_ui(
-          id = "6",
-          care_home = FALSE,
-          value = unique_medicines_per_patient_df$`Non care home`,
-          icon = unique_medicines_per_patient_df$ICON
-        )
-      )
-    ),
-    fluidRow(
-      col_6(
-        p(
-          tippy(
-            text = "Patients on ten or more unique medicines", 
-            tooltip = tooltip_text$ten_or_more_unique_medicines
-          )
-        )
-      ),
-      col_3(
-        mod_value_box_ui(
-          id = "7",
-          care_home = TRUE,
-          value = ten_or_more_unique_medicines_per_patient_df$`Care home`,
-          icon = ten_or_more_unique_medicines_per_patient_df$ICON
-        )
-      ),
-      col_3(
-        mod_value_box_ui(
-          id = "8",
-          care_home = FALSE,
-          value = ten_or_more_unique_medicines_per_patient_df$`Non care home`,
-          icon = ten_or_more_unique_medicines_per_patient_df$ICON
-        )
-      )
+      uiOutput(ns("table"))
     )
   )
 }
@@ -189,6 +62,195 @@ mod_02_overall_summary_ui <- function(id) {
 #' @noRd
 mod_02_overall_summary_server <- function(input, output, session) {
   ns <- session$ns
+  
+  # Join the 3 datasets together
+  overall_summary_df <- 
+    careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df %>%
+    dplyr::full_join(
+      y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_geography_df
+    ) %>%
+    dplyr::full_join(
+      y = careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_by_geography_df
+    )
+  
+  # Only interested in overall period
+  overall_summary_df <- overall_summary_df %>%
+    dplyr::filter(YEAR_MONTH == "Overall")
+  
+  # Filter to relevant data for this chart
+  overall_summary_df <- overall_summary_df %>%
+    dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY), not_na))
+  
+  # Tidy the cols
+  overall_summary_df <- overall_summary_df %>%
+    dplyr::mutate(
+      COST_PER_PATIENT = paste0(
+        "£", 
+        format(x = round(COST_PER_PATIENT, 2), nsmall = 2)
+      ),
+      ITEMS_PER_PATIENT = round(ITEMS_PER_PATIENT, 0),
+      UNIQUE_MEDICINES_PER_PATIENT = round(UNIQUE_MEDICINES_PER_PATIENT, 0),
+      PCT_PATIENTS_TEN_OR_MORE = paste0(round(PCT_PATIENTS_TEN_OR_MORE, 0), "%")
+    )
+  
+  # Handy resource: https://mastering-shiny.org/action-dynamic.html
+  
+  # Filter the data based on the geography
+  geography_df <- reactive({
+    req(input$geography)
+    overall_summary_df %>%
+      dplyr::filter(GEOGRAPHY == input$geography)
+    
+  })
+  
+  # Update the list of choices for sub geography from the rows in the geography 
+  # dataframe
+  observeEvent(
+    eventExpr = geography_df(), 
+    handlerExpr = {
+      updateSelectInput(
+        inputId = "sub_geography", 
+        choices = unique(geography_df()$SUB_GEOGRAPHY)
+      ) 
+    }
+  )
+  
+  # Filter the data based on the level and format for the table
+  table_df <- reactive({
+    req(input$sub_geography)
+    geography_df() %>%
+      dplyr::filter(SUB_GEOGRAPHY == input$sub_geography)
+  })
+  
+  # Create the table
+  output$table <- renderUI({
+    req(input$sub_geography)
+    tagList(
+      fluidRow(
+        col_6(
+          p(
+            tippy(
+              text = "Total drug cost", 
+              tooltip = tooltip_text$cost
+            )
+          )
+        ),
+        col_3(
+          mod_value_box_ui(
+            id = "3",
+            care_home = TRUE,
+            value = table_df() %>% 
+              dplyr::filter(CH_FLAG == "Care home") %>% 
+              dplyr::pull(COST_PER_PATIENT),
+            icon = "coins"
+          )
+        ),
+        col_3(
+          mod_value_box_ui(
+            id = "4",
+            care_home = FALSE,
+            value = table_df() %>% 
+              dplyr::filter(CH_FLAG == "Non care home") %>% 
+              dplyr::pull(COST_PER_PATIENT),
+            icon = "coins"
+          )
+        )
+      ),
+      fluidRow(
+        col_6(
+          p(
+            tippy(
+              text = "Number of prescription items", 
+              tooltip = tooltip_text$items
+            )
+          )
+        ),
+        col_3(
+          mod_value_box_ui(
+            id = "1",
+            care_home = TRUE,
+            value = table_df() %>% 
+              dplyr::filter(CH_FLAG == "Care home") %>% 
+              dplyr::pull(ITEMS_PER_PATIENT),
+            icon = "prescription"
+          ),
+        ),
+        col_3(
+          mod_value_box_ui(
+            id = "2",
+            care_home = FALSE,
+            value = table_df() %>% 
+              dplyr::filter(CH_FLAG == "Non care home") %>% 
+              dplyr::pull(ITEMS_PER_PATIENT),
+            icon = "prescription"
+          )
+        )
+      ),
+      fluidRow(
+        col_6(
+          p(
+            tippy(
+              text = "Number of unique medicines", 
+              tooltip = tooltip_text$unique_medicines
+            )
+          )
+        ),
+        col_3(
+          mod_value_box_ui(
+            id = "5",
+            care_home = TRUE,
+            value = table_df() %>% 
+              dplyr::filter(CH_FLAG == "Care home") %>% 
+              dplyr::pull(UNIQUE_MEDICINES_PER_PATIENT),
+            icon = "pills"
+          )
+        ),
+        col_3(
+          mod_value_box_ui(
+            id = "6",
+            care_home = FALSE,
+            value = table_df() %>% 
+              dplyr::filter(CH_FLAG == "Non care home") %>% 
+              dplyr::pull(UNIQUE_MEDICINES_PER_PATIENT),
+            icon = "pills"
+          )
+        )
+      ),
+      fluidRow(
+        col_6(
+          p(
+            tippy(
+              text = "Patients on ten or more unique medicines", 
+              tooltip = tooltip_text$ten_or_more_unique_medicines
+            )
+          )
+        ),
+        col_3(
+          mod_value_box_ui(
+            id = "7",
+            care_home = TRUE,
+            value = table_df() %>% 
+              dplyr::filter(CH_FLAG == "Care home") %>% 
+              dplyr::pull(PCT_PATIENTS_TEN_OR_MORE),
+            icon = "pills"
+          )
+        ),
+        col_3(
+          mod_value_box_ui(
+            id = "8",
+            care_home = FALSE,
+            value = table_df() %>% 
+              dplyr::filter(CH_FLAG == "Non care home") %>% 
+              dplyr::pull(PCT_PATIENTS_TEN_OR_MORE),
+            icon = "pills"
+          )
+        )
+      )
+    )
+    
+  })
+  
+  
 }
 
 ## To be copied in the UI

@@ -19,16 +19,16 @@ mod_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       ),
       col_6(
         selectInput(
-          inputId = ns("level"),
-          label = "Level",
+          inputId = ns("geography"),
+          label = "Geography",
           choices = c("Overall", "Region", "STP", "Local Authority"),
           width = "100%"
         )
       ),
       col_6(
         selectInput(
-          inputId = ns("geography"),
-          label = "Geography",
+          inputId = ns("sub_geography"),
+          label = "Sub Geography",
           choices = NULL, # dynamically generated
           width = "100%"
         )
@@ -52,37 +52,43 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
 ) {
   ns <- session$ns
   
-  # Filter to relevant data for this chart
+  # Only interested in overall period
   patients_by_geography_and_gender_and_age_band_df <- 
     careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-    dplyr::filter(dplyr::across(c(LEVEL, GEOGRAPHY, GENDER), not_na))
+    dplyr::filter(YEAR_MONTH == "Overall")
+  
+  # Filter to relevant data for this chart
+  patients_by_geography_and_gender_and_age_band_df <- 
+    patients_by_geography_and_gender_and_age_band_df %>%
+    dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY, GENDER), not_na))
     
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
   
-  # Filter the data based on the level
-  level_df <- reactive({
-    req(input$level)
+  # Filter the data based on the geography
+  geography_df <- reactive({
+    req(input$geography)
     patients_by_geography_and_gender_and_age_band_df %>%
-      dplyr::filter(LEVEL == input$level)
+      dplyr::filter(GEOGRAPHY == input$geography)
     
   })
   
-  # Update the list of choices for geography from the rows in level dataframe
+  # Update the list of choices for sub geography from the rows in the geography 
+  # dataframe
   observeEvent(
-    eventExpr = level_df(), 
+    eventExpr = geography_df(), 
     handlerExpr = {
       updateSelectInput(
-        inputId = "geography", 
-        choices = unique(level_df()$GEOGRAPHY)
+        inputId = "sub_geography", 
+        choices = unique(geography_df()$SUB_GEOGRAPHY)
       ) 
     }
   )
   
-  # Filter the data based on the level and format for the plot
+  # Filter the data based on the sub geography and format for the plot
   plot_df <- reactive({
-    req(input$geography)
-    level_df() %>%
-      dplyr::filter(GEOGRAPHY == input$geography) %>%
+    req(input$sub_geography)
+    geography_df() %>%
+      dplyr::filter(SUB_GEOGRAPHY == input$sub_geography) %>%
       dplyr::group_by(YEAR_MONTH) %>%
       dplyr::mutate(p = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
       dplyr::ungroup() %>%
@@ -97,7 +103,7 @@ mod_patients_by_geography_and_gender_and_age_band_chart_server <- function(
   
   # Format for highcharter animation
   plot_series_list <- reactive({
-    req(input$geography)
+    req(input$sub_geography)
     plot_df() %>%
       tidyr::expand(YEAR_MONTH, AGE_BAND, GENDER) %>%
       dplyr::left_join(plot_df()) %>%

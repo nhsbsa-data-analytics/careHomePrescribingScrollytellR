@@ -77,8 +77,8 @@ for (
     tmp_unique_medicines_db %>%
     group_by(
       YEAR_MONTH = as.character(YEAR_MONTH), 
-      GEOGRAPHY = geography, 
-      SUB_GEOGRAPHY = !!dplyr::sym(geography),
+      GEOGRAPHY, 
+      SUB_GEOGRAPHY,
       CH_FLAG
     ) %>%
     summarise(UNIQUE_MEDICINES_PER_PATIENT = mean(UNIQUE_MEDICINES)) %>%
@@ -103,8 +103,8 @@ for (
     tmp_unique_medicines_db %>%
     group_by(
       YEAR_MONTH = as.character(YEAR_MONTH), 
-      GEOGRAPHY = geography, 
-      SUB_GEOGRAPHY = !!dplyr::sym(geography),
+      GEOGRAPHY, 
+      SUB_GEOGRAPHY,
       CH_FLAG
     ) %>%
     summarise(
