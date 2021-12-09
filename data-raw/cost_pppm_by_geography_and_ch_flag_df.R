@@ -29,7 +29,7 @@ fact_db <- fact_db %>%
     y = postcode_db, 
     copy = TRUE
   )  %>%
-  mutate(OVERALL = "Overall") %>% # dummy col so aggregation is easier
+  mutate(OVERALL = "Overall") # dummy col so aggregation is easier
   
 # Loop over geography cols and aggregate
 for (
