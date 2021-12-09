@@ -28,8 +28,10 @@ fact_db <- fact_db %>%
 # Calculate IMD decile figures, filter to carehomes only
 imd_calc <- fact_db %>%
   group_by(INDEX_OF_MULT_DEPRIV_DECILE) %>%
-  filter(CH_FLAG == 1,
-         !is.na(INDEX_OF_MULT_DEPRIV_DECILE)) %>%
+  filter(
+    CH_FLAG == 1,
+    !is.na(INDEX_OF_MULT_DEPRIV_DECILE)
+  ) %>%
   summarise(TOTAL_DECILE = count(INDEX_OF_MULT_DEPRIV_DECILE)) %>%
   ungroup() %>%
   collect()

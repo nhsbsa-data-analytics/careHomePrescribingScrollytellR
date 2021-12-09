@@ -97,7 +97,7 @@ postcode_imd_db <- postcode_imd_db %>%
 # Join IMD data onto postcode
 postcode_db <- postcode_db %>%
   inner_join(
-    y = postcode_imd_db, 
+    y = postcode_imd_db,
     by = "LSOA_CODE"
   )
 
