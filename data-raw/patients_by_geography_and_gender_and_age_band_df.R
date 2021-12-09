@@ -11,7 +11,7 @@ postcode_db <- con %>%
 
 # Subset the columns
 postcode_db <- postcode_db %>%
-  select(POSTCODE, PCD_REGION_NAME, PCD_STP_NAME, PCD_LAD_NAME)
+  select(POSTCODE, PCD_REGION_NAME, PCD_STP_NAME, PCD_LAD_NAME, INDEX_OF_MULT_DEPRIV_DECILE)
 
 # Create a lazy table from the care home FACT table
 fact_db <- con %>%
@@ -24,6 +24,17 @@ fact_db <- fact_db %>%
     y = postcode_db,
     by = c("PCD_NO_SPACES" = "POSTCODE")
   )
+
+# Calculate IMD decile figures, filter to carehomes only
+imd_calc <- fact_db %>%
+  group_by(INDEX_OF_MULT_DEPRIV_DECILE) %>%
+  filter(CH_FLAG == 1,
+         !is.na(INDEX_OF_MULT_DEPRIV_DECILE)) %>%
+  summarise(TOTAL_DECILE = count(INDEX_OF_MULT_DEPRIV_DECILE)) %>%
+  ungroup() %>%
+  collect()
+
+# Calculate total for IMD
 
 # Get a single gender and age for the period
 patient_db <- fact_db %>%
