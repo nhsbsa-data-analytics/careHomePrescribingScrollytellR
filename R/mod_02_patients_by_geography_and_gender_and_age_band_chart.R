@@ -89,12 +89,12 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
                                                                               session) {
   ns <- session$ns
 
+  # comma separate setting
   hcoptslang <- getOption("highcharter.lang")
   hcoptslang$thousandsSep <- ","
   options(highcharter.lang = hcoptslang)
 
   # Radio button added as we cannot add two values in one sequence for the hc_motion
-
   metric_selection <- reactiveValues(v = NULL)
 
   observe({
@@ -226,12 +226,25 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
           min = -ceiling(max_p() / 5) * 5,
           max = ceiling(max_p() / 5) * 5,
           labels = list(
-            formatter = highcharter::JS("function(){ return Math.abs(this.value);}")
+            formatter = htmlwidgets::JS("function(){ return Math.abs(this.value)/1000 + 'K';}")
           )
         ) %>%
         highcharter::hc_tooltip(
           shared = FALSE,
-          formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Number of patients: </b>' + Math.abs(Math.round(this.point.y /10)*10) ;}")
+          useHTML = TRUE,
+          formatter = htmlwidgets::JS(
+            "
+            function(){
+            if(Math.abs(this.point.y) >= 1000){
+            outHTML = '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(Math.round(this.point.y/10)*10),0)
+            return(outHTML)
+            }else{
+            outHTML = '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Number of patients: </b>' + Math.abs(Math.round(this.point.y /10)*10)
+            return(outHTML)
+            }
+            }
+            "
+          )
         )
     }
   })
@@ -241,4 +254,4 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
 # mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_1")
 
 ## To be copied in the server
-# callModule(mod_02_patients_by_geography_and_gender_and_age_band_chart_server, "02_patients_by_geography_and_gender_and_age_band_chart_1")
+# callModule(mod_03_patients_by_geography_and_gender_and_age_band_chart_server, "02_patients_by_geography_and_gender_and_age_band_chart_1")
