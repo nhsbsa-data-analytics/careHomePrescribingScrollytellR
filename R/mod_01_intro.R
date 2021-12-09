@@ -11,7 +11,7 @@ mod_01_intro_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4(
-      "Primary care prescribing patterns for ",
+      "Estimated primary care prescribing patterns for ",
       tippy(
         text = "older care home patients",
         tooltip = tooltip_text$care_home
@@ -31,7 +31,7 @@ mod_01_intro_ui <- function(id) {
     br(),
     p(
       "We estimate that there was a monthly average of", tags$b("284 thousand"),
-      "patients recieving prescriptions each month in 2020/21 and they ",
+      "patients receiving prescriptions each month in 2020/21 and they ",
       "received an estimated 34 million prescription items at a cost of",
       tags$b("£318 million.")
     ),
@@ -69,7 +69,7 @@ mod_01_intro_ui <- function(id) {
     ),
     p(
       "These estimates address a key gap in knowledge and give valuable ",
-      "insights to inform the use and management of medicines in care homes ",
+      "insights which could inform the use and management of medicines in care homes ",
       "to help improve health outcomes, the quality of care and ensure value."
     )
   )
