@@ -11,10 +11,8 @@ postcode_db <- con %>%
 
 # Subset the columns
 postcode_db <- postcode_db %>%
-  mutate(OVERALL = "Overall") %>% # dummy col so aggregation is easier
   select(
-    PCD_NO_SPACES = POSTCODE, 
-    OVERALL,
+    PCD_NO_SPACES = POSTCODE, # to join to FACT table
     PCD_REGION_NAME, 
     PCD_STP_NAME, 
     PCD_LAD_NAME
@@ -30,7 +28,8 @@ fact_db <- fact_db %>%
   left_join(
     y = postcode_db, 
     copy = TRUE
-  ) 
+  )  %>%
+  mutate(OVERALL = "Overall") %>% # dummy col so aggregation is easier
   
 # Loop over geography cols and aggregate
 for (
