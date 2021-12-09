@@ -37,7 +37,7 @@ for (
 ) {
   
   # Monthly cost per patient by care home flag
-  tmp_df <- fact_db %>%
+  tmp_db <- fact_db %>%
     group_by(
       YEAR_MONTH = as.character(YEAR_MONTH), 
       GEOGRAPHY = geography, 
@@ -46,17 +46,22 @@ for (
     ) %>%
     summarise(
       TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01),
+      TOTAL_ITEMS = sum(ITEM_COUNT),
       TOTAL_PATIENTS = n_distinct(NHS_NO),
-      COST_PER_PATIENT = sum(ITEM_PAY_DR_NIC * 0.01) / n_distinct(NHS_NO)
+      COST_PER_PATIENT = sum(ITEM_PAY_DR_NIC * 0.01) / n_distinct(NHS_NO),
+      ITEMS_PER_PATIENT = sum(ITEM_COUNT) / n_distinct(NHS_NO)
     ) %>%
     ungroup()
   
-  # Add overall mean (average monthly cost per patient is the metric)
-  tmp_df <- tmp_df %>%
+  # Add overall mean (average monthly per patient is the metric)
+  tmp_db <- tmp_db %>%
     union_all(
       y = tmp_df %>%
         group_by(YEAR_MONTH = "Overall", GEOGRAPHY, SUB_GEOGRAPHY, CH_FLAG) %>%
-        summarise(COST_PER_PATIENT = mean(COST_PER_PATIENT)) %>%
+        summarise(
+          COST_PER_PATIENT = mean(COST_PER_PATIENT),
+          ITEMS_PER_PATIENT = mean(ITEMS_PER_PATIENT)
+        ) %>%
         ungroup()
     )
   
@@ -64,14 +69,14 @@ for (
   if (geography == "OVERALL") {
     
     # On the first iteration initialise the table
-    cost_pppm_by_geography_and_ch_flag_db <- tmp_df
+    items_and_cost_pppm_by_geography_and_ch_flag_db <- tmp_db
     
   } else {
     
     # Union results to initialised table
-    cost_pppm_by_geography_and_ch_flag_db <- union_all(
-      x = cost_pppm_by_geography_and_ch_flag_db,
-      y = tmp_df
+    items_and_cost_pppm_by_geography_and_ch_flag_db <- union_all(
+      x = items_and_cost_pppm_by_geography_and_ch_flag_db,
+      y = tmp_db
     )
     
   }
@@ -79,8 +84,8 @@ for (
 }
 
 # Give the GEOGRAPHY column nice names
-cost_pppm_by_geography_and_ch_flag_db <- 
-  cost_pppm_by_geography_and_ch_flag_db %>%
+items_and_cost_pppm_by_geography_and_ch_flag_db <- 
+  items_and_cost_pppm_by_geography_and_ch_flag_db %>%
   mutate(
     GEOGRAPHY = case_when(
       GEOGRAPHY == "OVERALL" ~ "Overall",
@@ -91,14 +96,14 @@ cost_pppm_by_geography_and_ch_flag_db <-
   )
 
 # Sort as is (not geography as we do that later) and collect
-cost_pppm_by_geography_and_ch_flag_df <- 
-  cost_pppm_by_geography_and_ch_flag_db %>%
+items_and_cost_pppm_by_geography_and_ch_flag_df <- 
+  items_and_cost_pppm_by_geography_and_ch_flag_db %>%
   arrange(YEAR_MONTH, SUB_GEOGRAPHY, CH_FLAG) %>%
   collect() 
   
 # Format for highcharter
-cost_pppm_by_geography_and_ch_flag_df <- 
-  cost_pppm_by_geography_and_ch_flag_df %>%
+items_and_cost_pppm_by_geography_and_ch_flag_df <- 
+  items_and_cost_pppm_by_geography_and_ch_flag_df %>%
   # Tweak the factors
   mutate(
     # Move overall to first category
@@ -113,7 +118,10 @@ cost_pppm_by_geography_and_ch_flag_df <-
   arrange(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY, CH_FLAG)
 
 # Add to data-raw/
-usethis::use_data(cost_pppm_by_geography_and_ch_flag_df, overwrite = TRUE)
+usethis::use_data(
+  items_and_cost_pppm_by_geography_and_ch_flag_df, 
+  overwrite = TRUE
+)
 
 # Disconnect from database
 DBI::dbDisconnect(con)
