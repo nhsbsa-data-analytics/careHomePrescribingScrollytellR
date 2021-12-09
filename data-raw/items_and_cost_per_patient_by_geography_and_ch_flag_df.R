@@ -1,4 +1,3 @@
-# Load libraries
 library(dplyr)
 library(dbplyr)
 
@@ -56,7 +55,7 @@ for (
   # Add overall mean (average monthly per patient is the metric)
   tmp_db <- tmp_db %>%
     union_all(
-      y = tmp_df %>%
+      y = tmp_db %>%
         group_by(YEAR_MONTH = "Overall", GEOGRAPHY, SUB_GEOGRAPHY, CH_FLAG) %>%
         summarise(
           COST_PER_PATIENT = mean(COST_PER_PATIENT),
@@ -69,13 +68,13 @@ for (
   if (geography == "OVERALL") {
     
     # On the first iteration initialise the table
-    items_and_cost_pppm_by_geography_and_ch_flag_db <- tmp_db
+    items_and_cost_per_patient_by_geography_and_ch_flag_db <- tmp_db
     
   } else {
     
     # Union results to initialised table
-    items_and_cost_pppm_by_geography_and_ch_flag_db <- union_all(
-      x = items_and_cost_pppm_by_geography_and_ch_flag_db,
+    items_and_cost_per_patient_by_geography_and_ch_flag_db <- union_all(
+      x = items_and_cost_per_patient_by_geography_and_ch_flag_db,
       y = tmp_db
     )
     
@@ -84,8 +83,8 @@ for (
 }
 
 # Give the GEOGRAPHY column nice names
-items_and_cost_pppm_by_geography_and_ch_flag_db <- 
-  items_and_cost_pppm_by_geography_and_ch_flag_db %>%
+items_and_cost_per_patient_by_geography_and_ch_flag_db <- 
+  items_and_cost_per_patient_by_geography_and_ch_flag_db %>%
   mutate(
     GEOGRAPHY = case_when(
       GEOGRAPHY == "OVERALL" ~ "Overall",
@@ -96,14 +95,14 @@ items_and_cost_pppm_by_geography_and_ch_flag_db <-
   )
 
 # Sort as is (not geography as we do that later) and collect
-items_and_cost_pppm_by_geography_and_ch_flag_df <- 
-  items_and_cost_pppm_by_geography_and_ch_flag_db %>%
+items_and_cost_per_patient_by_geography_and_ch_flag_df <- 
+  items_and_cost_per_patient_by_geography_and_ch_flag_db %>%
   arrange(YEAR_MONTH, SUB_GEOGRAPHY, CH_FLAG) %>%
   collect() 
   
 # Format for highcharter
-items_and_cost_pppm_by_geography_and_ch_flag_df <- 
-  items_and_cost_pppm_by_geography_and_ch_flag_df %>%
+items_and_cost_per_patient_by_geography_and_ch_flag_df <- 
+  items_and_cost_per_patient_by_geography_and_ch_flag_df %>%
   # Tweak the factors
   mutate(
     # Move overall to first category
@@ -119,7 +118,7 @@ items_and_cost_pppm_by_geography_and_ch_flag_df <-
 
 # Add to data-raw/
 usethis::use_data(
-  items_and_cost_pppm_by_geography_and_ch_flag_df, 
+  items_and_cost_per_patient_by_geography_and_ch_flag_df, 
   overwrite = TRUE
 )
 
