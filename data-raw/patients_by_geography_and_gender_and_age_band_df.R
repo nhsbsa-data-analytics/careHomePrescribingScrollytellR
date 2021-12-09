@@ -84,7 +84,7 @@ for (
 ) {
   
   # Aggregate to a temporary database table
-  tmp_df <-
+  tmp_db <-
     
     union_all(
       
@@ -118,14 +118,14 @@ for (
   if (geography == "OVERALL") {
     
     # On the first iteration initialise the table
-    patients_by_geography_and_gender_and_age_band_db <- tmp_df
+    patients_by_geography_and_gender_and_age_band_db <- tmp_db
     
   } else {
     
     # Union results to initialised table
     patients_by_geography_and_gender_and_age_band_db <- union_all(
       x = patients_by_geography_and_gender_and_age_band_db,
-      y = tmp_df
+      y = tmp_db
     )
     
   }
