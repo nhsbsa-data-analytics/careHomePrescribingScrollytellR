@@ -25,7 +25,7 @@ map_df <- bind_rows(
   
   # Local Authority
   sf::read_sf("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LocalAuthorityDistrictsMay2021UKBUC/FeatureServer/0/query?where=1%3D1&outFields=LAD21CD,LAD21NM&outSR=27700&f=json") %>%
-    mutate(GEOGRAPHY = "Local Auhtority") %>%
+    mutate(GEOGRAPHY = "Local Authority") %>%
     dplyr::select(
       GEOGRAPHY,
       SUB_GEOGRAPHY_CODE = LAD21CD,
