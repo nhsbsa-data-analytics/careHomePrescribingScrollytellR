@@ -1,5 +1,6 @@
 library(dplyr)
 library(dbplyr)
+devtools::load_all()
 
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
@@ -19,7 +20,7 @@ fact_db <- fact_db %>%
     y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE), 
     copy = TRUE
   ) %>%
-  mutate(OVERALL = "Overall") # dummy col so aggregation is easier
+  mutate(OVERALL_CODE = NA, OVERALL_NAME = "Overall") # dummy col
 
 # Get a single gender and age for the period
 patient_db <- fact_db %>%
@@ -70,9 +71,7 @@ fact_db <- fact_db %>%
   )
 
 # Loop over geography cols and aggregate
-for (
-  geography in c("OVERALL", "PCD_REGION_NAME", "PCD_STP_NAME", "PCD_LAD_NAME")
-) {
+for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
   
   # Aggregate to a temporary database table
   tmp_db <-
@@ -83,8 +82,15 @@ for (
       x = fact_db %>%
         group_by(
           YEAR_MONTH = as.character(YEAR_MONTH), 
-          GEOGRAPHY = geography, 
-          SUB_GEOGRAPHY = !!dplyr::sym(geography),
+          GEOGRAPHY = switch(
+            geography,
+            "OVERALL" = "Overall",
+            "PCD_REGION" = "Region",
+            "PCD_STP" = "STP",
+            "PCD_LAD" = "Local Autority"
+          ), 
+          SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
+          SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
           GENDER, 
           AGE_BAND
         ) %>%
@@ -95,8 +101,15 @@ for (
       y = fact_db %>%
         group_by(
           YEAR_MONTH = "Overall",
-          GEOGRAPHY = geography, 
-          SUB_GEOGRAPHY = !!dplyr::sym(geography),
+          GEOGRAPHY = switch(
+            geography,
+            "OVERALL" = "Overall",
+            "PCD_REGION" = "Region",
+            "PCD_STP" = "STP",
+            "PCD_LAD" = "Local Autority"
+          ), 
+          SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
+          SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
           GENDER, 
           AGE_BAND
         ) %>%
@@ -123,40 +136,11 @@ for (
   
 }
 
-# Give the GEOGRAPHY column nice names
-patients_by_geography_and_gender_and_age_band_db <- 
-  patients_by_geography_and_gender_and_age_band_db %>%
-  mutate(
-    GEOGRAPHY = case_when(
-      GEOGRAPHY == "OVERALL" ~ "Overall",
-      GEOGRAPHY == "PCD_REGION_NAME" ~ "Region",
-      GEOGRAPHY == "PCD_STP_NAME" ~ "STP",
-      GEOGRAPHY == "PCD_LAD_NAME" ~ "Local Authority"
-    )
-  )
-
-# Sort as is (not geography as we do that later) and collect
+# Collect and format for highcharter
 patients_by_geography_and_gender_and_age_band_df <- 
   patients_by_geography_and_gender_and_age_band_db %>%
-  # Sort as is and collect (not geography as we do that later)
-  arrange(YEAR_MONTH, SUB_GEOGRAPHY, GENDER, AGE_BAND) %>%
-  collect()
-
-# Format for highcharter
-patients_by_geography_and_gender_and_age_band_df <- 
-  patients_by_geography_and_gender_and_age_band_df %>%
-  # Tweak the factors
-  mutate(
-    # Move overall to first category
-    across(
-      .cols = c(YEAR_MONTH, SUB_GEOGRAPHY),
-      .fns = ~ forcats::fct_relevel(.x, "Overall")
-    ),
-    # Factor is a heirachy
-    GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, "Overall", "Region", "STP")
-  ) %>%
-  # Sort final dataframe by new factors
-  arrange(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY)
+  collect() %>%
+  careHomePrescribingScrollytellR::format_data_raw(GENDER, AGE_BAND)
 
 # Add to data-raw/
 usethis::use_data(

@@ -70,14 +70,11 @@ mod_03_overall_summary_ui <- function(id) {
 mod_03_overall_summary_server <- function(input, output, session) {
   ns <- session$ns
   
-  # Join the 3 datasets together
+  # Join the 2 metric datasets together
   overall_summary_df <- 
-    careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df %>%
     dplyr::full_join(
+      x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df,
       y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_geography_df
-    ) %>%
-    dplyr::full_join(
-      y = careHomePrescribingScrollytellR::ten_or_more_unique_medicines_per_patient_by_geography_df
     )
   
   # Only interested in overall period
@@ -86,7 +83,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
   
   # Filter to relevant data for this chart
   overall_summary_df <- overall_summary_df %>%
-    dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY), not_na))
+    dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME), not_na))
   
   # Tidy the cols
   overall_summary_df <- overall_summary_df %>%
@@ -117,7 +114,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
     handlerExpr = {
       updateSelectInput(
         inputId = "sub_geography", 
-        choices = unique(geography_df()$SUB_GEOGRAPHY)
+        choices = unique(geography_df()$SUB_GEOGRAPHY_NAME)
       ) 
     }
   )
@@ -126,7 +123,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
   table_df <- reactive({
     req(input$sub_geography)
     geography_df() %>%
-      dplyr::filter(SUB_GEOGRAPHY == input$sub_geography)
+      dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography)
   })
   
   # Create the table

@@ -34,11 +34,6 @@ map_df <- bind_rows(
     )
   
 )
-  
-# Format for highcharter
-map_list <- map_df %>%
-  geojsonsf::sf_geojson() %>%
-  jsonlite::fromJSON(simplifyVector = FALSE)
 
 # Add to data-raw/
-usethis::use_data(map_list,overwrite = TRUE)
+usethis::use_data(map_df, overwrite = TRUE)
