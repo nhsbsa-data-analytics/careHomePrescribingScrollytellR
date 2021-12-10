@@ -34,6 +34,11 @@ app_ui <- function(request) {
           scrollytell::scrolly_section(
             id = "04_items_and_cost_per_bnf_chapter_and_section_chart",
             mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui("04_items_and_cost_per_bnf_chapter_and_section_chart_1")
+          ),
+          br(),
+          scrollytell::scrolly_section(
+            id = "map",
+            mod_map_ui("map_1")
           )
         )
       )
