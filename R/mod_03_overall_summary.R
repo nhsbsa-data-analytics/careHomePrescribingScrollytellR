@@ -51,11 +51,16 @@ mod_03_overall_summary_ui <- function(id) {
       ),
       br(),
       fluidRow(
+        col_6(
+          style = "text-indent: 15px;",
+          h6("Metric")
+        ),
         col_3(
-          offset = 6,
+          style = "text-align: center;",
           h6("Care home")
         ),
         col_3(
+          style = "text-align: center;",
           h6("Non-care home")
         )
       ),
@@ -143,6 +148,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
     tagList(
       fluidRow(
         col_6(
+          style = "text-indent: 15px;",
           p(
             tippy(
               text = "Total drug cost",
@@ -173,6 +179,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
       ),
       fluidRow(
         col_6(
+          style = "text-indent: 15px;",
           p(
             tippy(
               text = "Number of prescription items",
@@ -203,6 +210,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
       ),
       fluidRow(
         col_6(
+          style = "text-indent: 15px;",
           p(
             tippy(
               text = "Number of unique medicines",
@@ -233,6 +241,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
       ),
       fluidRow(
         col_6(
+          style = "text-indent: 15px;",
           p(
             tippy(
               text = "Patients on ten or more unique medicines",
