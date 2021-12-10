@@ -272,9 +272,6 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
         highcharter::hc_add_series_list(x = plot_series_list()) %>%
-        highcharter::hc_subtitle(
-          text = "Note: Counts rounded to nearest ten (e.g. 12 rounded to 10) "
-        ) %>%
         highcharter::hc_motion(
           labels = unique(plot_df()$YEAR_MONTH),
           series = c(0, 1)
@@ -286,11 +283,11 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
           reversed = FALSE
         ) %>%
         highcharter::hc_yAxis(
-          title = list(text = "Number of care home patients"),
+          title = list(text = "Estimated number of care home patients (thousands)"),
           min = -ceiling(max_value() / 5) * 5,
           max = ceiling(max_value() / 5) * 5,
           labels = list(
-            formatter = htmlwidgets::JS("function(){ return Math.abs(this.value)/1000 + 'K';}")
+            formatter = htmlwidgets::JS("function(){ return Math.abs(this.value)/1000;}")
           )
         ) %>%
         highcharter::hc_tooltip(
