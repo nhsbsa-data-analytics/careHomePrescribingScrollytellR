@@ -32,7 +32,7 @@ imd_calc <- fact_db %>%
     CH_FLAG == 1,
     !is.na(INDEX_OF_MULT_DEPRIV_DECILE)
   ) %>%
-  summarise(TOTAL_DECILE = count(INDEX_OF_MULT_DEPRIV_DECILE)) %>%
+  summarise(TOTAL_DECILE = count(ITEM_COUNT)) %>%
   ungroup() %>%
   collect()
 
