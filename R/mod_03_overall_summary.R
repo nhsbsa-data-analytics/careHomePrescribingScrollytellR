@@ -53,9 +53,11 @@ mod_03_overall_summary_ui <- function(id) {
       fluidRow(
         col_3(
           offset = 6,
+          style = "text-align: center;",
           h6("Care home")
         ),
         col_3(
+          style = "text-align: center;",
           h6("Non-care home")
         )
       ),
