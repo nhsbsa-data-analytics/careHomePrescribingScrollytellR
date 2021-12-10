@@ -65,7 +65,8 @@ ul.frames {
 }
 
 ul.frames li {
-  font-size: 14px; font-size:1.4rem;
+  font-size: 14px; 
+  font-size:1.4rem;
   display: inline;
 }
 
@@ -130,4 +131,17 @@ should be no wider as per NHS guidelines) */
 .tippy-backdrop {
   background-color: var(--nhs-pale-grey);
 
+}
+
+/* NavBar stuff */
+
+/* Make NavBar links stick when scrolling */
+.col-sm-2 {
+  z-index: 10;
+  position: fixed; 
+}
+
+/* Make NavBar links stick when scrolling */
+.nav-pills > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
+  background-color: var(--nhs-mid-grey);
 }

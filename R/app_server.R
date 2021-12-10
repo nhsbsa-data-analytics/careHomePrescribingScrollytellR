@@ -32,6 +32,10 @@ app_server <- function(input, output, session) {
     module = mod_map_server
   )
   moduleServer(
+    id = "definitions_1",
+    module = mod_definitions_server
+  )
+  moduleServer(
     id = "99_footer_1",
     module = mod_99_footer_server
   )

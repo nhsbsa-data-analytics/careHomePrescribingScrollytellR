@@ -11,7 +11,7 @@ mod_00_header_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      style = "background-color: #005EB8; width: 100%",
+      style = "background-color: #005EB8; width: 100%;",
       align = "center",
       fluidRow(
         style = "background-color: #005EB8; max-width: 950px",
