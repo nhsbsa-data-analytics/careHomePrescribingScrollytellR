@@ -11,54 +11,58 @@ app_ui <- function(request) {
     # Your application UI logic
     mod_00_header_ui("00_header_1"),
     br(),
-    sidebarLayout(
-      
-      sidebarPanel(
-        style = "position:fixed; width:inherit;",
-        width = 1,
-        
-        "Definitions",
-        
-      ),
-      
-      mainPanel(
-        width = 10,
-      
-        fluidPage(
-          mod_01_intro_ui("01_intro_1"),
-          scrollytell::scrolly_container(
-            outputId = "scrolly",
-            scrollytell::scrolly_graph(),
-            scrollytell::scrolly_sections(
-              scrollytell::scrolly_section(
-                id = "dummy"
-              ),
-              br(),
-              scrollytell::scrolly_section(
-                id = "02_patients_by_geography_and_gender_and_age_band_chart",
-                mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_1")
-              ),
-              br(),
-              scrollytell::scrolly_section(
-                id = "03_overall_summary",
-                mod_03_overall_summary_ui("03_overall_summary_1")
-              ),
-              br(),
-              scrollytell::scrolly_section(
-                id = "04_items_and_cost_per_bnf_chapter_and_section_chart",
-                mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui("04_items_and_cost_per_bnf_chapter_and_section_chart_1")
-              ),
-              br(),
-              scrollytell::scrolly_section(
-                id = "map",
-                mod_map_ui("map_1")
+      navlistPanel(
+        well = FALSE,
+        widths = c(2, 12), # Z index set on the 2 so it is above the 12
+        tabPanel(
+          title = "Article",
+          
+          fluidPage(
+            br(),
+            mod_01_intro_ui("01_intro_1"),
+            scrollytell::scrolly_container(
+              outputId = "scrolly",
+              scrollytell::scrolly_graph(),
+              scrollytell::scrolly_sections(
+                scrollytell::scrolly_section(
+                  id = "dummy"
+                ),
+                br(),
+                scrollytell::scrolly_section(
+                  id = "02_patients_by_geography_and_gender_and_age_band_chart",
+                  mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_1")
+                ),
+                br(),
+                scrollytell::scrolly_section(
+                  id = "03_overall_summary",
+                  mod_03_overall_summary_ui("03_overall_summary_1")
+                ),
+                br(),
+                scrollytell::scrolly_section(
+                  id = "04_items_and_cost_per_bnf_chapter_and_section_chart",
+                  mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui("04_items_and_cost_per_bnf_chapter_and_section_chart_1")
+                ),
+                br(),
+                scrollytell::scrolly_section(
+                  id = "map",
+                  mod_map_ui("map_1")
+                )
               )
             )
           )
+          
+        ),
+        
+        tabPanel(
+          title = "Definitions",
+          
+          fluidPage(
+            br(),
+            mod_definitions_ui("definitions_1")
+          )
+          
         )
         
-      )
-      
     ),
     br(),
     mod_99_footer_ui("99_footer_1")
