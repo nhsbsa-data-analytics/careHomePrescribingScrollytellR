@@ -57,7 +57,7 @@ for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
         "OVERALL" = "Overall",
         "PCD_REGION" = "Region",
         "PCD_STP" = "STP",
-        "PCD_LAD" = "Local Autority"
+        "PCD_LAD" = "Local Authority"
       ), 
       SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
       SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
