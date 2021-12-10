@@ -129,20 +129,24 @@ mod_map_server <- function(input, output, session) {
     
   })
   
-  # Format for highchater animation
-  # using tidyr::complete
+  # Format for highchater animation using tidyr::complete
   plot_sequence_series <- reactive({
     
     req(input$geography)
     req(input$metric)
     
-    plot_df() %>%
+    # Expand plot dataframe to cover all possibilities
+    plot_df_ <- plot_df() %>%
       tidyr::complete(
         YEAR_MONTH, SUB_GEOGRAPHY_CODE,
         fill = list(value = 0)
-      ) %>%
+      )
+    
+    # Create series (including code and name)
+    plot_df_ %>%
       dplyr::group_by(SUB_GEOGRAPHY_CODE) %>%
       dplyr::do(sequence = .$value) %>%
+      dplyr::left_join(y = plot_df_) %>%
       highcharter::list_parse()
     
   })
@@ -158,7 +162,20 @@ mod_map_server <- function(input, output, session) {
       highcharter::hc_add_series(
         data = plot_sequence_series(),
         mapData = map_list(),
-        joinBy = "SUB_GEOGRAPHY_CODE"
+        joinBy = "SUB_GEOGRAPHY_CODE",
+        tooltip = list(
+          headerFormat = "",
+          pointFormat = paste0(
+            "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
+            switch(
+              input$metric,
+              "COST_PER_PATIENT" = "Total drug cost:</b> £{point.value:.2f}",
+              "ITEMS_PER_PATIENT" = "Number of prescription items:</b> {point.value:.0f}",
+              "UNIQUE_MEDICINES_PER_PATIENT" = "Number of unique medicines:</b> {point.value:.0f}",
+              "PCT_PATIENTS_TEN_OR_MORE" = "Patients on ten or more unique medicines:</b> {point.value:.0f}%"
+            )
+          )
+        )
       ) %>%
       highcharter::hc_motion(labels = unique(plot_df()$YEAR_MONTH)) %>%
       theme_nhsbsa() %>%
