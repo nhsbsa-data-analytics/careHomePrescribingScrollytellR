@@ -35,3 +35,32 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
     highcharter::hc_yAxis(title = list(text = "")) %>%
     highcharter::hc_credits(enabled = TRUE)
 }
+
+
+#' Format data-raw table
+#'
+#' Deal with factors and sort table.
+#'
+#' @param df 
+#' @param ... 
+#'
+#' @return
+#' @export
+format_data_raw <- function(df, ...) {
+
+  df %>%
+    dplyr::arrange(YEAR_MONTH, SUB_GEOGRAPHY_NAME, ...) %>%
+    # Tweak the factors
+    dplyr::mutate(
+      # Move overall to first category
+      dplyr::across(
+        .cols = c(YEAR_MONTH, SUB_GEOGRAPHY_NAME),
+        .fns = ~ forcats::fct_relevel(.x, "Overall")
+      ),
+      # Factor is a heirachy
+      GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, "Overall", "Region", "STP")
+    ) %>%
+    # Sort final dataframe by new factors
+    dplyr::arrange(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY_NAME, ...)
+  
+}

@@ -1,4 +1,4 @@
-#' items_and_cost_per_bnf_chapter_and_section_chart UI Function
+#' 04_items_and_cost_per_bnf_chapter_and_section_chart UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,22 +7,25 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
+mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Commonly prescribed drugs"),
+    h4("Commonly prescribed medicines"),
     p(
-      "We will add text here about ",
+      "Around one in four items (24%) prescribed to care home patients are from the central nervous system",
       tippy(
-        text = "BNF Chapter.",
+        text = "BNF",
         tooltip = tooltip_text$bnf_code
-      )
+      ),
+      "chapter. This chapter also accounts for 24% of drug cost. Analgesics is the most common",
+      "BNF section within...."
     ),
     br(),
+    br(),
+    h6("Medicines prescribed to older care home patients in England (2020/21)"),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      h6("Medicines prescribed to older care home patients in England (2020/21)"),
       radioButtons(
         inputId = ns("metric"),
         label = "",
@@ -49,9 +52,9 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
 #' items_and_cost_per_bnf_chapter_and_section_chart Server Function
 #'
 #' @noRd
-mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
-                                                                        output,
-                                                                        session) {
+mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
+                                                                           output,
+                                                                           session) {
   ns <- session$ns
   # comma separate setting. (otherwise comma didn't show)
   hcoptslang <- getOption("highcharter.lang")
@@ -163,6 +166,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
           allowDrillToNode = TRUE,
           levelIsConstant = FALSE,
           textOverflow = "clip",
+          # drillDownButton = list(text = "<< Goto BNF Section"), #didn't work
           drillUpButton = list(text = "<< Back BNF Chapter"),
           dataLabels = list(color = "white"),
           levels = list(
@@ -189,6 +193,9 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
         highcharter::hc_title(
           text = glue::glue("Number and % of {title} by BNF Chapter and Section"),
           align = "left"
+        ) %>%
+        highcharter::hc_subtitle(
+          text = "Click points to drill down to BNF Section level"
         ) %>%
         # useful: https://www.titanwolf.org/Network/q/9ba6af5e-1a32-404f-aefb-bc9ce6daf227/y (wrap around highcharts.numberFormat)
         highcharter::hc_tooltip(
@@ -333,7 +340,7 @@ mod_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
 }
 
 ## To be copied in the UI
-# mod_items_and_cost_per_bnf_chapter_and_section_chart_ui("items_and_cost_per_bnf_chapter_and_section_chart_1")
+# mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui("items_and_cost_per_bnf_chapter_and_section_chart_1")
 
 ## To be copied in the server
-# callModule(mod_items_and_cost_per_bnf_chapter_and_section_chart_server, "items_and_cost_per_bnf_chapter_and_section_chart_1")
+# callModule(mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server, "04_items_and_cost_per_bnf_chapter_and_section_chart_1")

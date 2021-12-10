@@ -1,6 +1,6 @@
-# Load libraries
 library(dplyr)
 library(dbplyr)
+devtools::load_all()
 
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
@@ -8,10 +8,6 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 # Create a lazy table from the geography lookup table (Region, STP and LA)
 postcode_db <- con %>%
   tbl(from = "INT615_POSTCODE_LOOKUP")
-
-# Subset the columns
-postcode_db <- postcode_db %>%
-  select(POSTCODE, PCD_REGION_NAME, PCD_STP_NAME, PCD_LAD_NAME, INDEX_OF_MULT_DEPRIV_DECILE)
 
 # Create a lazy table from the care home FACT table
 fact_db <- con %>%
@@ -21,9 +17,10 @@ fact_db <- con %>%
 fact_db <- fact_db %>%
   filter(CH_FLAG == 1) %>%
   left_join(
-    y = postcode_db,
-    by = c("PCD_NO_SPACES" = "POSTCODE")
-  )
+    y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE), 
+    copy = TRUE
+  ) %>%
+  mutate(OVERALL_CODE = NA, OVERALL_NAME = "Overall") # dummy col
 
 # Calculate IMD decile figures, filter to carehomes only
 imd_calc <- fact_db %>%
@@ -43,10 +40,19 @@ patient_db <- fact_db %>%
   group_by(NHS_NO) %>%
   summarise(
     # Gender
-    MALE_COUNT = sum(ifelse(PDS_GENDER == 1, 1, 0)),
-    FEMALE_COUNT = sum(ifelse(PDS_GENDER == 2, 1, 0)),
+    MALE_COUNT = sum(
+      ifelse(PDS_GENDER == 1, 1, 0), 
+      na.rm = TRUE
+    ),
+    FEMALE_COUNT = sum(
+      ifelse(PDS_GENDER == 2, 1, 0),
+      na.rm = TRUE
+    ),
     # Take the max age
-    AGE = max(CALC_AGE)
+    AGE = max(
+      CALC_AGE,
+      na.rm = TRUE
+    )
   ) %>%
   mutate(
     GENDER = case_when(
@@ -72,117 +78,82 @@ patient_db <- patient_db %>%
 
 # Join fact data to patient level dimension
 fact_db <- fact_db %>%
-  left_join(y = patient_db, by = "NHS_NO")
+  left_join(
+    y = patient_db, 
+    copy = TRUE
+  )
 
-# Total patients by gender and age band
-patients_by_gender_and_age_band_df <-
-  union_all(
-    # Overall
-    x = fact_db %>%
-      group_by(GENDER, AGE_BAND) %>%
-      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-      ungroup(),
-    # By year month
-    y = fact_db %>%
-      group_by(YEAR_MONTH, GENDER, AGE_BAND) %>%
-      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-      ungroup()
-  ) %>%
-  mutate(
-    YEAR_MONTH = ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH)),
-    GEOGRAPHY = "Overall",
-    LEVEL = "Overall"
-  ) %>%
-  relocate(LEVEL, GEOGRAPHY, YEAR_MONTH) %>%
-  arrange(YEAR_MONTH, GENDER, AGE_BAND) %>%
+# Loop over geography cols and aggregate
+for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
+  
+  # Aggregate to a temporary database table
+  tmp_db <-
+    
+    union_all(
+      
+      # Monthly total patients
+      x = fact_db %>%
+        group_by(
+          YEAR_MONTH = as.character(YEAR_MONTH), 
+          GEOGRAPHY = switch(
+            geography,
+            "OVERALL" = "Overall",
+            "PCD_REGION" = "Region",
+            "PCD_STP" = "STP",
+            "PCD_LAD" = "Local Authority"
+          ), 
+          SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
+          SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
+          GENDER, 
+          AGE_BAND
+        ) %>%
+        summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+        ungroup(),
+      
+      # Overall total patients
+      y = fact_db %>%
+        group_by(
+          YEAR_MONTH = "Overall",
+          GEOGRAPHY = switch(
+            geography,
+            "OVERALL" = "Overall",
+            "PCD_REGION" = "Region",
+            "PCD_STP" = "STP",
+            "PCD_LAD" = "Local Autority"
+          ), 
+          SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
+          SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
+          GENDER, 
+          AGE_BAND
+        ) %>%
+        summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+        ungroup()
+      
+      )
+  
+  # Either create the table or append to it
+  if (geography == "OVERALL") {
+    
+    # On the first iteration initialise the table
+    patients_by_geography_and_gender_and_age_band_db <- tmp_db
+    
+  } else {
+    
+    # Union results to initialised table
+    patients_by_geography_and_gender_and_age_band_db <- union_all(
+      x = patients_by_geography_and_gender_and_age_band_db,
+      y = tmp_db
+    )
+    
+  }
+  
+}
+
+# Collect and format for highcharter
+patients_by_geography_and_gender_and_age_band_df <- 
+  patients_by_geography_and_gender_and_age_band_db %>%
   collect() %>%
-  # Format for highcharter
-  mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
-  arrange(YEAR_MONTH)
-
-
-# Process for Region (48,608 records could not match with region)
-patients_by_region_and_gender_and_age_band_df <-
-  union_all(
-    # Overall
-    x = fact_db %>%
-      group_by(GENDER, AGE_BAND, GEOGRAPHY = PCD_REGION_NAME) %>%
-      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-      ungroup(),
-    # By year month
-    y = fact_db %>%
-      group_by(YEAR_MONTH, GENDER, AGE_BAND, GEOGRAPHY = PCD_REGION_NAME) %>%
-      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-      ungroup()
-  ) %>%
-  mutate(
-    YEAR_MONTH = ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH)),
-    LEVEL = "Region"
-  ) %>%
-  relocate(LEVEL, GEOGRAPHY, YEAR_MONTH) %>%
-  arrange(YEAR_MONTH, LEVEL, GEOGRAPHY, GENDER, AGE_BAND) %>%
-  collect() %>%
-  # Format for highcharter
-  mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
-  arrange(YEAR_MONTH)
-
-# Process for STP
-patients_by_stp_and_gender_and_age_band_df <-
-  union_all(
-    # Overall
-    x = fact_db %>%
-      group_by(GENDER, AGE_BAND, GEOGRAPHY = PCD_STP_NAME) %>%
-      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-      ungroup(),
-    # By year month
-    y = fact_db %>%
-      group_by(YEAR_MONTH, GENDER, AGE_BAND, GEOGRAPHY = PCD_STP_NAME) %>%
-      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-      ungroup()
-  ) %>%
-  mutate(
-    YEAR_MONTH = ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH)),
-    LEVEL = "STP"
-  ) %>%
-  relocate(LEVEL, GEOGRAPHY, YEAR_MONTH) %>%
-  arrange(YEAR_MONTH, LEVEL, GEOGRAPHY, GENDER, AGE_BAND) %>%
-  collect() %>%
-  # Format for highcharter
-  mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
-  arrange(YEAR_MONTH)
-
-# Process for LA
-patients_by_la_and_gender_and_age_band_df <-
-  union_all(
-    # Overall
-    x = fact_db %>%
-      group_by(GENDER, AGE_BAND, GEOGRAPHY = PCD_LAD_NAME) %>%
-      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-      ungroup(),
-    # By year month
-    y = fact_db %>%
-      group_by(YEAR_MONTH, GENDER, AGE_BAND, GEOGRAPHY = PCD_LAD_NAME) %>%
-      summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-      ungroup()
-  ) %>%
-  mutate(
-    YEAR_MONTH = ifelse(is.na(YEAR_MONTH), "Overall", as.character(YEAR_MONTH)),
-    LEVEL = "Local Authority"
-  ) %>%
-  relocate(YEAR_MONTH) %>%
-  arrange(YEAR_MONTH, LEVEL, GEOGRAPHY, GENDER, AGE_BAND) %>%
-  collect() %>%
-  # Format for highcharter
-  mutate(YEAR_MONTH = forcats::fct_relevel(YEAR_MONTH, "Overall")) %>%
-  arrange(YEAR_MONTH)
-
-# Bind the rows together
-patients_by_geography_and_gender_and_age_band_df <- bind_rows(
-  patients_by_gender_and_age_band_df,
-  patients_by_region_and_gender_and_age_band_df,
-  patients_by_stp_and_gender_and_age_band_df,
-  patients_by_la_and_gender_and_age_band_df
-)
+  careHomePrescribingScrollytellR::format_data_raw(GENDER, AGE_BAND)
 
 # Add to data-raw/
 usethis::use_data(

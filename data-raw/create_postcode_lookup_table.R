@@ -49,18 +49,9 @@ postcode_db <- postcode_db %>%
   # LA
   inner_join(
     y = geography_db %>%
-      filter(RELATIONSHIP == "LSOA_WARD2020") %>%
+      filter(RELATIONSHIP == "LSOA_LAD2021") %>%
       select(
         LSOA_CODE = CHILD_ONS_CODE,
-        PCD_WARD_CODE = PARENT_ONS_CODE,
-        PCD_WARD_NAME = PARENT_NAME
-      )
-  ) %>%
-  inner_join(
-    y = geography_db %>%
-      filter(RELATIONSHIP == "WARD2020_LAD2020") %>%
-      select(
-        PCD_WARD_CODE = CHILD_ONS_CODE,
         PCD_LAD_CODE = PARENT_ONS_CODE,
         PCD_LAD_NAME = PARENT_NAME
       )
@@ -68,7 +59,7 @@ postcode_db <- postcode_db %>%
   # Region
   inner_join(
     y = geography_db %>%
-      filter(RELATIONSHIP == "LAD2020_REG2020") %>%
+      filter(RELATIONSHIP == "LAD2021_REG2021") %>%
       select(
         PCD_LAD_CODE = CHILD_ONS_CODE,
         PCD_REGION_CODE = PARENT_ONS_CODE,

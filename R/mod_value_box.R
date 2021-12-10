@@ -22,7 +22,7 @@ mod_value_box_ui <- function(id,
 
   tagList(
     div(
-      class = "col-lg-9 col-md-9",
+      class = "col-xs-12 col-sm-12 col-md-12 col-lg-12",
       div(
         class = "panel panel-white",
         div(
@@ -31,16 +31,15 @@ mod_value_box_ui <- function(id,
           div(
             class = "row",
             div(
-              class = "col-md-6",
+              class = "col-xs-4 col-sm-4 col-md-4 col-lg-4",
               icon(icon_name, "fa-3x"),
               style = "color: #FFFFFF"
             ),
             div(
-              class = ("col-xs-9 text-right"),
+              class = "col-xs-8 col-sm-8 col-md-8 col-lg-8",
               div(
-                style = ("font-size: 40px;
-                         font-weight: bold;
-                         color: #FFFFFF"), value
+                style = "font-size: 28px; font-weight: bold; color: #FFFFFF; text-align: right;", 
+                value
               )
             )
           )
