@@ -51,8 +51,11 @@ mod_03_overall_summary_ui <- function(id) {
       ),
       br(),
       fluidRow(
+        col_6(
+          style = "text-indent: 15px;",
+          h6("Metric")
+        ),
         col_3(
-          offset = 6,
           style = "text-align: center;",
           h6("Care home")
         ),
