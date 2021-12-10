@@ -22,19 +22,6 @@ fact_db <- fact_db %>%
   ) %>%
   mutate(OVERALL_CODE = NA, OVERALL_NAME = "Overall") # dummy col
 
-# Calculate IMD decile figures, filter to carehomes only
-imd_calc <- fact_db %>%
-  group_by(INDEX_OF_MULT_DEPRIV_DECILE) %>%
-  filter(
-    CH_FLAG == 1,
-    !is.na(INDEX_OF_MULT_DEPRIV_DECILE)
-  ) %>%
-  summarise(TOTAL_DECILE = count(ITEM_COUNT)) %>%
-  ungroup() %>%
-  collect()
-
-# Calculate total for IMD
-
 # Get a single gender and age for the period
 patient_db <- fact_db %>%
   group_by(NHS_NO) %>%
