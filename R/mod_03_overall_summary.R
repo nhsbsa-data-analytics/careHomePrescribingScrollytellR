@@ -71,22 +71,22 @@ mod_03_overall_summary_server <- function(input, output, session) {
   ns <- session$ns
   
   # Join the 2 metric datasets together
-  overall_summary_df <- 
+  metric_df <- 
     dplyr::full_join(
       x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df,
       y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_geography_df
     )
   
-  # Only interested in overall period
-  overall_summary_df <- overall_summary_df %>%
+  # Only interested in care homes
+  metric_df <- metric_df %>%
     dplyr::filter(YEAR_MONTH == "Overall")
   
   # Filter to relevant data for this chart
-  overall_summary_df <- overall_summary_df %>%
+  metric_df <- metric_df %>%
     dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME), not_na))
   
   # Tidy the cols
-  overall_summary_df <- overall_summary_df %>%
+  metric_df <- metric_df %>%
     dplyr::mutate(
       COST_PER_PATIENT = paste0(
         "£", 
@@ -101,8 +101,10 @@ mod_03_overall_summary_server <- function(input, output, session) {
   
   # Filter the data based on the geography
   geography_df <- reactive({
+    
     req(input$geography)
-    overall_summary_df %>%
+    
+    metric_df %>%
       dplyr::filter(GEOGRAPHY == input$geography)
     
   })
@@ -121,9 +123,12 @@ mod_03_overall_summary_server <- function(input, output, session) {
   
   # Filter the data based on the level and format for the table
   table_df <- reactive({
+    
     req(input$sub_geography)
+    
     geography_df() %>%
       dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography)
+    
   })
   
   # Create the table
