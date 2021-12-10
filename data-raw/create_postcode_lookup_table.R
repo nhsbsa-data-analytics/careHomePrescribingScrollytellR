@@ -13,6 +13,10 @@ geography_db <- con %>%
 postcode_db <- con %>%
   tbl(from = in_schema("DIM", sql("ONS_POSTCODE_DATA_DIM@dwcpb")))
 
+# Create a lazy table for IMD data
+imd_db <- con %>%
+  tbl(from = in_schema("DALL_REF", "ONS_INDEX_OF_MULTIPLE_DEPRIVATION"))
+
 # Check if the table exists
 exists <- DBI::dbExistsTable(conn = con, name = "INT615_POSTCODE_LOOKUP")
 
@@ -61,8 +65,15 @@ postcode_db <- postcode_db %>%
         PCD_REGION_CODE = PARENT_ONS_CODE,
         PCD_REGION_NAME = PARENT_NAME
       )
-  )
-
+  ) %>%
+  # Index of Multiple Deprivation
+  left_join(
+    y = imd_db %>%
+      filter(IMD_YEAR == 2019) %>%
+      mutate(IMD_QUINTILE = round(INDEX_OF_MULT_DEPRIV_DECILE / 2, 0)) %>%
+      select(LSOA_CODE, IMD_QUINTILE)
+      )
+    
 # Reorder the columns
 postcode_db <- postcode_db %>%
   select(
@@ -72,7 +83,8 @@ postcode_db <- postcode_db %>%
     PCD_STP_CODE,
     PCD_STP_NAME,
     PCD_LAD_CODE,
-    PCD_LAD_NAME
+    PCD_LAD_NAME,
+    IMD_QUINTILE
   )
 
 # Write the table back to the DB
