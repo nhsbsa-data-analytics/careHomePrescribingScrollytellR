@@ -1,21 +1,13 @@
 library(dplyr)
 library(dbplyr)
+devtools::load_all()
 
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Create a lazy table from the geography lookup table (Region, STP and LA)
 postcode_db <- con %>%
-  tbl(from = in_schema("ADAIV", "INT615_PCD_REF"))
-
-# Subset the columns
-postcode_db <- postcode_db %>%
-  select(
-    PCD_NO_SPACES = POSTCODE, # to join to FACT table
-    PCD_REGION_NAME, 
-    PCD_STP_NAME, 
-    PCD_LAD_NAME
-  )
+  tbl(from = "INT615_POSTCODE_LOOKUP")
 
 # Create a lazy table from the care home FACT table
 fact_db <- con %>%
@@ -25,22 +17,27 @@ fact_db <- con %>%
 fact_db <- fact_db %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")) %>%
   left_join(
-    y = postcode_db, 
+    y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE), 
     copy = TRUE
   )  %>%
-  mutate(OVERALL = "Overall") # dummy col so aggregation is easier
+  mutate(OVERALL_CODE = NA, OVERALL_NAME = "Overall") # dummy col 
   
 # Loop over geography cols and aggregate
-for (
-  geography in c("OVERALL", "PCD_REGION_NAME", "PCD_STP_NAME", "PCD_LAD_NAME")
-) {
+for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
   
   # Monthly cost per patient by care home flag
   tmp_db <- fact_db %>%
     group_by(
       YEAR_MONTH = as.character(YEAR_MONTH), 
-      GEOGRAPHY = geography, 
-      SUB_GEOGRAPHY = !!dplyr::sym(geography),
+      GEOGRAPHY = switch(
+        geography,
+        "OVERALL" = "Overall",
+        "PCD_REGION" = "Region",
+        "PCD_STP" = "STP",
+        "PCD_LAD" = "Local Authority"
+      ), 
+      SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
+      SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
       CH_FLAG, 
     ) %>%
     summarise(
@@ -56,7 +53,13 @@ for (
   tmp_db <- tmp_db %>%
     union_all(
       y = tmp_db %>%
-        group_by(YEAR_MONTH = "Overall", GEOGRAPHY, SUB_GEOGRAPHY, CH_FLAG) %>%
+        group_by(
+          YEAR_MONTH = "Overall", 
+          GEOGRAPHY, 
+          SUB_GEOGRAPHY_CODE,
+          SUB_GEOGRAPHY_NAME, 
+          CH_FLAG
+        ) %>%
         summarise(
           COST_PER_PATIENT = mean(COST_PER_PATIENT),
           ITEMS_PER_PATIENT = mean(ITEMS_PER_PATIENT)
@@ -82,39 +85,11 @@ for (
   
 }
 
-# Give the GEOGRAPHY column nice names
-items_and_cost_per_patient_by_geography_and_ch_flag_db <- 
-  items_and_cost_per_patient_by_geography_and_ch_flag_db %>%
-  mutate(
-    GEOGRAPHY = case_when(
-      GEOGRAPHY == "OVERALL" ~ "Overall",
-      GEOGRAPHY == "PCD_REGION_NAME" ~ "Region",
-      GEOGRAPHY == "PCD_STP_NAME" ~ "STP",
-      GEOGRAPHY == "PCD_LAD_NAME" ~ "Local Authority"
-    )
-  )
-
-# Sort as is (not geography as we do that later) and collect
+# Collect and format for highcharter
 items_and_cost_per_patient_by_geography_and_ch_flag_df <- 
   items_and_cost_per_patient_by_geography_and_ch_flag_db %>%
-  arrange(YEAR_MONTH, SUB_GEOGRAPHY, CH_FLAG) %>%
-  collect() 
-  
-# Format for highcharter
-items_and_cost_per_patient_by_geography_and_ch_flag_df <- 
-  items_and_cost_per_patient_by_geography_and_ch_flag_df %>%
-  # Tweak the factors
-  mutate(
-    # Move overall to first category
-    across(
-      .cols = c(YEAR_MONTH, SUB_GEOGRAPHY),
-      .fns = ~ forcats::fct_relevel(.x, "Overall")
-    ),
-    # Factor is a heirachy
-    GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, "Overall", "Region", "STP")
-  ) %>%
-  # Sort final dataframe by new factors
-  arrange(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY, CH_FLAG)
+  collect() %>%
+  careHomePrescribingScrollytellR::format_data_raw(CH_FLAG)
 
 # Add to data-raw/
 usethis::use_data(

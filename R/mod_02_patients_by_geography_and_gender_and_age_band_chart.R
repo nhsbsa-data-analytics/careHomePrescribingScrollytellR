@@ -84,9 +84,11 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
 #' patients_by_geography_and_gender_and_age_band_chart Server Function
 #'
 #' @noRd
-mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(input,
-                                                                              output,
-                                                                              session) {
+mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
+  input,
+  output,
+  session
+) {
   ns <- session$ns
 
   # comma separate setting
@@ -107,7 +109,9 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   # Filter to relevant data for this chart
   patients_by_geography_and_gender_and_age_band_df <- 
     patients_by_geography_and_gender_and_age_band_df %>%
-    dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY, GENDER), not_na))
+    dplyr::filter(
+      dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME, GENDER), not_na)
+    )
     
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
   
@@ -126,7 +130,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
     handlerExpr = {
       updateSelectInput(
         inputId = "sub_geography", 
-        choices = unique(geography_df()$SUB_GEOGRAPHY)
+        choices = unique(geography_df()$SUB_GEOGRAPHY_NAME)
       ) 
     }
   )
@@ -138,14 +142,14 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
     req(input$count_or_percentage)
     if (input$count_or_percentage == "Percentage") {
       geography_df() %>%
-        dplyr::filter(SUB_GEOGRAPHY == input$sub_geography) %>%
+        dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography) %>%
         dplyr::group_by(YEAR_MONTH) %>%
         dplyr::mutate(value = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1))
     } else if (input$count_or_percentage == "Count") {
       geography_df() %>%
-        dplyr::filter(SUB_GEOGRAPHY == input$sub_geography) %>%
+        dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography) %>%
         dplyr::group_by(YEAR_MONTH) %>%
         dplyr::mutate(value = TOTAL_PATIENTS) %>%
         dplyr::ungroup() %>%

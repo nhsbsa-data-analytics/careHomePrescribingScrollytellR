@@ -28,6 +28,10 @@ app_server <- function(input, output, session) {
     module = mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server
   )
   moduleServer(
+    id = "map_1",
+    module = mod_map_server
+  )
+  moduleServer(
     id = "99_footer_1",
     module = mod_99_footer_server
   )
