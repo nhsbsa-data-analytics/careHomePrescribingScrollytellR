@@ -56,14 +56,14 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
         inline = TRUE,
         width = "100%"
       ),
-      col_8(
+      col_9(
         highcharter::highchartOutput(
           outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
           height = "500px",
           width = "900px"
         )
       ),
-      col_4(
+      col_3(
         shiny::htmlOutput(
           ns("text")
         )
