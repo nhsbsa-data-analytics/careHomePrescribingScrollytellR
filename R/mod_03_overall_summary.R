@@ -137,6 +137,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
     tagList(
       fluidRow(
         col_6(
+          style = "text-indent: 15px;",
           p(
             tippy(
               text = "Total drug cost", 
@@ -167,6 +168,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
       ),
       fluidRow(
         col_6(
+          style = "text-indent: 15px;",
           p(
             tippy(
               text = "Number of prescription items", 
@@ -197,6 +199,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
       ),
       fluidRow(
         col_6(
+          style = "text-indent: 15px;",
           p(
             tippy(
               text = "Number of unique medicines", 
@@ -227,6 +230,7 @@ mod_03_overall_summary_server <- function(input, output, session) {
       ),
       fluidRow(
         col_6(
+          style = "text-indent: 15px;",
           p(
             tippy(
               text = "Patients on ten or more unique medicines", 
