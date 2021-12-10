@@ -249,6 +249,9 @@ mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input
           text = glue::glue("Number and % of {title} by BNF Section and Chapter"),
           align = "left"
         ) %>%
+        highcharter::hc_subtitle(
+          text = "Click points to drill down to BNF Section level"
+        ) %>%
         highcharter::hc_tooltip(
           useHTML = TRUE,
           formatter = htmlwidgets::JS(
