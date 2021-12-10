@@ -179,7 +179,12 @@ mod_map_server <- function(input, output, session) {
       ) %>%
       highcharter::hc_motion(labels = unique(plot_df()$YEAR_MONTH)) %>%
       theme_nhsbsa() %>%
-      highcharter::hc_colorAxis(min = min_value(), max = max_value())
+      highcharter::hc_colorAxis(min = min_value(), max = max_value()) %>%
+      highcharter::hc_mapNavigation(
+        enabled = TRUE,
+        enableMouseWheelZoom = TRUE,
+        enableDoubleClickZoom = TRUE
+      )
   })
   
 }
