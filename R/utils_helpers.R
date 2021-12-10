@@ -41,13 +41,12 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
 #'
 #' Deal with factors and sort table.
 #'
-#' @param df 
-#' @param ... 
+#' @param df
+#' @param ...
 #'
 #' @return
 #' @export
 format_data_raw <- function(df, ...) {
-
   df %>%
     dplyr::arrange(YEAR_MONTH, SUB_GEOGRAPHY_NAME, ...) %>%
     # Tweak the factors
@@ -62,5 +61,4 @@ format_data_raw <- function(df, ...) {
     ) %>%
     # Sort final dataframe by new factors
     dplyr::arrange(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY_NAME, ...)
-  
 }

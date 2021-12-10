@@ -17,7 +17,7 @@ fact_db <- con %>%
 fact_db <- fact_db %>%
   filter(CH_FLAG == 1) %>%
   left_join(
-    y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE), 
+    y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE),
     copy = TRUE
   ) %>%
   mutate(OVERALL_CODE = NA, OVERALL_NAME = "Overall") # dummy col
@@ -28,7 +28,7 @@ patient_db <- fact_db %>%
   summarise(
     # Gender
     MALE_COUNT = sum(
-      ifelse(PDS_GENDER == 1, 1, 0), 
+      ifelse(PDS_GENDER == 1, 1, 0),
       na.rm = TRUE
     ),
     FEMALE_COUNT = sum(
@@ -66,78 +66,71 @@ patient_db <- patient_db %>%
 # Join fact data to patient level dimension
 fact_db <- fact_db %>%
   left_join(
-    y = patient_db, 
+    y = patient_db,
     copy = TRUE
   )
 
 # Loop over geography cols and aggregate
 for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
-  
+
   # Aggregate to a temporary database table
   tmp_db <-
-    
     union_all(
-      
+
       # Monthly total patients
       x = fact_db %>%
         group_by(
-          YEAR_MONTH = as.character(YEAR_MONTH), 
-          GEOGRAPHY = switch(
-            geography,
+          YEAR_MONTH = as.character(YEAR_MONTH),
+          GEOGRAPHY = switch(geography,
             "OVERALL" = "Overall",
             "PCD_REGION" = "Region",
             "PCD_STP" = "STP",
             "PCD_LAD" = "Local Authority"
-          ), 
+          ),
           SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
           SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
-          GENDER, 
+          GENDER,
           AGE_BAND
         ) %>%
         summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
         ungroup(),
-      
+
       # Overall total patients
       y = fact_db %>%
         group_by(
           YEAR_MONTH = "Overall",
-          GEOGRAPHY = switch(
-            geography,
+          GEOGRAPHY = switch(geography,
             "OVERALL" = "Overall",
             "PCD_REGION" = "Region",
             "PCD_STP" = "STP",
             "PCD_LAD" = "Local Authority"
-          ), 
+           ),
           SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
           SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
-          GENDER, 
+          GENDER,
           AGE_BAND
         ) %>%
         summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
         ungroup()
-      
-      )
-  
+    )
+
   # Either create the table or append to it
   if (geography == "OVERALL") {
-    
+
     # On the first iteration initialise the table
     patients_by_geography_and_gender_and_age_band_db <- tmp_db
-    
   } else {
-    
+
     # Union results to initialised table
     patients_by_geography_and_gender_and_age_band_db <- union_all(
       x = patients_by_geography_and_gender_and_age_band_db,
       y = tmp_db
     )
-    
   }
-  
 }
 
 # Collect and format for highcharter
-patients_by_geography_and_gender_and_age_band_df <- 
+patients_by_geography_and_gender_and_age_band_df <-
   patients_by_geography_and_gender_and_age_band_db %>%
   collect() %>%
   careHomePrescribingScrollytellR::format_data_raw(GENDER, AGE_BAND)

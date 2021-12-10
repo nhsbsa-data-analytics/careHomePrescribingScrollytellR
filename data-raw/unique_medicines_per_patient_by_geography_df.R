@@ -40,25 +40,24 @@ fact_db <- fact_db %>%
     by = c("YEAR_MONTH", "CALC_PREC_DRUG_RECORD_ID" = "RECORD_ID")
   ) %>%
   left_join(
-    y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE), 
+    y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE),
     copy = TRUE
   ) %>%
   mutate(OVERALL_CODE = NA, OVERALL_NAME = "Overall") # dummy col
 
 # Loop over geography cols and aggregate
 for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
-  
+
   # Get the number of unique medicines per patient
   tmp_db <- fact_db %>%
     group_by(
-      YEAR_MONTH = as.character(YEAR_MONTH), 
-      GEOGRAPHY = switch(
-        geography,
+      YEAR_MONTH = as.character(YEAR_MONTH),
+      GEOGRAPHY = switch(geography,
         "OVERALL" = "Overall",
         "PCD_REGION" = "Region",
         "PCD_STP" = "STP",
         "PCD_LAD" = "Local Authority"
-      ), 
+      ),
       SUB_GEOGRAPHY_CODE = !!dplyr::sym(paste0(geography, "_CODE")),
       SUB_GEOGRAPHY_NAME = !!dplyr::sym(paste0(geography, "_NAME")),
       CH_FLAG,
@@ -66,7 +65,7 @@ for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
     ) %>%
     summarise(UNIQUE_MEDICINES = n_distinct(CHEMICAL_SUBSTANCE_BNF_DESCR)) %>%
     ungroup()
-  
+
   # Summarise across patients
   tmp_db <- tmp_db %>%
     group_by(
@@ -79,7 +78,7 @@ for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
     summarise(
       # Unique medicines per patient
       UNIQUE_MEDICINES_PER_PATIENT = mean(UNIQUE_MEDICINES),
-      # % of patients on ten or more unique medicines 
+      # % of patients on ten or more unique medicines
       PATIENTS_TEN_OR_MORE = n_distinct(
         ifelse(UNIQUE_MEDICINES >= 10, NHS_NO, NA)
       ),
@@ -90,12 +89,12 @@ for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
       PCT_PATIENTS_TEN_OR_MORE = PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS * 100
     ) %>%
     select(-c(PATIENTS_TEN_OR_MORE, TOTAL_PATIENTS))
-  
+
   # Add overall mean (average monthly per patient is the metric)
   tmp_db <- tmp_db %>%
     union_all(
       y = tmp_db %>%
-        group_by(      
+        group_by(
           YEAR_MONTH = "Overall",
           GEOGRAPHY,
           SUB_GEOGRAPHY_CODE,
@@ -108,27 +107,24 @@ for (geography in c("OVERALL", "PCD_REGION", "PCD_STP", "PCD_LAD")) {
         ) %>%
         ungroup()
     )
-  
+
   # Either create the table or append to them
   if (geography == "OVERALL") {
-    
+
     # On the first iteration initialise the table
     unique_medicines_per_patient_by_geography_db <- tmp_db
-    
   } else {
-    
+
     # Union results to initialised table
     unique_medicines_per_patient_by_geography_db <- union_all(
       x = unique_medicines_per_patient_by_geography_db,
       y = tmp_db
     )
-    
   }
-  
 }
 
 # Collect and format for highcharter
-unique_medicines_per_patient_by_geography_df <- 
+unique_medicines_per_patient_by_geography_df <-
   unique_medicines_per_patient_by_geography_db %>%
   collect() %>%
   careHomePrescribingScrollytellR::format_data_raw(CH_FLAG)
@@ -136,7 +132,7 @@ unique_medicines_per_patient_by_geography_df <-
 
 # Add to data-raw/
 usethis::use_data(
-  unique_medicines_per_patient_by_geography_df, 
+  unique_medicines_per_patient_by_geography_df,
   overwrite = TRUE
 )
 

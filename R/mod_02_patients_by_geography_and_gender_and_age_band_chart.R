@@ -13,14 +13,11 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
     h4("Demographic estimates for older care home patients receiving prescriptions"),
     p(
       "Overall, we estimate a monthly average of ", tags$b("284 thousand care home patients,"),
-      " aged 65+ years receiving prescriptions each month, which accounts for around", tags$b("X%"), "of patients aged 65+ ",
+      " aged 65+ years receiving prescriptions each month, which accounts for around", tags$b("4%"), "of patients aged 65+ ",
       "years receiving prescription items."
     ),
     p(
-      "Overall, ", tags$b("two thirds"), " are ", tags$b("female"), "(66%) and", tags$b("44%"), "are", tags$b("female aged 85+ years.")
-    ),
-    p(
-      "The age and gender profile is broadly comparable to",
+      "Overall, the age and gender profile is broadly comparable to",
       a(
         "ONS Estimates of care home patients from April 2020.",
         href = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales",
@@ -59,10 +56,17 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
         inline = TRUE,
         width = "100%"
       ),
-      highcharter::highchartOutput(
-        outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
-        height = "500px",
-        width = "800px"
+      col_9(
+        highcharter::highchartOutput(
+          outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
+          height = "500px",
+          width = "900px"
+        )
+      ),
+      col_3(
+        shiny::htmlOutput(
+          ns("text")
+        )
       )
     ),
     br(),
@@ -84,11 +88,9 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
 #' patients_by_geography_and_gender_and_age_band_chart Server Function
 #'
 #' @noRd
-mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
-  input,
-  output,
-  session
-) {
+mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(input,
+                                                                              output,
+                                                                              session) {
   ns <- session$ns
 
   # comma separate setting
@@ -105,36 +107,35 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
 
   # create as reactive value - now it holds selected value
   input_metric <- reactive(metric_selection$v)
-  
+
   # Filter to relevant data for this chart
-  patients_by_geography_and_gender_and_age_band_df <- 
-    patients_by_geography_and_gender_and_age_band_df %>%
+  patients_by_geography_and_gender_and_age_band_df <-
+    careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
     dplyr::filter(
       dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME, GENDER), not_na)
     )
-    
+
   # Handy resource: https://mastering-shiny.org/action-dynamic.html
-  
+
   # Filter the data based on the geography
   geography_df <- reactive({
     req(input$geography)
     patients_by_geography_and_gender_and_age_band_df %>%
       dplyr::filter(GEOGRAPHY == input$geography)
-    
   })
-  
-  # Update the list of choices for sub geography from the rows in the geography 
+
+  # Update the list of choices for sub geography from the rows in the geography
   # dataframe
   observeEvent(
-    eventExpr = geography_df(), 
+    eventExpr = geography_df(),
     handlerExpr = {
       updateSelectInput(
-        inputId = "sub_geography", 
+        inputId = "sub_geography",
         choices = unique(geography_df()$SUB_GEOGRAPHY_NAME)
-      ) 
+      )
     }
   )
-  
+
   # Filter the data based on the sub geography and format for the plot
   plot_df <- reactive({
     req(input$geography)
@@ -164,6 +165,57 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
     req(input$count_or_percentage)
     max(abs(plot_df()$value), na.rm = TRUE)
   })
+
+  # pull % of female of selected geography (# female / total patients)
+  female_p <- reactive({
+    req(input$geography)
+    req(input$sub_geography)
+    geography_df() %>%
+      dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography & YEAR_MONTH == "Overall") %>%
+      dplyr::group_by(GENDER) %>%
+      dplyr::summarise(PAT_SUM = sum(TOTAL_PATIENTS)) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(P = floor(PAT_SUM / sum(PAT_SUM) * 100)) %>%
+      dplyr::filter(GENDER == "Female") %>%
+      dplyr::select(P) %>%
+      dplyr::pull()
+  })
+
+
+  # pull % of 85+ female of selected geography (# 85+ female / # total patients)
+  female_85plus_p <- reactive({
+    req(input$geography)
+    req(input$sub_geography)
+    geography_df() %>%
+      dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography & YEAR_MONTH == "Overall") %>%
+      dplyr::mutate(GENDER_RECODE = dplyr::case_when(
+        GENDER == "Female" & AGE_BAND == "85-89" ~ "Female_85_plus",
+        GENDER == "Female" & AGE_BAND == "90+" ~ "Female_85_plus",
+        TRUE ~ "Other"
+      )) %>%
+      dplyr::group_by(GENDER_RECODE) %>%
+      dplyr::summarise(PAT_SUM = sum(TOTAL_PATIENTS)) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(P = floor(PAT_SUM / sum(PAT_SUM) * 100)) %>%
+      dplyr::filter(GENDER_RECODE == "Female_85_plus") %>%
+      dplyr::select(P) %>%
+      dplyr::pull()
+  })
+
+  # pull monthly average of care home patients
+  avg_pats <- reactive({
+    req(input$geography)
+    req(input$sub_geography)
+    geography_df() %>%
+      dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography & YEAR_MONTH != "Overall") %>%
+      dplyr::group_by(YEAR_MONTH) %>%
+      dplyr::summarise(MONTHLY_TOTAL_PAT = sum(TOTAL_PATIENTS)) %>%
+      dplyr::summarise(AVG_PAT = floor(sum(MONTHLY_TOTAL_PAT) / 12)) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(AVG_PAT = prettyNum(AVG_PAT, big.mark = ",", scientific = FALSE)) %>%
+      dplyr::pull()
+  })
+
 
   # Format for highcharter animation
   # unfortunately, tooltip with two different values doesn't work.
@@ -220,9 +272,6 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
       highcharter::highchart() %>%
         highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
         highcharter::hc_add_series_list(x = plot_series_list()) %>%
-        highcharter::hc_subtitle(
-          text = "Note: Counts rounded to nearest ten (e.g. 12 rounded to 10) "
-        ) %>%
         highcharter::hc_motion(
           labels = unique(plot_df()$YEAR_MONTH),
           series = c(0, 1)
@@ -234,11 +283,11 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
           reversed = FALSE
         ) %>%
         highcharter::hc_yAxis(
-          title = list(text = "Number of care home patients"),
+          title = list(text = "Estimated number of care home patients (thousands)"),
           min = -ceiling(max_value() / 5) * 5,
           max = ceiling(max_value() / 5) * 5,
           labels = list(
-            formatter = htmlwidgets::JS("function(){ return Math.abs(this.value)/1000 + 'K';}")
+            formatter = htmlwidgets::JS("function(){ return Math.abs(this.value)/1000;}")
           )
         ) %>%
         highcharter::hc_tooltip(
@@ -258,6 +307,30 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
             "
           )
         )
+    }
+  })
+
+  output$text <- shiny::renderUI({
+    if (input$sub_geography == "Overall") {
+      shiny::HTML(paste(
+        '<p id = "small"> <br> <br> <br> <br> <br>',
+        " Overall we estimate ", "<b>", female_p(),
+        "%</b>", " of care home patients are females and ", "<b>", female_85plus_p(),
+        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br>",
+        '<p id = "small"> Monthly average of', " overall care home patients are ", "<b>",
+        avg_pats(), "</b>", ". </p>",
+        sep = ""
+      ))
+    } else {
+      shiny::HTML(paste(
+        '<p id = "small"> <br>', "<br>", "<br>", "<br>", "<br>", "In ",
+        input$sub_geography, ", we estimate ", "<b>", female_p(),
+        "%</b>", " of care home patients are females and ", "<b>", female_85plus_p(),
+        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br>",
+        '<p id = "small"> Monthly average of ', input$sub_geography, " care home patients are ", "<b>",
+        avg_pats(), "</b>", ". </p>",
+        sep = ""
+      ))
     }
   })
 }
