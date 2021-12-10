@@ -7,8 +7,6 @@
 format_data_raw(df, ...)
 }
 \arguments{
-\item{df}{}
-
 \item{...}{}
 }
 \value{
