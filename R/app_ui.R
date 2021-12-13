@@ -38,13 +38,13 @@ app_ui <- function(request) {
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "04_items_and_cost_per_bnf_chapter_and_section_chart",
-                mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui("04_items_and_cost_per_bnf_chapter_and_section_chart_1")
+                id = "04_estimated_care_home_patients",
+                mod_04_estimated_care_home_patients_ui("04_estimated_care_home_patients_1")
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "map",
-                mod_map_ui("map_1")
+                id = "05_items_and_cost_per_bnf_chapter_and_section_chart",
+                mod_05_items_and_cost_per_bnf_chapter_and_section_chart_ui("05_items_and_cost_per_bnf_chapter_and_section_chart_1")
               )
             )
           )

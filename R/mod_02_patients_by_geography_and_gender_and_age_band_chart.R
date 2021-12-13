@@ -10,7 +10,14 @@
 mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4("Demographic estimates for older care home patients receiving prescriptions"),
+    h4(
+      "Demographic estimates for",
+      tippy(
+        text = "older care home patients",
+        tooltip = tooltip_text$care_home
+      ),
+      "receiving prescriptions"
+    ),
     p(
       "Overall, we estimate a monthly average of ", tags$b("285 thousand care home patients,"),
       " aged 65+ years receiving prescriptions, which accounts for around 4% of patients aged 65+ ",
@@ -80,7 +87,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
     ),
     p(
       "Care home patient's prescriptions were allocated an IMD and associated decile based on the area in which the care home is located. ",
-      "On average, the proportion of xxx in each ", tags$b("IMD decile"), "is broadly in line with expected proportions."
+      "On average, the proportion is very close to 20% in each ", tags$b("IMD quintile,"), " which suggests equal distribution and little variation."
     )
   )
 }

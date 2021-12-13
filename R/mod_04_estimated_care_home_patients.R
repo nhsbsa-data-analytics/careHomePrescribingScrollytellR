@@ -1,4 +1,4 @@
-#' map UI Function
+#' 04_estimated_care_home_patients UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,11 +7,29 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_map_ui <- function(id) {
+mod_04_estimated_care_home_patients_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    h4("Map"),
+    h4(
+      "Estimated prescribing patterns for",
+      tippy(
+        text = "older care home patients",
+        tooltip = tooltip_text$care_home
+      )
+    ),
+    p(
+      "Older care home patients received an estimated 35 million prescription items ",
+      "at a cost of", tags$b("£320 million"), " during 2020/21."
+    ),
+    p(
+      "Average drug costs per patient per month are highest for the youngest care home patients ",
+      "amongst both males and females. They are over 1.5 times higher for 65 to 74 year olds than ",
+      "90+ year olds. Drug costs are also higher for male care home patients than females in all age groups.",
+      " Drug volumnes are broadly similar by age and gender, although there is a smaller proportion ",
+      "of care home patients aged 90+ years on 10 more drugs than other age groups."
+    ),
+    br(),
     fluidRow(
       style = "background-color: #FFFFFF;",
       col_6(
@@ -53,7 +71,7 @@ mod_map_ui <- function(id) {
 #' map Server Function
 #'
 #' @noRd
-mod_map_server <- function(input, output, session) {
+mod_04_estimated_care_home_patients_server <- function(input, output, session) {
   ns <- session$ns
 
   # Radio button added as we cannot add two values in one sequence for the hc_motion
@@ -176,7 +194,7 @@ mod_map_server <- function(input, output, session) {
 }
 
 ## To be copied in the UI
-# mod_map_ui("map_1")
+# mod_estimated_care_home_patients_ui("estimated_care_home_patients_1")
 
 ## To be copied in the server
 # callModule(mod_map_server, "map_1")

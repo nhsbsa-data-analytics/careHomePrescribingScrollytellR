@@ -74,7 +74,7 @@ mod_01_intro_ui <- function(id) {
     ),
     p(
       "This is an experimental piece of work and we are interested in collaboration",
-      " and refinding the methodology so that it can be used in NHS informatino systems in future."
+      " and refinding the methodology so that it can be used in NHS information systems in future."
     )
   )
 }

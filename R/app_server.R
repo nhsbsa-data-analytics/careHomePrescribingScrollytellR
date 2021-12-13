@@ -24,12 +24,12 @@ app_server <- function(input, output, session) {
     module = mod_03_overall_summary_server
   )
   moduleServer(
-    id = "04_items_and_cost_per_bnf_chapter_and_section_chart_1",
-    module = mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server
+    id = "05_items_and_cost_per_bnf_chapter_and_section_chart_1",
+    module = mod_05_items_and_cost_per_bnf_chapter_and_section_chart_server
   )
   moduleServer(
-    id = "map_1",
-    module = mod_map_server
+    id = "04_estimated_care_home_patients_1",
+    module = mod_04_estimated_care_home_patients_server
   )
   moduleServer(
     id = "definitions_1",
