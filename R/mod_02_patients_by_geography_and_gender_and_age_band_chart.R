@@ -12,9 +12,9 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
   tagList(
     h4("Demographic estimates for older care home patients receiving prescriptions"),
     p(
-      "Overall, we estimate a monthly average of ", tags$b("284 thousand care home patients,"),
-      " aged 65+ years receiving prescriptions each month, which accounts for around", tags$b("4%"), "of patients aged 65+ ",
-      "years receiving prescription items."
+      "Overall, we estimate a monthly average of ", tags$b("285 thousand care home patients,"),
+      " aged 65+ years receiving prescriptions, which accounts for around 4% of patients aged 65+ ",
+      "years receiving prescription items each month."
     ),
     p(
       "Overall, the age and gender profile is broadly comparable to",
@@ -74,15 +74,13 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
     br(),
     br(),
     p(
-      "We have used CQC data to identify residential care homes and nursing homes. On average we ",
-      "estimate there around each month are similar numbers of older patients in residential (113 thousand) ",
-      "and nursing (106 thousand) homes, with a small number of care home patients appearing in both (6.9 thousand) ",
-      "during 2020/21."
+      "Based on CQC data, we estimate similar proportions of care home patients aged 65+ living in ",
+      tags$b("residential homes"), " (40%) and ", tags$b("nursing homes"), " (37%) each month.", "A small percentage (2%) ",
+      "appear in both settings and there are 21% who we were unable to match against a residential or nursing home within CQC dataset."
     ),
     p(
-      "Care home patient's prescription were allocated an IMD and associated decile/quintile based on area in which ",
-      "the care home is located. On average, the proportion of XXX in each decile/quintile ",
-      "is broadly in line with expected proportions. (note: will change depends on decile/quintile)"
+      "Care home patient's prescriptions were allocated an IMD and associated decile based on the area in which the care home is located. ",
+      "On average, the proportion of xxx in each ", tags$b("IMD decile"), "is broadly in line with expected proportions."
     )
   )
 }
