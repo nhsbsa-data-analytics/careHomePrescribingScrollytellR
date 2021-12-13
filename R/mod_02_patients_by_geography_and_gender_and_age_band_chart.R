@@ -56,14 +56,16 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
         inline = TRUE,
         width = "100%"
       ),
-      col_9(
+      col_8(
         highcharter::highchartOutput(
           outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
           height = "500px",
           width = "900px"
         )
       ),
-      col_3(
+      col_4(
+        br(),
+        br(),
         shiny::htmlOutput(
           ns("text")
         )
@@ -210,7 +212,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
       dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography & YEAR_MONTH != "Overall") %>%
       dplyr::group_by(YEAR_MONTH) %>%
       dplyr::summarise(MONTHLY_TOTAL_PAT = sum(TOTAL_PATIENTS)) %>%
-      dplyr::summarise(AVG_PAT = floor(sum(MONTHLY_TOTAL_PAT) / 12)) %>%
+      dplyr::summarise(AVG_PAT = ceiling(sum(MONTHLY_TOTAL_PAT) / 12 / 1000) * 1000) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(AVG_PAT = prettyNum(AVG_PAT, big.mark = ",", scientific = FALSE)) %>%
       dplyr::pull()
@@ -313,21 +315,21 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   output$text <- shiny::renderUI({
     if (input$sub_geography == "Overall") {
       shiny::HTML(paste(
-        '<p id = "small"> <br> <br> <br> <br> <br>',
+        '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">',
         " Overall we estimate ", "<b>", female_p(),
         "%</b>", " of care home patients are females and ", "<b>", female_85plus_p(),
-        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br>",
-        '<p id = "small"> Monthly average of', " overall care home patients are ", "<b>",
+        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br> <br> <br> <br>",
+        '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">', "<br>", "Monthly average of", " overall care home patients are ", "<b>",
         avg_pats(), "</b>", ". </p>",
         sep = ""
       ))
     } else {
       shiny::HTML(paste(
-        '<p id = "small"> <br>', "<br>", "<br>", "<br>", "<br>", "In ",
+        '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">', "In ",
         input$sub_geography, ", we estimate ", "<b>", female_p(),
         "%</b>", " of care home patients are females and ", "<b>", female_85plus_p(),
-        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br>",
-        '<p id = "small"> Monthly average of ', input$sub_geography, " care home patients are ", "<b>",
+        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br> <br> <br> <br>",
+        '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">', "<br>", "Monthly average of ", input$sub_geography, " care home patients are ", "<b>",
         avg_pats(), "</b>", ". </p>",
         sep = ""
       ))

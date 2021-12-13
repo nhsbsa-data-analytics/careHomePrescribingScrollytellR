@@ -29,11 +29,13 @@ index_of_multiple_deprivation_df <- fact_db %>%
   ungroup() %>%
   group_by(IMD_QUINTILE) %>%
   summarise(TOTAL_ITEMS = count(ITEM_COUNT)) %>%
-  mutate(OVERALL_QUINTILE = sum(TOTAL_ITEMS),
-         PROP = round(TOTAL_ITEMS / OVERALL_QUINTILE * 100, 0)) %>%
+  mutate(
+    OVERALL_QUINTILE = sum(TOTAL_ITEMS),
+    PROP = round(TOTAL_ITEMS / OVERALL_QUINTILE * 100, 0)
+  ) %>%
   arrange(IMD_QUINTILE) %>%
   collect()
-  
+
 # Add to data-raw/
 usethis::use_data(index_of_multiple_deprivation_df, overwrite = TRUE)
 

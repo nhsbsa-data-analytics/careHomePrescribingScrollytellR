@@ -119,19 +119,19 @@ mod_map_server <- function(input, output, session) {
 
     max(abs(plot_df()$value), na.rm = TRUE)
   })
-  
+
   # Format for highchater animation using tidyr::complete
   plot_sequence_series <- reactive({
     req(input$geography)
     req(input$metric)
-    
+
     # Expand plot dataframe to cover all possibilities
     plot_df_ <- plot_df() %>%
       tidyr::complete(
         YEAR_MONTH, SUB_GEOGRAPHY_CODE,
         fill = list(value = 0)
       )
-    
+
     # Create series (including code and name)
     plot_df_ %>%
       dplyr::group_by(SUB_GEOGRAPHY_CODE) %>%
@@ -155,8 +155,7 @@ mod_map_server <- function(input, output, session) {
           headerFormat = "",
           pointFormat = paste0(
             "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
-            switch(
-              input$metric,
+            switch(input$metric,
               "COST_PER_PATIENT" = "Total drug cost:</b> £{point.value:.2f}",
               "ITEMS_PER_PATIENT" = "Number of prescription items:</b> {point.value:.0f}",
               "UNIQUE_MEDICINES_PER_PATIENT" = "Number of unique medicines:</b> {point.value:.0f}",

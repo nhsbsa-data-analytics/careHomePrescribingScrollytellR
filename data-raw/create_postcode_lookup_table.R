@@ -72,8 +72,8 @@ postcode_db <- postcode_db %>%
       filter(IMD_YEAR == 2019) %>%
       mutate(IMD_QUINTILE = round(INDEX_OF_MULT_DEPRIV_DECILE / 2, 0)) %>%
       select(LSOA_CODE, IMD_QUINTILE)
-      )
-    
+  )
+
 # Reorder the columns
 postcode_db <- postcode_db %>%
   select(
