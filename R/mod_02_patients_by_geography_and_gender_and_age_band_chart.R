@@ -10,11 +10,18 @@
 mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4("Demographic estimates for older care home patients receiving prescriptions"),
+    h4(
+      "Demographic estimates for",
+      tippy(
+        text = "older care home patients",
+        tooltip = tooltip_text$care_home
+      ),
+      "receiving prescriptions"
+    ),
     p(
-      "Overall, we estimate a monthly average of ", tags$b("284 thousand care home patients,"),
-      " aged 65+ years receiving prescriptions each month, which accounts for around", tags$b("4%"), "of patients aged 65+ ",
-      "years receiving prescription items."
+      "Overall, we estimate a monthly average of ", tags$b("285 thousand care home patients,"),
+      " aged 65+ years receiving prescriptions, which accounts for around 4% of patients aged 65+ ",
+      "years receiving prescription items each month."
     ),
     p(
       "Overall, the age and gender profile is broadly comparable to",
@@ -56,14 +63,16 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
         inline = TRUE,
         width = "100%"
       ),
-      col_9(
+      col_8(
         highcharter::highchartOutput(
           outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
           height = "500px",
           width = "900px"
         )
       ),
-      col_3(
+      col_4(
+        br(),
+        br(),
         shiny::htmlOutput(
           ns("text")
         )
@@ -72,15 +81,13 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
     br(),
     br(),
     p(
-      "We have used CQC data to identify residential care homes and nursing homes. On average we ",
-      "estimate there around each month are similar numbers of older patients in residential (113 thousand) ",
-      "and nursing (106 thousand) homes, with a small number of care home patients appearing in both (6.9 thousand) ",
-      "during 2020/21."
+      "Based on CQC data, we estimate similar proportions of care home patients aged 65+ living in ",
+      tags$b("residential homes"), " (40%) and ", tags$b("nursing homes"), " (37%) each month.", "A small percentage (2%) ",
+      "appear in both settings and there are 21% who we were unable to match against a residential or nursing home within CQC dataset."
     ),
     p(
-      "Care home patient's prescription were allocated an IMD and associated decile/quintile based on area in which ",
-      "the care home is located. On average, the proportion of XXX in each decile/quintile ",
-      "is broadly in line with expected proportions. (note: will change depends on decile/quintile)"
+      "Care home patient's prescriptions were allocated an IMD and associated decile based on the area in which the care home is located. ",
+      "On average, the proportion is very close to 20% in each ", tags$b("IMD quintile,"), " which suggests equal distribution and little variation."
     )
   )
 }
@@ -210,7 +217,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
       dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography & YEAR_MONTH != "Overall") %>%
       dplyr::group_by(YEAR_MONTH) %>%
       dplyr::summarise(MONTHLY_TOTAL_PAT = sum(TOTAL_PATIENTS)) %>%
-      dplyr::summarise(AVG_PAT = floor(sum(MONTHLY_TOTAL_PAT) / 12)) %>%
+      dplyr::summarise(AVG_PAT = ceiling(sum(MONTHLY_TOTAL_PAT) / 12 / 1000) * 1000) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(AVG_PAT = prettyNum(AVG_PAT, big.mark = ",", scientific = FALSE)) %>%
       dplyr::pull()
@@ -313,21 +320,21 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(in
   output$text <- shiny::renderUI({
     if (input$sub_geography == "Overall") {
       shiny::HTML(paste(
-        '<p id = "small"> <br> <br> <br> <br> <br>',
+        '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">',
         " Overall we estimate ", "<b>", female_p(),
         "%</b>", " of care home patients are females and ", "<b>", female_85plus_p(),
-        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br>",
-        '<p id = "small"> Monthly average of', " overall care home patients are ", "<b>",
+        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br> <br> <br> <br>",
+        '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">', "<br>", "Monthly average of", " overall care home patients are ", "<b>",
         avg_pats(), "</b>", ". </p>",
         sep = ""
       ))
     } else {
       shiny::HTML(paste(
-        '<p id = "small"> <br>', "<br>", "<br>", "<br>", "<br>", "In ",
+        '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">', "In ",
         input$sub_geography, ", we estimate ", "<b>", female_p(),
         "%</b>", " of care home patients are females and ", "<b>", female_85plus_p(),
-        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br>",
-        '<p id = "small"> Monthly average of ', input$sub_geography, " care home patients are ", "<b>",
+        "%</b>", " are female aged 85+ years.", "</p>", "<br> <br> <br> <br> <br>",
+        '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">', "<br>", "Monthly average of ", input$sub_geography, " care home patients are ", "<b>",
         avg_pats(), "</b>", ". </p>",
         sep = ""
       ))

@@ -1,4 +1,4 @@
-#' map UI Function
+#' 04_estimated_care_home_patients UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,11 +7,29 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_map_ui <- function(id) {
+mod_04_estimated_care_home_patients_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    h4("Map"),
+    h4(
+      "Estimated prescribing patterns for",
+      tippy(
+        text = "older care home patients",
+        tooltip = tooltip_text$care_home
+      )
+    ),
+    p(
+      "Older care home patients received an estimated 35 million prescription items ",
+      "at a cost of", tags$b("£320 million"), " during 2020/21."
+    ),
+    p(
+      "Average drug costs per patient per month are highest for the youngest care home patients ",
+      "amongst both males and females. They are over 1.5 times higher for 65 to 74 year olds than ",
+      "90+ year olds. Drug costs are also higher for male care home patients than females in all age groups.",
+      " Drug volumnes are broadly similar by age and gender, although there is a smaller proportion ",
+      "of care home patients aged 90+ years on 10 more drugs than other age groups."
+    ),
+    br(),
     fluidRow(
       style = "background-color: #FFFFFF;",
       col_6(
@@ -53,7 +71,7 @@ mod_map_ui <- function(id) {
 #' map Server Function
 #'
 #' @noRd
-mod_map_server <- function(input, output, session) {
+mod_04_estimated_care_home_patients_server <- function(input, output, session) {
   ns <- session$ns
 
   # Radio button added as we cannot add two values in one sequence for the hc_motion
@@ -119,19 +137,19 @@ mod_map_server <- function(input, output, session) {
 
     max(abs(plot_df()$value), na.rm = TRUE)
   })
-  
+
   # Format for highchater animation using tidyr::complete
   plot_sequence_series <- reactive({
     req(input$geography)
     req(input$metric)
-    
+
     # Expand plot dataframe to cover all possibilities
     plot_df_ <- plot_df() %>%
       tidyr::complete(
         YEAR_MONTH, SUB_GEOGRAPHY_CODE,
         fill = list(value = 0)
       )
-    
+
     # Create series (including code and name)
     plot_df_ %>%
       dplyr::group_by(SUB_GEOGRAPHY_CODE) %>%
@@ -155,8 +173,7 @@ mod_map_server <- function(input, output, session) {
           headerFormat = "",
           pointFormat = paste0(
             "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
-            switch(
-              input$metric,
+            switch(input$metric,
               "COST_PER_PATIENT" = "Total drug cost:</b> £{point.value:.2f}",
               "ITEMS_PER_PATIENT" = "Number of prescription items:</b> {point.value:.0f}",
               "UNIQUE_MEDICINES_PER_PATIENT" = "Number of unique medicines:</b> {point.value:.0f}",
@@ -177,7 +194,7 @@ mod_map_server <- function(input, output, session) {
 }
 
 ## To be copied in the UI
-# mod_map_ui("map_1")
+# mod_estimated_care_home_patients_ui("estimated_care_home_patients_1")
 
 ## To be copied in the server
 # callModule(mod_map_server, "map_1")

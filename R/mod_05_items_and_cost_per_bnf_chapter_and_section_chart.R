@@ -1,4 +1,4 @@
-#' 04_items_and_cost_per_bnf_chapter_and_section_chart UI Function
+#' 05_items_and_cost_per_bnf_chapter_and_section_chart UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,18 +7,18 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
+mod_05_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Commonly prescribed medicines"),
     p(
-      "Around one in four items (24%) prescribed to care home patients are from the central nervous system",
+      "Around one in four items (24%) prescribed to care home patients are from the Central Nervous System",
       tippy(
         text = "BNF",
         tooltip = tooltip_text$bnf_code
       ),
       "chapter. This chapter also accounts for 24% of drug cost. Analgesics is the most common",
-      "BNF section within...."
+      "BNF section within the Central Nervous System."
     ),
     br(),
     br(),
@@ -52,7 +52,7 @@ mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui <- function(id) {
 #' items_and_cost_per_bnf_chapter_and_section_chart Server Function
 #'
 #' @noRd
-mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
+mod_05_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input,
                                                                            output,
                                                                            session) {
   ns <- session$ns
@@ -343,7 +343,7 @@ mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server <- function(input
 }
 
 ## To be copied in the UI
-# mod_04_items_and_cost_per_bnf_chapter_and_section_chart_ui("items_and_cost_per_bnf_chapter_and_section_chart_1")
+# mod_05_items_and_cost_per_bnf_chapter_and_section_chart_ui("items_and_cost_per_bnf_chapter_and_section_chart_1")
 
 ## To be copied in the server
-# callModule(mod_04_items_and_cost_per_bnf_chapter_and_section_chart_server, "04_items_and_cost_per_bnf_chapter_and_section_chart_1")
+# callModule(mod_05_items_and_cost_per_bnf_chapter_and_section_chart_server, "05_items_and_cost_per_bnf_chapter_and_section_chart_1")

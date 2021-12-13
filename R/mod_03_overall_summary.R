@@ -24,12 +24,10 @@ mod_03_overall_summary_ui <- function(id) {
       )
     ),
     p(
-      "Overall, care home patients receive more prescription items and unique medicines per patient per month than non-care home patients",
-      " aged 65+ receiving prescriptions. We estimate",
-      tags$b("10 prescription items"), " per patient per month at an estimated cost of £90 per patient per month.",
-      "This compares to 6 items per patient per month at a cost of £47 per patient per month for non-care home patients aged 65+ receiving prescriptions."
+      "Overall, older care home patients receive around 1.4 times more prescription items  ",
+      "and unique medicines per patient per month than non-care home older patients.",
+      " At around twice the drug cost."
     ),
-    p("Correspondingly the estimated volumne and number of medicines per patient per month is higher."),
     br(),
     fluidRow(
       style = "background-color: #FFFFFF;",
@@ -67,14 +65,9 @@ mod_03_overall_summary_ui <- function(id) {
       uiOutput(ns("table"))
     ),
     p(
-      "Average drugs costs per patient per month are highest for the youngest care home patients",
-      "amongst both males and females. They are over 1.5 times higher for 65 to 74 year olds than ",
-      "90+ year olds."
-    ),
-    p(
-      "Drug costs are also consistently higher for male care home patients than females.",
-      "And when compared with non-care home patients, drug costs are higher across all age and ",
-      "gender groups, with the greatest differences in younger care home patients."
+      "Drug costs and volumes are higher for care home patients than non-care home patients ",
+      "across all age and gender groups except females aged 90+ years. The greatest differences ",
+      "are between younger care home and non-care home patients."
     )
   )
 }
