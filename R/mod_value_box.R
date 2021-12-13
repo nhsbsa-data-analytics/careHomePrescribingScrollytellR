@@ -49,15 +49,17 @@ mod_value_box_ui <- function(id,
   )
 }
 
-#' slider Server Function
+#' value_box Server Functions
 #'
 #' @noRd
-mod_value_box_server <- function(input, output, session) {
-  ns <- session$ns
+mod_value_box_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+  })
 }
 
 ## To be copied in the UI
-# mod_value_box_ui("value_box_1")
+# mod_value_box_ui("value_box_ui_1")
 
 ## To be copied in the server
-# callModule(mod_value_box_server, "value_box_1")
+# mod_value_box_server("value_box_ui_1")
