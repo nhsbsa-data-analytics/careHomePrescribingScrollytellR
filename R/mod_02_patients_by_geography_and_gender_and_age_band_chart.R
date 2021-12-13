@@ -309,7 +309,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(id
     output$text <- shiny::renderUI({
       if (input$sub_geography == "Overall") {
         shiny::HTML(paste(
-          '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">',
+          '<p id = "medium"; style = "border:1px; border-color:#808080;padding:2em">',
           " Overall we estimate ", "<b>", female_p(),
           "%</b>", " of care home patients are females and ", "<b>", female_85plus_p(),
           "%</b>", " are female aged 85+ years.", "</p>", "<br> <br> <br> <br> <br>",
@@ -319,7 +319,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(id
         ))
       } else {
         shiny::HTML(paste(
-          '<p id = "small"; style = "border:1px; border-color:#808080;padding:2em">', "In ",
+          '<p id = "medium"; style = "border:1px; border-color:#808080;padding:2em">', "In ",
           input$sub_geography, ", we estimate ", "<b>", female_p(),
           "%</b>", " of care home patients are females and ", "<b>", female_85plus_p(),
           "%</b>", " are female aged 85+ years.", "</p>", "<br> <br> <br> <br> <br>",
