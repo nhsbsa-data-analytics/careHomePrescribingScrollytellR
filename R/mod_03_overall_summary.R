@@ -144,7 +144,7 @@ mod_03_overall_summary_server <- function(id) {
             style = "text-indent: 15px;",
             p(
               tippy(
-                text = "Total drug cost",
+                text = "Drug cost",
                 tooltip = tooltip_text$cost
               )
             )
