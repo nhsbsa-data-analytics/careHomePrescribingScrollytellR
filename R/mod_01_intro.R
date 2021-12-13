@@ -30,19 +30,19 @@ mod_01_intro_ui <- function(id) {
     ),
     br(),
     p(
-      "We estimate that there was a monthly average of", tags$b("284 thousand"),
-      "patients receiving prescriptions each month in 2020/21 and they ",
-      "received a monthly average of an estimated 2.9 million prescription items at a cost of",
-      tags$b("£27 million.")
+      "We estimate that there was a monthly average of", tags$b("285 thousand"),
+      " care home patients receiving prescriptions each month in 2020/21. They ",
+      "received an estimated 35 million prescription items at a cost of ",
+      tags$b("£320 million"), " during 2020/21."
     ),
     br(),
     p(
-      "This accounts for around", tags$b("4%"), "of ",
+      "This accounts for around 4% of ",
       tippy(
         text = "older patients",
         tooltip = tooltip_text$older
       ),
-      "receiving prescription items and", tags$b("7%"), "of the total primary ",
+      "receiving prescription items each month and 7% of the total primary ",
       "care drug spend for ",
       tippy(
         text = "older patients",
@@ -71,6 +71,10 @@ mod_01_intro_ui <- function(id) {
       "These estimates address a key gap in knowledge and give valuable ",
       "insights which could inform the use and management of medicines in care homes ",
       "to help improve health outcomes, the quality of care and ensure value."
+    ),
+    p(
+      "This is an experimental piece of work and we are interested in collaboration",
+      " and refinding the methodology so that it can be used in NHS informatino systems in future."
     )
   )
 }
