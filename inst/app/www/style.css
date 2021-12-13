@@ -52,6 +52,10 @@ em { font-size: 16pt; }
   font-size: 10pt;
 }
 
+#medium{
+  font-size: 11pt;
+}
+
 
 /* Make hyperlinks blue and underlined */
 a { 

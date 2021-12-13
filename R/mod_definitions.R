@@ -44,15 +44,17 @@ mod_definitions_ui <- function(id) {
   )
 }
 
-#' definitions Server Function
+#' definitions Server Functions
 #'
 #' @noRd
-mod_definitions_server <- function(input, output, session) {
-  ns <- session$ns
+mod_definitions_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+  })
 }
 
 ## To be copied in the UI
-# mod_definitions_ui("definitions_1")
+# mod_definitions_ui("definitions_ui_1")
 
 ## To be copied in the server
-# callModule(mod_definitions, "definitions_1")
+# mod_definitions_server("definitions_ui_1")

@@ -9,7 +9,7 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    mod_00_header_ui("00_header_1"),
+    mod_00_header_ui("00_header_ui_1"),
     br(),
     navlistPanel(
       well = FALSE,
@@ -18,7 +18,7 @@ app_ui <- function(request) {
         title = "Article",
         fluidPage(
           br(),
-          mod_01_intro_ui("01_intro_1"),
+          mod_01_intro_ui("01_intro_ui_1"),
           scrollytell::scrolly_container(
             outputId = "scrolly",
             scrollytell::scrolly_graph(),
@@ -29,22 +29,22 @@ app_ui <- function(request) {
               br(),
               scrollytell::scrolly_section(
                 id = "02_patients_by_geography_and_gender_and_age_band_chart",
-                mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_1")
+                mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_ui_1")
               ),
               br(),
               scrollytell::scrolly_section(
                 id = "03_overall_summary",
-                mod_03_overall_summary_ui("03_overall_summary_1")
+                mod_03_overall_summary_ui("03_overall_summary_ui_1")
               ),
               br(),
               scrollytell::scrolly_section(
                 id = "04_estimated_care_home_patients",
-                mod_04_estimated_care_home_patients_ui("04_estimated_care_home_patients_1")
+                mod_04_estimated_care_home_patients_ui("04_estimated_care_home_patients_ui_1")
               ),
               br(),
               scrollytell::scrolly_section(
                 id = "05_items_and_cost_per_bnf_chapter_and_section_chart",
-                mod_05_items_and_cost_per_bnf_chapter_and_section_chart_ui("05_items_and_cost_per_bnf_chapter_and_section_chart_1")
+                mod_05_items_and_cost_per_bnf_chapter_and_section_chart_ui("05_items_and_cost_per_bnf_chapter_and_section_chart_ui_1")
               )
             )
           )
@@ -54,12 +54,12 @@ app_ui <- function(request) {
         title = "Definitions",
         fluidPage(
           br(),
-          mod_definitions_ui("definitions_1")
+          mod_definitions_ui("definitions_ui_1")
         )
       )
     ),
     br(),
-    mod_99_footer_ui("99_footer_1")
+    mod_08_footer_ui("08_footer_ui_1")
   )
 }
 

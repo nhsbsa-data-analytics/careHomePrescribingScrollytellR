@@ -79,15 +79,17 @@ mod_01_intro_ui <- function(id) {
   )
 }
 
-#' 01_intro Server Function
+#' 01_intro Server Functions
 #'
 #' @noRd
-mod_01_intro_server <- function(input, output, session) {
-  ns <- session$ns
+mod_01_intro_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+  })
 }
 
 ## To be copied in the UI
-# mod_01_intro_ui("01_intro_1")
+# mod_01_intro_ui("01_intro_ui_1")
 
 ## To be copied in the server
-# callModule(mod_01_intro, "01_intro_1")
+# mod_01_intro_server("01_intro_ui_1")
