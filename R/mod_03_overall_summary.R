@@ -98,7 +98,7 @@ mod_03_overall_summary_server <- function(id) {
       dplyr::mutate(
         COST_PER_PATIENT = paste0(
           "£",
-          format(x = round(COST_PER_PATIENT, 2), nsmall = 2)
+          format(x = round(COST_PER_PATIENT, 0), nsmall = 0)
         ),
         ITEMS_PER_PATIENT = round(ITEMS_PER_PATIENT, 0),
         UNIQUE_MEDICINES_PER_PATIENT = round(UNIQUE_MEDICINES_PER_PATIENT, 0),
