@@ -387,7 +387,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
       p(
         id = "small",
         "Average number of monthly care home patients is", 
-        tags$b(paste0(average_monthly_patients(), ".")
+        tags$b(paste0(average_monthly_patients(), "."))
       )
     )
     
