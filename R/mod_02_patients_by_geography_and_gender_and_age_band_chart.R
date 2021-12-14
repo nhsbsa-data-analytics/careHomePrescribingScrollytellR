@@ -325,7 +325,13 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
           min = -ceiling(max_value() / 5) * 5,
           max = ceiling(max_value() / 5) * 5,
           labels = list(
-            formatter = htmlwidgets::JS("function(){ return Math.abs(this.value)/1000;}")
+            formatter = htmlwidgets::JS(
+              "
+              function() { 
+                return Math.abs(this.value) / 1000;
+              }
+              "
+            )
           )
         ) %>%
         highcharter::hc_tooltip(
@@ -333,14 +339,26 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
           useHTML = TRUE,
           formatter = htmlwidgets::JS(
             "
-            function(){
-            if(Math.abs(this.point.y) >= 1000){
-            outHTML = '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(Math.round(this.point.y/10)*10),0)
-            return(outHTML)
-            }else{
-            outHTML = '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Number of patients: </b>' + Math.abs(Math.round(this.point.y /10)*10)
-            return(outHTML)
-            }
+            function() {
+            
+              if(Math.abs(this.point.y) >= 1000) {
+              
+                outHTML = 
+                  '<b>Gender: </b>' + this.series.name + '<br>' + 
+                  '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + 
+                  '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(Math.round(this.point.y / 10) * 10), 0);
+                  
+              } else {
+              
+                outHTML = 
+                  '<b>Gender: </b>' + this.series.name + '<br>' + 
+                  '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + 
+                  '<b>Number of patients: </b>' + Math.abs(Math.round(this.point.y / 10) * 10);
+                
+              }
+            
+              return(outHTML);
+              
             }
             "
           )
@@ -358,12 +376,31 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
           min = -ceiling(max_value() / 5) * 5,
           max = ceiling(max_value() / 5) * 5,
           labels = list(
-            formatter = highcharter::JS("function(){ return Math.abs(this.value);}")
+            formatter = highcharter::JS(
+              "
+              function() { 
+                return Math.abs(this.value);
+              }
+              "
+            )
           )
         ) %>%
         highcharter::hc_tooltip(
           shared = FALSE,
-          formatter = highcharter::JS("function () { return '<b>Gender: </b>' + this.series.name + '<br>' + '<b>Age band (5 years): </b>' + this.point.category + '<br/>' + '<b>Percentage: </b>' + Math.abs(this.point.y).toFixed(1) + '%';}")
+          formatter = highcharter::JS(
+            "
+            function () { 
+              
+              outHTML = 
+                '<b>Gender: </b>' + this.series.name + '<br>' + 
+                '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
+                '<b>Percentage: </b>' + Math.abs(this.point.y).toFixed(1) + '%';
+                
+              return outHTML;
+            
+            }
+            "
+          )
         )
       
     }
