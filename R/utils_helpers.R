@@ -71,8 +71,8 @@ geographys <- list(
 #'
 #' Deal with factors and sort table.
 #'
-#' @param df
-#' @param ...
+#' @param df Dataframe
+#' @param vars Grouping variables
 #'
 #' @return
 #' @export

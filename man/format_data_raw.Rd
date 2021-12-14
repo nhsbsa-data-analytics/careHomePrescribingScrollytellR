@@ -7,7 +7,9 @@
 format_data_raw(df, vars)
 }
 \arguments{
-\item{...}{}
+\item{df}{Dataframe}
+
+\item{vars}{Grouping variables}
 }
 \value{
 
