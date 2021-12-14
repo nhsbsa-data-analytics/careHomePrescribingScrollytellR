@@ -59,7 +59,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       radioButtons(
         inputId = ns("count_or_percentage"),
         label = "",
-        choices = c("Percentage", "Count"),
+        choices = c("Count", "Percentage"),
         inline = TRUE,
         width = "100%"
       ),

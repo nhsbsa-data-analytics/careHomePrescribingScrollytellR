@@ -198,7 +198,7 @@ for (breakdown_name in names(breakdowns)) {
 unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
   unique_medicines_per_patient_by_breakdown_and_ch_flag_db %>%
   collect() %>%
-  careHomePrescribingScrollytellR::format_data_raw(CH_FLAG)
+  careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
 
 
 # Add to data-raw/

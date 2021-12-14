@@ -91,7 +91,7 @@ mod_03_overall_summary_server <- function(id) {
 
     # Filter to relevant data for this chart
     metric_df <- metric_df %>%
-      dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME), not_na))
+      dplyr::filter(dplyr::across(c(BREAKDOWN, SUB_BREAKDOWN_NAME), not_na))
 
     # Tidy the cols
     metric_df <- metric_df %>%

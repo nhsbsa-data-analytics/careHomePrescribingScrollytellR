@@ -35,7 +35,7 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
       style = "background-color: #FFFFFF;",
       col_6(
         selectInput(
-          inputId = ns("geography"),
+          inputId = ns("breakdown"),
           label = "Geography",
           choices = c("Region", "STP", "Local Authority"),
           width = "100%"
@@ -83,44 +83,48 @@ mod_04_estimated_care_home_patients_server <- function(id) {
     # Join the metrics together
     metric_df <-
       dplyr::full_join(
-        x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df,
-        y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_geography_df
+        x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_breakdown_and_ch_flag_df,
+        y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_breakdown_and_ch_flag_df
       )
 
-    # Only interested in care homes
+    # Only interested in care homes and geographical breakdowns
     metric_df <- metric_df %>%
-      dplyr::filter(CH_FLAG == "Care home")
+      dplyr::filter(
+        grepl("Geographical - ", BREAKDOWN),
+        CH_FLAG == "Care home"
+      ) %>%
+      dplyr::mutate(BREAKDOWN = gsub("Geographical - ", "", BREAKDOWN))
 
     # Filter to relevant data for this chart
     metric_df <- metric_df %>%
-      dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME), not_na))
+      dplyr::filter(dplyr::across(c(BREAKDOWN, SUB_BREAKDOWN_NAME), not_na))
 
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
-    # Filter the metric data based on the geography and format for the plot
+    # Filter the metric data based on the breakdown and format for the plot
     plot_df <- reactive({
-      req(input$geography)
+      req(input$breakdown)
       req(input$metric)
 
       metric_df %>%
-        dplyr::filter(GEOGRAPHY == input$geography) %>%
+        dplyr::filter(BREAKDOWN == input$breakdown) %>%
         dplyr::mutate(value = !!dplyr::sym(input$metric))
     })
 
-    # Filter the map data based on the geography and format for the plot
+    # Filter the map data based on the breakdown and format for the plot
     map_list <- reactive({
-      req(input$geography)
+      req(input$breakdown)
       req(input$metric)
 
       careHomePrescribingScrollytellR::map_df %>%
-        dplyr::filter(GEOGRAPHY == input$geography) %>%
+        dplyr::filter(BREAKDOWN == input$breakdown) %>%
         geojsonsf::sf_geojson() %>%
         jsonlite::fromJSON(simplifyVector = FALSE)
     })
 
     # Pull the min value
     min_value <- reactive({
-      req(input$geography)
+      req(input$breakdown)
       req(input$metric)
 
       min(abs(plot_df()$value), na.rm = TRUE)
@@ -128,7 +132,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
 
     # Pull the max value
     max_value <- reactive({
-      req(input$geography)
+      req(input$breakdown)
       req(input$metric)
 
       max(abs(plot_df()$value), na.rm = TRUE)
@@ -136,19 +140,19 @@ mod_04_estimated_care_home_patients_server <- function(id) {
 
     # Format for highchater animation using tidyr::complete
     plot_sequence_series <- reactive({
-      req(input$geography)
+      req(input$breakdown)
       req(input$metric)
 
       # Expand plot dataframe to cover all possibilities
       plot_df_ <- plot_df() %>%
         tidyr::complete(
-          YEAR_MONTH, SUB_GEOGRAPHY_CODE,
+          YEAR_MONTH, SUB_BREAKDOWN_CODE,
           fill = list(value = 0)
         )
       
       # Create series (including code and name)
       plot_df_ %>%
-        dplyr::group_by(SUB_GEOGRAPHY_CODE) %>%
+        dplyr::group_by(SUB_BREAKDOWN_CODE) %>%
         dplyr::do(sequence = .$value) %>%
         dplyr::left_join(y = plot_df_) %>%
         highcharter::list_parse()
@@ -156,7 +160,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
 
     # Create plot
     output$map_chart <- highcharter::renderHighchart({
-      req(input$geography)
+      req(input$breakdown)
       req(input$metric)
 
       highcharter::highchart(type = "map") %>%
@@ -164,11 +168,11 @@ mod_04_estimated_care_home_patients_server <- function(id) {
         highcharter::hc_add_series(
           data = plot_sequence_series(),
           mapData = map_list(),
-          joinBy = "SUB_GEOGRAPHY_CODE",
+          joinBy = "SUB_BREAKDOWN_CODE",
           tooltip = list(
             headerFormat = "",
             pointFormat = paste0(
-              "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
+              "<b>", input$breakdown, ":</b> {point.SUB_BREAKDOWN_NAME}<br><b>",
               switch(input$metric,
                 "COST_PER_PATIENT" = 
                   "Total drug cost:</b> £{point.value:.2f}",
