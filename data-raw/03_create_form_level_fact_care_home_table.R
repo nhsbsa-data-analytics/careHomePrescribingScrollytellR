@@ -63,18 +63,7 @@ elderly_nhs_no_db <- fact_db %>%
 # Filter the FACT table to these elderly patients but buffer the period so that 
 # we can search for addresses for paper forms from more months
 fact_db <- fact_db %>%
-  filter(
-    YEAR_MONTH >= 201912L & YEAR_MONTH <= 202105L
-  ) %>%
-  select(
-    YEAR_MONTH,
-    PART_DATE = EPS_PART_DATE,
-    EPM_ID,
-    PF_ID,
-    PATIENT_IDENTIFIED,
-    NHS_NO,
-    EPS_FLAG
-  ) %>%
+  filter(YEAR_MONTH >= 201912L & YEAR_MONTH <= 202105L) %>%
   semi_join(
     y = elderly_nhs_no_db,
     copy = TRUE
@@ -84,7 +73,18 @@ fact_db <- fact_db %>%
     copy = TRUE
   ) %>%
   relocate(YEAR_MONTH_ID) %>%
-  distinct()
+  group_by(
+    YEAR_MONTH_ID,
+    YEAR_MONTH,
+    PART_DATE = EPS_PART_DATE,
+    EPM_ID,
+    PF_ID,
+    PATIENT_IDENTIFIED,
+    NHS_NO,
+    EPS_FLAG
+  ) %>%
+  summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
+  ungroup()
 
 # EPS payload message data
 
@@ -215,11 +215,12 @@ pds_import_db <- con_dalp %>%
   tbl(from = "INT615_SCD2_EXT_PD_IMPORT_DATA")
 
 # Join the year month details (shift by 2 months)
-pds_import_db <-pds_import_db %>%
+pds_import_db <- pds_import_db %>%
   inner_join(y = year_month_db) %>%
   select(-YEAR_MONTH) %>%
   mutate(YEAR_MONTH_ID = YEAR_MONTH_ID + 2L) %>% 
-  inner_join(y = year_month_db)
+  inner_join(y = year_month_db) %>%
+  relocate(YEAR_MONTH_ID, YEAR_MONTH)
 
 # Get EPS
 
@@ -227,15 +228,17 @@ pds_import_db <-pds_import_db %>%
 eps_single_address_db <- eps_fact_db %>%
   filter(!is.na(POSTCODE)) %>%
   # Keep the address with the biggest item count in each postcode 
-  group_by(YEAR_MONTH, NHS_NO, POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  group_by(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO, POSTCODE, SINGLE_LINE_ADDRESS) %>%
   summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
   ungroup() %>%
-  group_by(YEAR_MONTH, NHS_NO, POSTCODE) %>%
+  group_by(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO, POSTCODE) %>%
   slice_max(order_by = ITEM_COUNT, with_ties = FALSE) %>%
   ungroup() %>%
+  select(-ITEM_COUNT) %>%
   # Remove patients with multiple postcodes
-  group_by(YEAR_MONTH, NHS_NO) %>%
+  group_by(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO) %>%
   mutate(POSTCODE_COUNT = n_distinct(POSTCODE)) %>%
+  ungroup() %>%
   filter(POSTCODE_COUNT == 1) %>%
   select(-POSTCODE_COUNT)
 
@@ -248,15 +251,13 @@ paper_fact_db <- fact_db %>%
 # Get the patients and months that we want an address for
 paper_patient_db <- paper_fact_db %>% 
   filter(YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L)  %>%
-  select(YEAR_MONTH, NHS_NO)
+  distinct(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO)
 
 # Add the year month information
-paper_patient_db <- paper_patient_db
-  inner_join(y = year_month_db %>% select(YEAR_MONTH, YEAR_MONTH_ID)) %>%
+paper_patient_db <- paper_patient_db %>%
   mutate(
     YEAR_MONTH_ID_M2 = YEAR_MONTH_ID - 2,
     YEAR_MONTH_ID_M1 = YEAR_MONTH_ID - 1,
-    YEAR_MONTH_ID_0  = YEAR_MONTH_ID,
     YEAR_MONTH_ID_P1 = YEAR_MONTH_ID + 1,
     YEAR_MONTH_ID_P2 = YEAR_MONTH_ID + 2
   )
@@ -266,96 +267,91 @@ left_join_address <- function(x, y, year_month_id_col, suffix){
   
   left_join(
     x = x,
-    y = y %>% 
-      rename(
-        !!dplyr::sym(paste0(suffix, "_POSTCODE_", year_month_id_col)) = 
-          POSTCODE,
-        !!dplyr::sym(paste0(suffix, "_SINGLE_LINE_ADDRESS_", year_month_id_col)) = 
-          SINGLE_LINE_ADDRESS,
-        !!dplyr::sym(year_month_id_col) = YEAR_MONTH_ID
-      ),
+    y = y,
+    by = setNames("YEAR_MONTH_ID", year_month_id_col), # Notice reverse order
+    suffix = c("", paste0(year_month_id_col, suffix)),
     copy = TRUE
   )
   
 }
-  
+
 # Join the ETP / PDS postcode and addresses for each year month ID and coalesce
 # to get the most appropriate postcode and address
 paper_patient_db <- paper_patient_db %>%
   left_join_address(
     y = eps_single_address_db,
-    year_month_id_col = "YEAR_MONTH_ID_0",
-    suffix = "EPS"
+    year_month_id_col = "YEAR_MONTH_ID",
+    suffix = "_EPS"
   ) %>%
   left_join_address(
     y = pds_import_db,
-    year_month_id_col = "YEAR_MONTH_ID_0",
-    suffix = "PDS"
+    year_month_id_col = "YEAR_MONTH_ID",
+    suffix = "_PDS"
   ) %>%
   left_join_address(
     y = eps_single_address_db,
     year_month_id_col = "YEAR_MONTH_ID_M1",
-    suffix = "EPS"
+    suffix = "_EPS"
   ) %>%
   left_join_address(
     y = eps_single_address_db,
     year_month_id_col = "YEAR_MONTH_ID_P1",
-    suffix = "EPS"
+    suffix = "_EPS"
   ) %>%
   left_join_address(
     y = pds_import_db,
     year_month_id_col = "YEAR_MONTH_ID_M1",
-    suffix = "PDS"
+    suffix = "_PDS"
   ) %>%
   left_join_address(
     y = pds_import_db,
     year_month_id_col = "YEAR_MONTH_ID_P1",
-    suffix = "PDS"
+    suffix = "_PDS"
   ) %>%
   left_join_address(
     y = eps_single_address_db,
     year_month_id_col = "YEAR_MONTH_ID_M2",
-    suffix = "EPS"
+    suffix = "_EPS"
   ) %>%
   left_join_address(
     y = eps_single_address_db,
     year_month_id_col = "YEAR_MONTH_ID_P2",
-    suffix = "EPS"
+    suffix = "_EPS"
   ) %>%
   left_join_address(
     y = pds_import_db,
     year_month_id_col = "YEAR_MONTH_ID_M2",
-    suffix = "PDS"
+    suffix = "_PDS"
   ) %>%
   left_join_address(
     y = pds_import_db,
     year_month_id_col = "YEAR_MONTH_ID_P2",
-    suffix = "PDS"
+    suffix = "_PDS"
   ) %>%
   mutate(
     POSTCODE = coalesce(
-      EPS_POSTCODE_YEAR_MONTH_ID_0,
-      PDS_POSTCODE_YEAR_MONTH_ID_0,
-      EPS_POSTCODE_YEAR_MONTH_ID_M1,
-      EPS_POSTCODE_YEAR_MONTH_ID_P1,
-      PDS_POSTCODE_YEAR_MONTH_ID_M1,
-      PDS_POSTCODE_YEAR_MONTH_ID_P1,
-      EPS_POSTCODE_YEAR_MONTH_ID_M2,
-      EPS_POSTCODE_YEAR_MONTH_ID_P2,
-      PDS_POSTCODE_YEAR_MONTH_ID_M2,
-      PDS_POSTCODE_YEAR_MONTH_ID_P2
+      POSTCODE_YEAR_MONTH_ID_EPS,
+      POSTCODE_YEAR_MONTH_ID_PDS,
+      POSTCODE_YEAR_MONTH_ID_M1_EPS,
+      POSTCODE_YEAR_MONTH_ID_P1_EPS,
+      POSTCODE_YEAR_MONTH_ID_M1_PDS,
+      POSTCODE_YEAR_MONTH_ID_P1_PDS,
+      POSTCODE_YEAR_MONTH_ID_M2_EPS,
+      POSTCODE_YEAR_MONTH_ID_P2_EPS,
+      POSTCODE_YEAR_MONTH_ID_M2_PDS,
+      POSTCODE_YEAR_MONTH_ID_P2_PDS
     ),
     SINGLE_LINE_ADDRESS = coalesce(
-      EPS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_0,
-      PDS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_0,
-      EPS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M1,
-      EPS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P1,
-      PDS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M1,
-      PDS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P1,
-      EPS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M2,
-      EPS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P2,
-      PDS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M2,
-      PDS_SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P2
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_PDS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M1_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P1_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M1_PDS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P1_PDS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M2_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P2_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M2_PDS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P2_PDS
     )
   ) %>%
   select(YEAR_MONTH, NHS_NO, POSTCODE, SINGLE_LINE_ADDRESS)
@@ -373,8 +369,10 @@ paper_fact_db <- paper_fact_db %>%
 # interested in
 fact_db <- union_all(
   x = eps_fact_db %>%
+    select(-YEAR_MONTH_ID, ITEM_COUNT) %>%
     filter(YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L), 
-  y = paper_fact_db %>%
+  y = paper_fact_db %>%    
+    select(-YEAR_MONTH_ID, ITEM_COUNT) %>%
     filter(YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L)
 )
 
