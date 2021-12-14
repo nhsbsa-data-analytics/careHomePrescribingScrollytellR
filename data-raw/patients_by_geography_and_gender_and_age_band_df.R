@@ -135,6 +135,21 @@ patients_by_geography_and_gender_and_age_band_df <-
   collect() %>%
   careHomePrescribingScrollytellR::format_data_raw(GENDER, AGE_BAND)
 
+# Statistical Disclosure Control to suppress low numbers and round to nearest 10
+patients_by_geography_and_gender_and_age_band_df <- patients_by_geography_and_gender_and_age_band_df %>%
+  mutate(TOTAL_PATIENTS = case_when(
+    TOTAL_PATIENTS == 0 ~ 0,
+    TOTAL_PATIENTS > 0 & TOTAL_PATIENTS <= 4 ~ NA_real_,
+    TOTAL_PATIENTS >= 5 & TOTAL_PATIENTS <= 9 ~ 10,
+    TRUE ~ as.numeric(plyr::round_any(TOTAL_PATIENTS, 10))
+  )
+  )
+
+# Replace suppressed NA value with C
+patients_by_geography_and_gender_and_age_band_df$TOTAL_PATIENTS <- ifelse(
+  is.na(patients_by_geography_and_gender_and_age_band_df$TOTAL_PATIENTS), "c", 
+  patients_by_geography_and_gender_and_age_band_df$TOTAL_PATIENTS)
+
 # Add to data-raw/
 usethis::use_data(
   patients_by_geography_and_gender_and_age_band_df,
