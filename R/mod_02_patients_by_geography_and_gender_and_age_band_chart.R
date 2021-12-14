@@ -88,6 +88,13 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
     p(
       "Care home patient's prescriptions were allocated an IMD and associated decile based on the area in which the care home is located. ",
       "On average, the proportion is very close to 20% in each ", tags$b("IMD quintile,"), " which suggests equal distribution and little variation."
+    ),
+    br(),
+    h6("Deprivation quintile of older care home patients in England (2020/21)"),
+    highcharter::highchartOutput(
+      outputId = ns("imd_quintile_chart"),
+      height = "400px",
+      width = "900px"
     )
   )
 }
@@ -328,6 +335,32 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(id
           sep = ""
         ))
       }
+    })
+
+
+    # Add IMD chart
+    output$imd_quintile_chart <- highcharter::renderHighchart({
+
+      # highcharter plot
+      careHomePrescribingScrollytellR::index_of_multiple_deprivation_df %>%
+        highcharter::hchart(
+          type = "column",
+          highcharter::hcaes(x = IMD_QUINTILE, y = PROP),
+          stacking = "normal"
+        ) %>%
+        theme_nhsbsa() %>%
+        highcharter::hc_legend(enabled = F) %>%
+        highcharter::hc_xAxis(
+          categories = c(NA, "1<br>Most<br>deprived", 2:4, "5<br>Least<br>deprived"),
+          title = list(text = "Deprivation quintile")
+        ) %>%
+        highcharter::hc_yAxis(
+          title = list(text = "% of care home patients")
+        ) %>%
+        highcharter::hc_tooltip(
+          shared = FALSE,
+          formatter = highcharter::JS("function () { return '<b>Quintile: </b>' + parseInt(this.point.category) + ' (' + this.point.y + '%)'} ")
+        )
     })
   })
 }
