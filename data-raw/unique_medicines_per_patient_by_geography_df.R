@@ -182,28 +182,28 @@ for (breakdown_name in names(breakdowns)) {
   if (breakdown_name == "Overall") {
 
     # On the first iteration initialise the table
-    unique_medicines_per_patient_by_breakdown_db <- tmp_db
+    unique_medicines_per_patient_by_breakdown_and_ch_flag_db <- tmp_db
     
   } else {
 
     # Union results to initialised table
-    unique_medicines_per_patient_by_breakdown_db <- union_all(
-      x = unique_medicines_per_patient_by_breakdown_db,
+    unique_medicines_per_patient_by_breakdown_and_ch_flag_db <- union_all(
+      x = unique_medicines_per_patient_by_breakdown_and_ch_flag_db,
       y = tmp_db
     )
   }
 }
 
 # Collect and format for highcharter
-unique_medicines_per_patient_by_breakdown_df <-
-  unique_medicines_per_patient_by_breakdown_db %>%
+unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
+  unique_medicines_per_patient_by_breakdown_and_ch_flag_db %>%
   collect() %>%
   careHomePrescribingScrollytellR::format_data_raw(CH_FLAG)
 
 
 # Add to data-raw/
 usethis::use_data(
-  unique_medicines_per_patient_by_breakdown_df,
+  unique_medicines_per_patient_by_breakdown_and_ch_flag_df,
   overwrite = TRUE
 )
 

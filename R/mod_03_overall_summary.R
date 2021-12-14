@@ -81,8 +81,8 @@ mod_03_overall_summary_server <- function(id) {
     # Join the 2 metric datasets together
     metric_df <-
       dplyr::full_join(
-        x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df,
-        y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_geography_df
+        x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_breakdown_and_ch_flag_df,
+        y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_breakdown_and_ch_flag_df
       )
     
     # Only interested in care homes
