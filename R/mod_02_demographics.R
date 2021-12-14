@@ -1,4 +1,4 @@
-#' 02_patients_by_geography_and_gender_and_age_band_chart UI Function
+#' 02_demographics UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
+mod_02_demographics_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4(
@@ -65,7 +65,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       ),
       col_8(
         highcharter::highchartOutput(
-          outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
+          outputId = ns("demographics"),
           height = "500px",
           width = "900px"
         )
@@ -114,10 +114,10 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
   )
 }
 
-#' 02_patients_by_geography_and_gender_and_age_band_chart Server Functions
+#' 02_demographics Server Functions
 #'
 #' @noRd
-mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
+mod_02_demographics_server <- function(
   id
 ) {
   
@@ -291,7 +291,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
   })
 
   # Pyramid plot for age band and gender
-  output$patients_by_geography_and_gender_and_age_band_chart <- 
+  output$demographics <- 
     highcharter::renderHighchart({
       
     req(input$geography)
@@ -454,7 +454,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
 }
 
 ## To be copied in the UI
-# mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_ui_1")
+# mod_02_demographics_ui("02_demographics_ui_1")
 
 ## To be copied in the server
-# mod_02_patients_by_geography_and_gender_and_age_band_chart_server("02_patients_by_geography_and_gender_and_age_band_chart_ui_1")
+# mod_02_demographics_server("02_demographics_ui_1")
