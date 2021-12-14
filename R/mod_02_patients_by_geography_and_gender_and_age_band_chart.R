@@ -153,6 +153,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
   observeEvent(
     eventExpr = geography_df(),
     handlerExpr = {
+      freezeReactiveValue(input, "sub_geography")
       updateSelectInput(
         inputId = "sub_geography",
         choices = unique(geography_df()$SUB_GEOGRAPHY_NAME)
@@ -259,6 +260,8 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
     req(input$geography)
     req(input$sub_geography)
     req(input$count_or_percentage)
+    
+    print(plot_df())
     
     max(plot_df()$value, na.rm = TRUE)
     
