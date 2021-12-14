@@ -261,8 +261,6 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
     req(input$sub_geography)
     req(input$count_or_percentage)
     
-    print(plot_df())
-    
     max(plot_df()$value, na.rm = TRUE)
     
   })
