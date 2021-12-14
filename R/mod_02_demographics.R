@@ -97,13 +97,14 @@ mod_02_demographics_ui <- function(id) {
       "dataset."
     ),
     p(
-      "Care home patient's prescriptions were allocated an IMD and associated ",
-      "decile based on the area in which the care home is located. On ",
-      "average, the proportion is very close to 20% in each ",
-      a("IMD quintile,",
+      "Care home patient's prescriptions were allocated an ",
+      a("Index of Multiple Deprivation (IMD)",
         href = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019",
         target = "_blank"
-      ),
+      ), " and associated ",
+      "decile based on the area in which the care home is located. On ",
+      "average, the proportion is very close to 20% in each ",
+      tags$b("IMD quintile,"),
       " which suggests equal distribution and little ",
       "variation."
     ),

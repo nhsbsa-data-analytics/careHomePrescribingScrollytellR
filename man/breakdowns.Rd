@@ -12,7 +12,7 @@ breakdowns
 }
 \description{
 Define the labels of the breakdowns (in order of hierarchy) with the columns
-that are used to aggregate (if there are two colums then the second is the 
+that are used to aggregate (if there are two colums then the second is the
 code)
 }
 \keyword{datasets}
