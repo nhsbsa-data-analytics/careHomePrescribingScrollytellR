@@ -374,6 +374,7 @@ mod_02_demographics_server <- function(id) {
                 '<b>Percentage: </b>' + Math.abs(this.point.y).toFixed(1) + '%';
 
               return outHTML;
+            }
             "
               )
             )
