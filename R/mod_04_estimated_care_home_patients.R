@@ -46,13 +46,13 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
-            "Total drug cost" = 
+            "Total drug cost" =
               "COST_PER_PATIENT",
-            "Number of prescription items" = 
+            "Number of prescription items" =
               "ITEMS_PER_PATIENT",
-            "Number of unique medicines" = 
+            "Number of unique medicines" =
               "UNIQUE_MEDICINES_PER_PATIENT",
-            "Patients on ten or more unique medicines" = 
+            "Patients on ten or more unique medicines" =
               "PCT_PATIENTS_TEN_OR_MORE"
           ),
           width = "100%"
@@ -107,7 +107,6 @@ mod_04_estimated_care_home_patients_server <- function(id) {
       metric_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown) %>%
         dplyr::mutate(value = !!dplyr::sym(input$metric))
-      
     })
 
     # Filter the map data based on the breakdown and format for the plot
@@ -119,7 +118,6 @@ mod_04_estimated_care_home_patients_server <- function(id) {
         dplyr::filter(BREAKDOWN == input$breakdown) %>%
         geojsonsf::sf_geojson() %>%
         jsonlite::fromJSON(simplifyVector = FALSE)
-      
     })
 
     # Pull the min value
@@ -128,7 +126,6 @@ mod_04_estimated_care_home_patients_server <- function(id) {
       req(input$metric)
 
       min(abs(plot_df()$value), na.rm = TRUE)
-      
     })
 
     # Pull the max value
@@ -137,12 +134,10 @@ mod_04_estimated_care_home_patients_server <- function(id) {
       req(input$metric)
 
       max(abs(plot_df()$value), na.rm = TRUE)
-      
     })
 
     # Format for highchater animation using tidyr::complete
     plot_sequence_series <- reactive({
-      
       req(input$breakdown)
       req(input$metric)
 
@@ -152,7 +147,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
           YEAR_MONTH, SUB_BREAKDOWN_CODE,
           fill = list(value = 0)
         )
-      
+
       # Create series (including code and name)
       plot_df_ %>%
         dplyr::group_by(SUB_BREAKDOWN_CODE) %>%
@@ -163,7 +158,6 @@ mod_04_estimated_care_home_patients_server <- function(id) {
 
     # Create plot
     output$map_chart <- highcharter::renderHighchart({
-      
       req(input$breakdown)
       req(input$metric)
 
@@ -178,13 +172,13 @@ mod_04_estimated_care_home_patients_server <- function(id) {
             pointFormat = paste0(
               "<b>", input$breakdown, ":</b> {point.SUB_BREAKDOWN_NAME}<br><b>",
               switch(input$metric,
-                "COST_PER_PATIENT" = 
+                "COST_PER_PATIENT" =
                   "Total drug cost:</b> £{point.value:.2f}",
-                "ITEMS_PER_PATIENT" = 
+                "ITEMS_PER_PATIENT" =
                   "Number of prescription items:</b> {point.value:.0f}",
-                "UNIQUE_MEDICINES_PER_PATIENT" = 
+                "UNIQUE_MEDICINES_PER_PATIENT" =
                   "Number of unique medicines:</b> {point.value:.0f}",
-                "PCT_PATIENTS_TEN_OR_MORE" = 
+                "PCT_PATIENTS_TEN_OR_MORE" =
                   "Patients on ten or more unique medicines:</b> {point.value:.0f}%"
               )
             )
@@ -198,9 +192,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
           enableMouseWheelZoom = TRUE,
           enableDoubleClickZoom = TRUE
         )
-      
     })
-    
   })
 }
 

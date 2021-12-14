@@ -73,11 +73,11 @@ fact_db <- fact_db %>%
 
 # Loop over each geography and aggregate
 for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
-  
+
   # Extract the geography cols
-  geography_cols <- 
+  geography_cols <-
     careHomePrescribingScrollytellR::geographys[[geography_name]]
-  
+
   # Group the table
   tmp_db <- fact_db %>%
     group_by(
@@ -87,16 +87,14 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
       GENDER,
       AGE_BAND
     )
-  
+
   # If there are two columns then override the code as the second column
   if (length(geography_cols) == 2) {
-    
     tmp_db <- tmp_db %>%
       group_by(
         SUB_GEOGRAPHY_CODE = !!dplyr::sym(geography_cols[2]),
         .add = TRUE
       )
-    
   }
 
   # Union monthly and overall
@@ -127,7 +125,6 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
 
     # On the first iteration initialise the table
     patients_by_geography_and_gender_and_age_band_db <- tmp_db
-    
   } else {
 
     # Union results to initialised table
@@ -135,9 +132,7 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
       x = patients_by_geography_and_gender_and_age_band_db,
       y = tmp_db
     )
-    
   }
-  
 }
 
 # Collect and format for highcharter

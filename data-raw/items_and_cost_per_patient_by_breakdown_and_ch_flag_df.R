@@ -72,9 +72,9 @@ fact_db <- fact_db %>%
 
 # Loop over each breakdown and aggregate
 for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
-  
+
   # Extract the breakdown cols
-  breakdown_cols <- 
+  breakdown_cols <-
     careHomePrescribingScrollytellR::breakdowns[[breakdown_name]]
 
   # Group the table
@@ -86,18 +86,16 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       SUB_BREAKDOWN_NAME = !!dplyr::sym(breakdown_cols[1]),
       CH_FLAG
     )
-  
+
   # If there are two columns then override the code as the second column
   if (length(breakdown_cols) == 2) {
-    
     tmp_db <- tmp_db %>%
       group_by(
         SUB_BREAKDOWN_CODE = !!dplyr::sym(breakdown_cols[2]),
         .add = TRUE
       )
-    
   }
-  
+
   # Monthly cost per patient by care home flag
   tmp_db <- tmp_db %>%
     summarise(
@@ -132,7 +130,6 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
 
     # On the first iteration initialise the table
     items_and_cost_per_patient_by_breakdown_and_ch_flag_db <- tmp_db
-    
   } else {
 
     # Union results to initialised table
@@ -140,9 +137,7 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       x = items_and_cost_per_patient_by_breakdown_and_ch_flag_db,
       y = tmp_db
     )
-    
   }
-  
 }
 
 # Collect and format for highcharter

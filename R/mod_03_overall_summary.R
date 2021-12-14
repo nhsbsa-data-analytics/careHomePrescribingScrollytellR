@@ -84,7 +84,7 @@ mod_03_overall_summary_server <- function(id) {
         x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_breakdown_and_ch_flag_df,
         y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_breakdown_and_ch_flag_df
       )
-    
+
     # Only interested in care homes
     metric_df <- metric_df %>%
       dplyr::filter(YEAR_MONTH == "Overall")
@@ -110,7 +110,6 @@ mod_03_overall_summary_server <- function(id) {
 
     # Filter the data based on the breakdown
     breakdown_df <- reactive({
-      
       req(input$breakdown)
 
       metric_df %>%

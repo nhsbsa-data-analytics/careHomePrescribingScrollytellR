@@ -39,9 +39,9 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
 #' Define the breakdowns
 #'
 #' Define the labels of the breakdowns (in order of hierarchy) with the columns
-#' that are used to aggregate (if there are two colums then the second is the 
+#' that are used to aggregate (if there are two colums then the second is the
 #' code)
-#' 
+#'
 #' @export
 breakdowns <- list(
   "Overall" = "OVERALL",
@@ -56,9 +56,9 @@ breakdowns <- list(
 #' Define the geographys
 #'
 #' Define the labels of the geographys (in order of hierarchy) with the columns
-#' that are used to aggregate (if there are two colums then the second is the 
+#' that are used to aggregate (if there are two colums then the second is the
 #' code)
-#' 
+#'
 #' @export
 geographys <- list(
   "Overall" = "OVERALL",
@@ -77,7 +77,7 @@ geographys <- list(
 #' @return
 #' @export
 format_data_raw <- function(df, vars) {
-  
+
   # Initially sort the factors
   df <- df %>%
     dplyr::arrange(
@@ -87,7 +87,7 @@ format_data_raw <- function(df, vars) {
         )
       )
     )
-  
+
   # Move overall to the first category
   df <- df %>%
     dplyr::mutate(
@@ -97,26 +97,22 @@ format_data_raw <- function(df, vars) {
         ),
         .fns = ~ forcats::fct_relevel(.x, "Overall")
       )
-    ) 
-  
+    )
+
   # Breakdown is a hierachy
   if ("BREAKDOWN" %in% names(df)) {
-    
     df <- df %>%
       dplyr::mutate(
         BREAKDOWN = forcats::fct_relevel(BREAKDOWN, names(breakdowns))
       )
-    
   }
-  
+
   # Geography is a hierachy
   if ("GEOGRAPHY" %in% names(df)) {
-    
     df <- df %>%
       dplyr::mutate(
         GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, names(geographys))
       )
-    
   }
 
   # Sort final dataframe by new factors
@@ -125,9 +121,9 @@ format_data_raw <- function(df, vars) {
       dplyr::across(
         dplyr::any_of(
           c(
-            "YEAR_MONTH", 
-            "BREAKDOWN", 
-            "SUB_BREAKDOWN_NAME", 
+            "YEAR_MONTH",
+            "BREAKDOWN",
+            "SUB_BREAKDOWN_NAME",
             "GEOGRAPHY",
             "SUB_GEOGRAPHY_NAME",
             vars
@@ -135,5 +131,4 @@ format_data_raw <- function(df, vars) {
         )
       )
     )
-      
 }

@@ -105,10 +105,10 @@ breakdowns <- list(
 
 # Loop over each breakdown and aggregate
 for (breakdown_name in names(breakdowns)) {
-  
+
   # Extract the breakdown cols
   breakdown_cols <- breakdowns[[breakdown_name]]
-  
+
   # Group the table
   tmp_db <- fact_db %>%
     group_by(
@@ -119,18 +119,16 @@ for (breakdown_name in names(breakdowns)) {
       CH_FLAG,
       NHS_NO
     )
-  
+
   # If there are two columns then override the code as the second column
   if (length(breakdown_cols) == 2) {
-    
     tmp_db <- tmp_db %>%
       group_by(
         SUB_BREAKDOWN_CODE = !!dplyr::sym(breakdown_cols[2]),
         .add = TRUE
       )
-    
   }
-  
+
   # Get the number of unique medicines per patient
   tmp_db <- tmp_db %>%
     summarise(UNIQUE_MEDICINES = n_distinct(CHEMICAL_SUBSTANCE_BNF_DESCR)) %>%
@@ -183,7 +181,6 @@ for (breakdown_name in names(breakdowns)) {
 
     # On the first iteration initialise the table
     unique_medicines_per_patient_by_breakdown_and_ch_flag_db <- tmp_db
-    
   } else {
 
     # Union results to initialised table
