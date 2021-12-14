@@ -103,6 +103,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       "average, the proportion is very close to 20% in each ", 
       tags$b("IMD quintile,"), " which suggests equal distribution and little ",
       "variation."
+    ),
     br(),
     h6("Deprivation quintile of older care home patients in England (2020/21)"),
     highcharter::highchartOutput(
@@ -116,7 +117,10 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
 #' 02_patients_by_geography_and_gender_and_age_band_chart Server Functions
 #'
 #' @noRd
-mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(id) {
+mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
+  id
+) {
+  
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -445,7 +449,7 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(id
           formatter = highcharter::JS("function () { return '<b>Quintile: </b>' + parseInt(this.point.category) + ' (' + this.point.y + '%)'} ")
         )
     })
-
+  })
 }
 
 ## To be copied in the UI

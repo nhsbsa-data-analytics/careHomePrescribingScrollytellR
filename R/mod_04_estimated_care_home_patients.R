@@ -178,7 +178,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
                   "Number of unique medicines:</b> {point.value:.0f}",
                 "PCT_PATIENTS_TEN_OR_MORE" = 
                   "Patients on ten or more unique medicines:</b> {point.value:.0f}%"
-
+              )
             )
           )
         ) %>%
