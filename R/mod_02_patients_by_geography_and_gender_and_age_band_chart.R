@@ -103,43 +103,36 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_ui <- function(id) {
       "average, the proportion is very close to 20% in each ", 
       tags$b("IMD quintile,"), " which suggests equal distribution and little ",
       "variation."
+    br(),
+    h6("Deprivation quintile of older care home patients in England (2020/21)"),
+    highcharter::highchartOutput(
+      outputId = ns("imd_quintile_chart"),
+      height = "400px",
+      width = "900px"
     )
   )
 }
 
-#' patients_by_geography_and_gender_and_age_band_chart Server Function
+#' 02_patients_by_geography_and_gender_and_age_band_chart Server Functions
 #'
 #' @noRd
-mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
-  input,
-  output,
-  session
-) {
-  ns <- session$ns
+mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
-  # comma separate setting
-  hcoptslang <- getOption("highcharter.lang")
-  hcoptslang$thousandsSep <- ","
-  options(highcharter.lang = hcoptslang)
+    # comma separate setting
+    hcoptslang <- getOption("highcharter.lang")
+    hcoptslang$thousandsSep <- ","
+    options(highcharter.lang = hcoptslang)
 
-  # Radio button added as we cannot add two values in one sequence for the hc_motion
-  metric_selection <- reactiveValues(v = NULL)
+    # Filter to relevant data for this chart
+    patients_by_geography_and_gender_and_age_band_df <-
+      careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
+      dplyr::filter(
+        dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME, GENDER), not_na)
+      )
 
-  observe({
-    metric_selection$v <- input$count_or_percentage
-  })
-
-  # create as reactive value - now it holds selected value
-  input_metric <- reactive(metric_selection$v)
-
-  # Filter to relevant data for this chart
-  patients_by_geography_and_gender_and_age_band_df <-
-    careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-    dplyr::filter(
-      dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME, GENDER), not_na)
-    )
-
-  # Handy resource: https://mastering-shiny.org/action-dynamic.html
+    # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
   # Filter the data based on the geography
   geography_df <- reactive({
@@ -397,10 +390,8 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
                 '<b>Percentage: </b>' + Math.abs(this.point.y).toFixed(1) + '%';
                 
               return outHTML;
-            
-            }
             "
-          )
+          ) 
         )
       
     }
@@ -428,11 +419,37 @@ mod_02_patients_by_geography_and_gender_and_age_band_chart_server <- function(
       )
     )
     
-  })
+    })
+
+    # Add IMD chart
+    output$imd_quintile_chart <- highcharter::renderHighchart({
+
+      # highcharter plot
+      careHomePrescribingScrollytellR::index_of_multiple_deprivation_df %>%
+        highcharter::hchart(
+          type = "column",
+          highcharter::hcaes(x = IMD_QUINTILE, y = PROP),
+          stacking = "normal"
+        ) %>%
+        theme_nhsbsa() %>%
+        highcharter::hc_legend(enabled = F) %>%
+        highcharter::hc_xAxis(
+          categories = c(NA, "1<br>Most<br>deprived", 2:4, "5<br>Least<br>deprived"),
+          title = list(text = "Deprivation quintile")
+        ) %>%
+        highcharter::hc_yAxis(
+          title = list(text = "% of care home patients")
+        ) %>%
+        highcharter::hc_tooltip(
+          shared = FALSE,
+          formatter = highcharter::JS("function () { return '<b>Quintile: </b>' + parseInt(this.point.category) + ' (' + this.point.y + '%)'} ")
+        )
+    })
+
 }
 
 ## To be copied in the UI
-# mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_1")
+# mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_ui_1")
 
 ## To be copied in the server
-# callModule(mod_03_patients_by_geography_and_gender_and_age_band_chart_server, "02_patients_by_geography_and_gender_and_age_band_chart_1")
+# mod_02_patients_by_geography_and_gender_and_age_band_chart_server("02_patients_by_geography_and_gender_and_age_band_chart_ui_1")

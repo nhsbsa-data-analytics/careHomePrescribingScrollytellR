@@ -9,7 +9,6 @@
 #' @importFrom shiny NS tagList
 mod_04_estimated_care_home_patients_ui <- function(id) {
   ns <- NS(id)
-
   tagList(
     h4(
       "Estimated prescribing patterns for",
@@ -74,137 +73,129 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
   )
 }
 
-#' map Server Function
+#' 04_estimated_care_home_patients Server Functions
 #'
 #' @noRd
-mod_04_estimated_care_home_patients_server <- function(input, output, session) {
-  ns <- session$ns
+mod_04_estimated_care_home_patients_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
-  # Radio button added as we cannot add two values in one sequence for the hc_motion
-  metric_selection <- reactiveValues(v = NULL)
-
-  observe({
-    metric_selection$v <- input$metric
-  })
-
-  # create as reactive value - now it holds selected value
-  input_metric <- reactive(metric_selection$v)
-
-  # Join the metrics together
-  metric_df <-
-    dplyr::full_join(
-      x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df,
-      y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_geography_df
-    )
-
-  # Only interested in care homes
-  metric_df <- metric_df %>%
-    dplyr::filter(CH_FLAG == "Care home")
-
-  # Filter to relevant data for this chart
-  metric_df <- metric_df %>%
-    dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME), not_na))
-
-  # Handy resource: https://mastering-shiny.org/action-dynamic.html
-
-  # Filter the metric data based on the geography and format for the plot
-  plot_df <- reactive({
-    req(input$geography)
-    req(input$metric)
-
-    metric_df %>%
-      dplyr::filter(GEOGRAPHY == input$geography) %>%
-      dplyr::mutate(value = !!dplyr::sym(input$metric))
-  })
-
-  # Filter the map data based on the geography and format for the plot
-  map_list <- reactive({
-    req(input$geography)
-    req(input$metric)
-
-    careHomePrescribingScrollytellR::map_df %>%
-      dplyr::filter(GEOGRAPHY == input$geography) %>%
-      geojsonsf::sf_geojson() %>%
-      jsonlite::fromJSON(simplifyVector = FALSE)
-  })
-
-  # Pull the min value
-  min_value <- reactive({
-    req(input$geography)
-    req(input$metric)
-
-    min(abs(plot_df()$value), na.rm = TRUE)
-  })
-
-  # Pull the max value
-  max_value <- reactive({
-    req(input$geography)
-    req(input$metric)
-
-    max(abs(plot_df()$value), na.rm = TRUE)
-  })
-
-  # Format for highchater animation using tidyr::complete
-  plot_sequence_series <- reactive({
-    req(input$geography)
-    req(input$metric)
-
-    # Expand plot dataframe to cover all possibilities
-    plot_df_ <- plot_df() %>%
-      tidyr::complete(
-        YEAR_MONTH, SUB_GEOGRAPHY_CODE,
-        fill = list(value = 0)
+    # Join the metrics together
+    metric_df <-
+      dplyr::full_join(
+        x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df,
+        y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_geography_df
       )
 
-    # Create series (including code and name)
-    plot_df_ %>%
-      dplyr::group_by(SUB_GEOGRAPHY_CODE) %>%
-      dplyr::do(sequence = .$value) %>%
-      dplyr::left_join(y = plot_df_) %>%
-      highcharter::list_parse()
-  })
+    # Only interested in care homes
+    metric_df <- metric_df %>%
+      dplyr::filter(CH_FLAG == "Care home")
 
-  # Create plot
-  output$map_chart <- highcharter::renderHighchart({
-    req(input$geography)
-    req(input$metric)
+    # Filter to relevant data for this chart
+    metric_df <- metric_df %>%
+      dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME), not_na))
 
-    highcharter::highchart(type = "map") %>%
-      highcharter::hc_chart(marginBottom = 100) %>%
-      highcharter::hc_add_series(
-        data = plot_sequence_series(),
-        mapData = map_list(),
-        joinBy = "SUB_GEOGRAPHY_CODE",
-        tooltip = list(
-          headerFormat = "",
-          pointFormat = paste0(
-            "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
-            switch(input$metric,
-              "COST_PER_PATIENT" = 
-                "Total drug cost:</b> £{point.value:.2f}",
-              "ITEMS_PER_PATIENT" = 
-                "Number of prescription items:</b> {point.value:.0f}",
-              "UNIQUE_MEDICINES_PER_PATIENT" = 
-                "Number of unique medicines:</b> {point.value:.0f}",
-              "PCT_PATIENTS_TEN_OR_MORE" = 
-                "Patients on ten or more unique medicines:</b> {point.value:.0f}%"
+    # Handy resource: https://mastering-shiny.org/action-dynamic.html
+
+    # Filter the metric data based on the geography and format for the plot
+    plot_df <- reactive({
+      req(input$geography)
+      req(input$metric)
+
+      metric_df %>%
+        dplyr::filter(GEOGRAPHY == input$geography) %>%
+        dplyr::mutate(value = !!dplyr::sym(input$metric))
+    })
+
+    # Filter the map data based on the geography and format for the plot
+    map_list <- reactive({
+      req(input$geography)
+      req(input$metric)
+
+      careHomePrescribingScrollytellR::map_df %>%
+        dplyr::filter(GEOGRAPHY == input$geography) %>%
+        geojsonsf::sf_geojson() %>%
+        jsonlite::fromJSON(simplifyVector = FALSE)
+    })
+
+    # Pull the min value
+    min_value <- reactive({
+      req(input$geography)
+      req(input$metric)
+
+      min(abs(plot_df()$value), na.rm = TRUE)
+    })
+
+    # Pull the max value
+    max_value <- reactive({
+      req(input$geography)
+      req(input$metric)
+
+      max(abs(plot_df()$value), na.rm = TRUE)
+    })
+
+    # Format for highchater animation using tidyr::complete
+    plot_sequence_series <- reactive({
+      req(input$geography)
+      req(input$metric)
+
+      # Expand plot dataframe to cover all possibilities
+      plot_df_ <- plot_df() %>%
+        tidyr::complete(
+          YEAR_MONTH, SUB_GEOGRAPHY_CODE,
+          fill = list(value = 0)
+        )
+      
+      # Create series (including code and name)
+      plot_df_ %>%
+        dplyr::group_by(SUB_GEOGRAPHY_CODE) %>%
+        dplyr::do(sequence = .$value) %>%
+        dplyr::left_join(y = plot_df_) %>%
+        highcharter::list_parse()
+    })
+
+    # Create plot
+    output$map_chart <- highcharter::renderHighchart({
+      req(input$geography)
+      req(input$metric)
+
+      highcharter::highchart(type = "map") %>%
+        highcharter::hc_chart(marginBottom = 100) %>%
+        highcharter::hc_add_series(
+          data = plot_sequence_series(),
+          mapData = map_list(),
+          joinBy = "SUB_GEOGRAPHY_CODE",
+          tooltip = list(
+            headerFormat = "",
+            pointFormat = paste0(
+              "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
+              switch(input$metric,
+                "COST_PER_PATIENT" = 
+                  "Total drug cost:</b> £{point.value:.2f}",
+                "ITEMS_PER_PATIENT" = 
+                  "Number of prescription items:</b> {point.value:.0f}",
+                "UNIQUE_MEDICINES_PER_PATIENT" = 
+                  "Number of unique medicines:</b> {point.value:.0f}",
+                "PCT_PATIENTS_TEN_OR_MORE" = 
+                  "Patients on ten or more unique medicines:</b> {point.value:.0f}%"
+
             )
           )
+        ) %>%
+        highcharter::hc_motion(labels = unique(plot_df()$YEAR_MONTH)) %>%
+        theme_nhsbsa() %>%
+        highcharter::hc_colorAxis(min = min_value(), max = max_value()) %>%
+        highcharter::hc_mapNavigation(
+          enabled = TRUE,
+          enableMouseWheelZoom = TRUE,
+          enableDoubleClickZoom = TRUE
         )
-      ) %>%
-      highcharter::hc_motion(labels = unique(plot_df()$YEAR_MONTH)) %>%
-      theme_nhsbsa() %>%
-      highcharter::hc_colorAxis(min = min_value(), max = max_value()) %>%
-      highcharter::hc_mapNavigation(
-        enabled = TRUE,
-        enableMouseWheelZoom = TRUE,
-        enableDoubleClickZoom = TRUE
-      )
+    })
   })
 }
 
 ## To be copied in the UI
-# mod_estimated_care_home_patients_ui("estimated_care_home_patients_1")
+# mod_04_estimated_care_home_patients_ui("04_estimated_care_home_patients_ui_1")
 
 ## To be copied in the server
-# callModule(mod_map_server, "map_1")
+# mod_04_estimated_care_home_patients_server("04_estimated_care_home_patients_ui_1")
