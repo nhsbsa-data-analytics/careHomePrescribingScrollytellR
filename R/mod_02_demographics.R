@@ -81,7 +81,6 @@ mod_02_demographics_ui <- function(id) {
         br(),
         br(),
         br(),
-        br(),
         uiOutput(
           ns("text")
         )
@@ -411,14 +410,14 @@ mod_02_demographics_server <- function(
     
     tagList(
       p(
-        id = "small",
+        id = "medium",
         ifelse(input$sub_geography == "Overall", "", "In "), 
         input$sub_geography, " we estimate", tags$b(female_ps()[1]), "of care ",
         "home patients are females and", tags$b(female_ps()[2]), "are aged 85 ",
         "or over."
       ),
       p(
-        id = "small",
+        id = "medium",
         "Average number of monthly care home patients is", 
         tags$b(paste0(average_monthly_patients(), "."))
       )
