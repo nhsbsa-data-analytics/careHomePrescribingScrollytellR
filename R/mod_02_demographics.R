@@ -189,8 +189,9 @@ mod_02_demographics_server <- function(id) {
       female_patients <- sum(female_df$TOTAL_PATIENTS)
 
       # Filter to 85+ patients
+      # Female only
       female_85_plus_df <- overall_df %>%
-        dplyr::filter(AGE_BAND %in% c("85-89", "90+"))
+        dplyr::filter(GENDER == "Female" & AGE_BAND %in% c("85-89", "90+"))
 
       # Get the total female 85+ patients
       female_85_plus_patients <- sum(female_85_plus_df$TOTAL_PATIENTS)
@@ -198,8 +199,9 @@ mod_02_demographics_server <- function(id) {
       # Calculate the proportions
       p <- c(female_patients, female_85_plus_patients) / total_patients
 
-      # Calculate the floor and return the percentage
-      paste0(floor(p * 100), "%")
+      # Calculate the ceiling and return the percentage
+      # changed for the consistency?
+      paste0(ceiling(p * 100), "%")
     })
 
     # Pull monthly average care home patients
@@ -212,10 +214,24 @@ mod_02_demographics_server <- function(id) {
         dplyr::filter(YEAR_MONTH != "Overall")
 
       # Output the mean
-      monthly_average <- mean(non_overall_df$TOTAL_PATIENTS)
+      # This one will bring average care home by gender and month. we are interested in month
 
-      # Standardise
-      monthly_average <- ceiling(monthly_average / 1000) * 1000
+      monthly_average <- non_overall_df %>%
+        dplyr::summarise(monthly_average = sum(TOTAL_PATIENTS) / 12) %>%
+        dplyr::ungroup()
+
+
+
+      # monthly_average <- mean(non_overall_df$TOTAL_PATIENTS)
+
+      # Standardise and change all to ceiling?
+      # Isle of Scilly monthly is 8.08. perhaps LA to give 100 instead of 1000?
+      # Need to discuss?
+      if (input$geography == "Local Authority") {
+        monthly_average <- ceiling(monthly_average / 100) * 100
+      } else {
+        monthly_average <- ceiling(monthly_average / 1000) * 1000
+      }
 
       # Output a nicer version
       prettyNum(monthly_average, big.mark = ",", scientific = FALSE)
@@ -371,7 +387,7 @@ mod_02_demographics_server <- function(id) {
               outHTML =
                 '<b>Gender: </b>' + this.series.name + '<br>' +
                 '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
-                '<b>Percentage: </b>' + Math.abs(this.point.y).toFixed(1) + '%';
+                '<b>Percentage: </b>' + Math.abs(this.point.y).toFixed(0) + '%';
 
               return outHTML;
             }
@@ -391,11 +407,11 @@ mod_02_demographics_server <- function(id) {
           id = "medium",
           ifelse(input$sub_geography == "Overall", "", "In "),
           input$sub_geography, " we estimate", tags$b(female_ps()[1]), "of care ",
-          "home patients are females and", tags$b(female_ps()[2]), "are aged 85 ",
+          "home patients are females and", tags$b(female_ps()[2]), "are female aged 85 ",
           "or over."
         ),
         p(
-          id = "medium",
+          id = "small",
           "Average number of monthly care home patients is",
           tags$b(paste0(average_monthly_patients(), "."))
         )
