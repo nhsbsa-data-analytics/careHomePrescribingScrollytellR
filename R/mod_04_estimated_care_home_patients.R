@@ -19,15 +19,17 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
       )
     ),
     p(
-      "Older care home patients received an estimated 35 million prescription items ",
-      "at a cost of", tags$b("£320 million"), " during 2020/21."
+      "Older care home patients received an estimated 35 million prescription ",
+      "items at a cost of", tags$b("£320 million"), " during 2020/21."
     ),
     p(
-      "Average drug costs per patient per month are highest for the youngest care home patients ",
-      "amongst both males and females. They are over 1.5 times higher for 65 to 74 year olds than ",
-      "90+ year olds. Drug costs are also higher for male care home patients than females in all age groups.",
-      " Drug volumnes are broadly similar by age and gender, although there is a smaller proportion ",
-      "of care home patients aged 90+ years on 10 more drugs than other age groups."
+      "Average drug costs per patient per month are highest for the youngest ",
+      "care home patients amongst both males and females. They are over 1.5 ",
+      "times higher for 65 to 74 year olds than 90+ year olds. Drug costs are ",
+      "also higher for male care home patients than females in all age ",
+      "groups. Drug volumes are broadly similar by age and gender, although ",
+      "there is a smaller proportion of care home patients aged 90+ years on ",
+      "10 more drugs than other age groups."
     ),
     br(),
     fluidRow(
@@ -45,10 +47,14 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
-            "Total drug cost" = "COST_PER_PATIENT",
-            "Number of prescription items" = "ITEMS_PER_PATIENT",
-            "Number of unique medicines" = "UNIQUE_MEDICINES_PER_PATIENT",
-            "Patients on ten or more unique medicines" = "PCT_PATIENTS_TEN_OR_MORE"
+            "Total drug cost" = 
+              "COST_PER_PATIENT",
+            "Number of prescription items" = 
+              "ITEMS_PER_PATIENT",
+            "Number of unique medicines" = 
+              "UNIQUE_MEDICINES_PER_PATIENT",
+            "Patients on ten or more unique medicines" = 
+              "PCT_PATIENTS_TEN_OR_MORE"
           ),
           width = "100%"
         )
@@ -174,10 +180,14 @@ mod_04_estimated_care_home_patients_server <- function(input, output, session) {
           pointFormat = paste0(
             "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
             switch(input$metric,
-              "COST_PER_PATIENT" = "Total drug cost:</b> £{point.value:.2f}",
-              "ITEMS_PER_PATIENT" = "Number of prescription items:</b> {point.value:.0f}",
-              "UNIQUE_MEDICINES_PER_PATIENT" = "Number of unique medicines:</b> {point.value:.0f}",
-              "PCT_PATIENTS_TEN_OR_MORE" = "Patients on ten or more unique medicines:</b> {point.value:.0f}%"
+              "COST_PER_PATIENT" = 
+                "Total drug cost:</b> £{point.value:.2f}",
+              "ITEMS_PER_PATIENT" = 
+                "Number of prescription items:</b> {point.value:.0f}",
+              "UNIQUE_MEDICINES_PER_PATIENT" = 
+                "Number of unique medicines:</b> {point.value:.0f}",
+              "PCT_PATIENTS_TEN_OR_MORE" = 
+                "Patients on ten or more unique medicines:</b> {point.value:.0f}%"
             )
           )
         )
