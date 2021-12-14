@@ -4,7 +4,7 @@
 \alias{format_data_raw}
 \title{Format data-raw table}
 \usage{
-format_data_raw(df, ...)
+format_data_raw(df, vars)
 }
 \arguments{
 \item{...}{}
