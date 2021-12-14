@@ -31,8 +31,8 @@ mod_01_intro_ui <- function(id) {
     br(),
     p(
       "We estimate that there was a monthly average of", tags$b("285 thousand"),
-      " care home patients receiving prescriptions each month in 2020/21. They ",
-      "received an estimated 35 million prescription items at a cost of ",
+      " care home patients receiving prescriptions each month in 2020/21. ",
+      "They received an estimated 35 million prescription items at a cost of ",
       tags$b("£320 million"), " during 2020/21."
     ),
     br(),
@@ -69,12 +69,14 @@ mod_01_intro_ui <- function(id) {
     ),
     p(
       "These estimates address a key gap in knowledge and give valuable ",
-      "insights which could inform the use and management of medicines in care homes ",
-      "to help improve health outcomes, the quality of care and ensure value."
+      "insights which could inform the use and management of medicines in ",
+      "care homes to help improve health outcomes, the quality of care and ",
+      "ensure value."
     ),
     p(
-      "This is an experimental piece of work and we are interested in collaboration",
-      " and refinding the methodology so that it can be used in NHS information systems in future."
+      "This is an experimental piece of work and we are interested in ",
+      "collaboration and refining the methodology so that it can be used in ",
+      "NHS information systems in future."
     )
   )
 }

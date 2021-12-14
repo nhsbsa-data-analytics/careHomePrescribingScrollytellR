@@ -9,7 +9,7 @@ app_server <- function(input, output, session) {
   # Your application server logic
   mod_00_header_server("00_header_ui_1")
   mod_01_intro_server("01_intro_ui_1")
-  mod_02_patients_by_geography_and_gender_and_age_band_chart_server("02_patients_by_geography_and_gender_and_age_band_chart_ui_1")
+  mod_02_demographics_server("02_demographics_ui_1")
   mod_03_overall_summary_server("03_overall_summary_ui_1")
   mod_04_estimated_care_home_patients_server("04_estimated_care_home_patients_ui_1")
   mod_05_items_and_cost_per_bnf_chapter_and_section_chart_server("05_items_and_cost_per_bnf_chapter_and_section_chart_ui_1")

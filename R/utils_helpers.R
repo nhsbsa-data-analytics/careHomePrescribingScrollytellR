@@ -36,29 +36,104 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
     highcharter::hc_credits(enabled = TRUE)
 }
 
+#' Define the breakdowns
+#'
+#' Define the labels of the breakdowns (in order of hierarchy) with the columns
+#' that are used to aggregate (if there are two colums then the second is the 
+#' code)
+#' 
+#' @export
+breakdowns <- list(
+  "Overall" = "OVERALL",
+  "Geographical - Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
+  "Geographical - STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
+  "Geographical - Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE"),
+  "Demographical - Gender" = "GENDER",
+  "Demographical - Age Band" = "AGE_BAND"
+)
+
+
+#' Define the geographys
+#'
+#' Define the labels of the geographys (in order of hierarchy) with the columns
+#' that are used to aggregate (if there are two colums then the second is the 
+#' code)
+#' 
+#' @export
+geographys <- list(
+  "Overall" = "OVERALL",
+  "Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
+  "STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
+  "Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE")
+)
 
 #' Format data-raw table
 #'
 #' Deal with factors and sort table.
 #'
-#' @param df
-#' @param ...
+#' @param df Dataframe
+#' @param vars Grouping variables
 #'
 #' @return
 #' @export
-format_data_raw <- function(df, ...) {
-  df %>%
-    dplyr::arrange(YEAR_MONTH, SUB_GEOGRAPHY_NAME, ...) %>%
-    # Tweak the factors
-    dplyr::mutate(
-      # Move overall to first category
+format_data_raw <- function(df, vars) {
+  
+  # Initially sort the factors
+  df <- df %>%
+    dplyr::arrange(
       dplyr::across(
-        .cols = c(YEAR_MONTH, SUB_GEOGRAPHY_NAME),
+        dplyr::any_of(
+          c("YEAR_MONTH", "SUB_BREAKDOWN_NAME", "SUB_GEOGRAPHY_NAME", vars)
+        )
+      )
+    )
+  
+  # Move overall to the first category
+  df <- df %>%
+    dplyr::mutate(
+      dplyr::across(
+        .cols = dplyr::any_of(
+          c("YEAR_MONTH", "SUB_BREAKDOWN_NAME", "SUB_GEOGRAPHY_NAME")
+        ),
         .fns = ~ forcats::fct_relevel(.x, "Overall")
-      ),
-      # Factor is a heirachy
-      GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, "Overall", "Region", "STP")
-    ) %>%
-    # Sort final dataframe by new factors
-    dplyr::arrange(YEAR_MONTH, GEOGRAPHY, SUB_GEOGRAPHY_NAME, ...)
+      )
+    ) 
+  
+  # Breakdown is a hierachy
+  if ("BREAKDOWN" %in% names(df)) {
+    
+    df <- df %>%
+      dplyr::mutate(
+        BREAKDOWN = forcats::fct_relevel(BREAKDOWN, names(breakdowns))
+      )
+    
+  }
+  
+  # Geography is a hierachy
+  if ("GEOGRAPHY" %in% names(df)) {
+    
+    df <- df %>%
+      dplyr::mutate(
+        GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, names(geographys))
+      )
+    
+  }
+
+  # Sort final dataframe by new factors
+  df %>%
+    dplyr::arrange(
+      dplyr::across(
+        dplyr::any_of(
+          c(
+            "YEAR_MONTH", 
+            "BREAKDOWN", 
+            "SUB_BREAKDOWN_NAME", 
+            "GEOGRAPHY",
+            "SUB_GEOGRAPHY_NAME",
+            vars
+          )
+        )
+      )
+    )
+      
 }

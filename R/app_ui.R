@@ -28,8 +28,8 @@ app_ui <- function(request) {
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "02_patients_by_geography_and_gender_and_age_band_chart",
-                mod_02_patients_by_geography_and_gender_and_age_band_chart_ui("02_patients_by_geography_and_gender_and_age_band_chart_ui_1")
+                id = "02_demographics",
+                mod_02_demographics_ui("02_demographics_ui_1")
               ),
               br(),
               scrollytell::scrolly_section(

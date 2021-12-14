@@ -13,9 +13,9 @@ postcode_db <- con %>%
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
-# Filter to care home only, join the postcode info
+# Tidy care home flag and join the postcode info
 fact_db <- fact_db %>%
-  filter(CH_FLAG == 1) %>%
+  mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")) %>%
   left_join(
     y = postcode_db %>% rename(PCD_NO_SPACES = POSTCODE),
     copy = TRUE
@@ -62,7 +62,7 @@ patient_db <- patient_db %>%
     )
   )
 
-# Join fact data to patient level dimension
+# Join fact data to patient level dimension and add an overall column
 fact_db <- fact_db %>%
   left_join(
     y = patient_db,
@@ -70,69 +70,74 @@ fact_db <- fact_db %>%
   ) %>%
   mutate(OVERALL = "Overall") # dummy col
 
+# Loop over each breakdown and aggregate
+for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
+  
+  # Extract the breakdown cols
+  breakdown_cols <- 
+    careHomePrescribingScrollytellR::breakdowns[[breakdown_name]]
 
-# Loop over each geography and aggregate
-for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
-  
-  # Extract the geography cols
-  geography_cols <- 
-    careHomePrescribingScrollytellR::geographys[[geography_name]]
-  
   # Group the table
   tmp_db <- fact_db %>%
     group_by(
-      GEOGRAPHY = geography_name,
-      SUB_GEOGRAPHY_CODE = NA,
-      SUB_GEOGRAPHY_NAME = !!dplyr::sym(geography_cols[1]),
-      GENDER,
-      AGE_BAND
+      YEAR_MONTH = as.character(YEAR_MONTH),
+      BREAKDOWN = breakdown_name,
+      SUB_BREAKDOWN_CODE = NA,
+      SUB_BREAKDOWN_NAME = !!dplyr::sym(breakdown_cols[1]),
+      CH_FLAG
     )
   
   # If there are two columns then override the code as the second column
-  if (length(geography_cols) == 2) {
+  if (length(breakdown_cols) == 2) {
     
     tmp_db <- tmp_db %>%
       group_by(
-        SUB_GEOGRAPHY_CODE = !!dplyr::sym(geography_cols[2]),
+        SUB_BREAKDOWN_CODE = !!dplyr::sym(breakdown_cols[2]),
         .add = TRUE
       )
     
   }
+  
+  # Monthly cost per patient by care home flag
+  tmp_db <- tmp_db %>%
+    summarise(
+      TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01),
+      TOTAL_ITEMS = sum(ITEM_COUNT),
+      TOTAL_PATIENTS = n_distinct(NHS_NO),
+      COST_PER_PATIENT = sum(ITEM_PAY_DR_NIC * 0.01) / n_distinct(NHS_NO),
+      ITEMS_PER_PATIENT = sum(ITEM_COUNT) / n_distinct(NHS_NO)
+    ) %>%
+    ungroup()
 
-  # Union monthly and overall
-  tmp_db <-
+  # Add overall mean (average monthly per patient is the metric)
+  tmp_db <- tmp_db %>%
     union_all(
-
-      # Monthly total patients
-      x = tmp_db %>%
-        group_by(
-          YEAR_MONTH = as.character(YEAR_MONTH),
-          .add = TRUE
-        ) %>%
-        summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
-        ungroup(),
-
-      # Overall total patients
       y = tmp_db %>%
         group_by(
           YEAR_MONTH = "Overall",
-          .add = TRUE
+          BREAKDOWN,
+          SUB_BREAKDOWN_CODE,
+          SUB_BREAKDOWN_NAME,
+          CH_FLAG
         ) %>%
-        summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
+        summarise(
+          COST_PER_PATIENT = mean(COST_PER_PATIENT),
+          ITEMS_PER_PATIENT = mean(ITEMS_PER_PATIENT)
+        ) %>%
         ungroup()
     )
 
   # Either create the table or append to it
-  if (geography_name == "Overall") {
+  if (breakdown_name == "Overall") {
 
     # On the first iteration initialise the table
-    patients_by_geography_and_gender_and_age_band_db <- tmp_db
+    items_and_cost_per_patient_by_breakdown_and_ch_flag_db <- tmp_db
     
   } else {
 
     # Union results to initialised table
-    patients_by_geography_and_gender_and_age_band_db <- union_all(
-      x = patients_by_geography_and_gender_and_age_band_db,
+    items_and_cost_per_patient_by_breakdown_and_ch_flag_db <- union_all(
+      x = items_and_cost_per_patient_by_breakdown_and_ch_flag_db,
       y = tmp_db
     )
     
@@ -141,16 +146,14 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
 }
 
 # Collect and format for highcharter
-patients_by_geography_and_gender_and_age_band_df <-
-  patients_by_geography_and_gender_and_age_band_db %>%
+items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
+  items_and_cost_per_patient_by_breakdown_and_ch_flag_db %>%
   collect() %>%
-  careHomePrescribingScrollytellR::format_data_raw(
-    vars = c("GENDER", "AGE_BAND")
-  )
+  careHomePrescribingScrollytellR::format_data_raw(vars = "CH_FLAG")
 
 # Add to data-raw/
 usethis::use_data(
-  patients_by_geography_and_gender_and_age_band_df,
+  items_and_cost_per_patient_by_breakdown_and_ch_flag_df,
   overwrite = TRUE
 )
 

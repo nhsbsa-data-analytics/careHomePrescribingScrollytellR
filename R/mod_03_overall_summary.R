@@ -32,16 +32,16 @@ mod_03_overall_summary_ui <- function(id) {
       style = "background-color: #FFFFFF;",
       col_6(
         selectInput(
-          inputId = ns("geography"),
-          label = "Geography",
-          choices = c("Overall", "Region", "STP", "Local Authority"),
+          inputId = ns("breakdown"),
+          label = "Breakdown",
+          choices = names(careHomePrescribingScrollytellR::breakdowns),
           width = "100%"
         )
       ),
       col_6(
         selectInput(
-          inputId = ns("sub_geography"),
-          label = "Sub Geography",
+          inputId = ns("sub_breakdown"),
+          label = "Sub Breakdown",
           choices = NULL, # dynamically generated
           width = "100%"
         )
@@ -81,17 +81,17 @@ mod_03_overall_summary_server <- function(id) {
     # Join the 2 metric datasets together
     metric_df <-
       dplyr::full_join(
-        x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_geography_and_ch_flag_df,
-        y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_geography_df
+        x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_breakdown_and_ch_flag_df,
+        y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_breakdown_and_ch_flag_df
       )
-
+    
     # Only interested in care homes
     metric_df <- metric_df %>%
       dplyr::filter(YEAR_MONTH == "Overall")
 
     # Filter to relevant data for this chart
     metric_df <- metric_df %>%
-      dplyr::filter(dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME), not_na))
+      dplyr::filter(dplyr::across(c(BREAKDOWN, SUB_BREAKDOWN_NAME), not_na))
 
     # Tidy the cols
     metric_df <- metric_df %>%
@@ -107,37 +107,40 @@ mod_03_overall_summary_server <- function(id) {
 
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
-    # Filter the data based on the geography
-    geography_df <- reactive({
-      req(input$geography)
+
+    # Filter the data based on the breakdown
+    breakdown_df <- reactive({
+      
+      req(input$breakdown)
 
       metric_df %>%
-        dplyr::filter(GEOGRAPHY == input$geography)
+        dplyr::filter(BREAKDOWN == input$breakdown)
     })
 
-    # Update the list of choices for sub geography from the rows in the geography
+    # Update the list of choices for sub breakdown from the rows in the breakdown
     # dataframe
     observeEvent(
-      eventExpr = geography_df(),
+      eventExpr = breakdown_df(),
       handlerExpr = {
+        freezeReactiveValue(input, "sub_breakdown")
         updateSelectInput(
-          inputId = "sub_geography",
-          choices = unique(geography_df()$SUB_GEOGRAPHY_NAME)
+          inputId = "sub_breakdown",
+          choices = unique(breakdown_df()$SUB_BREAKDOWN_NAME)
         )
       }
     )
 
     # Filter the data based on the level and format for the table
     table_df <- reactive({
-      req(input$sub_geography)
+      req(input$sub_breakdown)
 
-      geography_df() %>%
-        dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography)
+      breakdown_df() %>%
+        dplyr::filter(SUB_BREAKDOWN_NAME == input$sub_breakdown)
     })
 
     # Create the table
     output$table <- renderUI({
-      req(input$sub_geography)
+      req(input$sub_breakdown)
       tagList(
         fluidRow(
           col_6(
