@@ -122,6 +122,7 @@ mod_03_overall_summary_server <- function(id) {
     observeEvent(
       eventExpr = breakdown_df(),
       handlerExpr = {
+        freezeReactiveValue(input, "sub_breakdown")
         updateSelectInput(
           inputId = "sub_breakdown",
           choices = unique(breakdown_df()$SUB_BREAKDOWN_NAME)

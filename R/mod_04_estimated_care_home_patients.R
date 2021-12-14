@@ -99,8 +99,6 @@ mod_04_estimated_care_home_patients_server <- function(id) {
     metric_df <- metric_df %>%
       dplyr::filter(dplyr::across(c(BREAKDOWN, SUB_BREAKDOWN_NAME), not_na))
 
-    # Handy resource: https://mastering-shiny.org/action-dynamic.html
-
     # Filter the metric data based on the breakdown and format for the plot
     plot_df <- reactive({
       req(input$breakdown)
@@ -109,6 +107,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
       metric_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown) %>%
         dplyr::mutate(value = !!dplyr::sym(input$metric))
+      
     })
 
     # Filter the map data based on the breakdown and format for the plot
@@ -120,6 +119,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
         dplyr::filter(BREAKDOWN == input$breakdown) %>%
         geojsonsf::sf_geojson() %>%
         jsonlite::fromJSON(simplifyVector = FALSE)
+      
     })
 
     # Pull the min value
@@ -128,6 +128,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
       req(input$metric)
 
       min(abs(plot_df()$value), na.rm = TRUE)
+      
     })
 
     # Pull the max value
@@ -136,10 +137,12 @@ mod_04_estimated_care_home_patients_server <- function(id) {
       req(input$metric)
 
       max(abs(plot_df()$value), na.rm = TRUE)
+      
     })
 
     # Format for highchater animation using tidyr::complete
     plot_sequence_series <- reactive({
+      
       req(input$breakdown)
       req(input$metric)
 
@@ -160,6 +163,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
 
     # Create plot
     output$map_chart <- highcharter::renderHighchart({
+      
       req(input$breakdown)
       req(input$metric)
 
@@ -194,7 +198,9 @@ mod_04_estimated_care_home_patients_server <- function(id) {
           enableMouseWheelZoom = TRUE,
           enableDoubleClickZoom = TRUE
         )
+      
     })
+    
   })
 }
 
