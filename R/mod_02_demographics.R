@@ -239,9 +239,16 @@ mod_02_demographics_server <- function(id, export_data) {
       req(input$sub_geography)
       req(input$count_or_percentage)
       
+      # Get all combinations of data
+      plot_df <- sub_geography_df() %>%
+        tidyr::complete(
+          YEAR_MONTH, AGE_BAND, GENDER,
+          fill = list(TOTAL_PATIENTS = 0)
+        )
+      
       if (input$count_or_percentage == "Count") {
         
-        sub_geography_df() %>%
+        plot_df %>%
           statistical_disclosure_control(
             col = "TOTAL_PATIENTS",
             type = "count"
@@ -250,7 +257,7 @@ mod_02_demographics_server <- function(id, export_data) {
         
       } else {
 
-        sub_geography_df() %>%
+        plot_df %>%
           dplyr::group_by(YEAR_MONTH) %>%
           statistical_disclosure_control(
             col = "value",
@@ -302,10 +309,6 @@ mod_02_demographics_server <- function(id, export_data) {
       plot_df() %>%
         # Negate male values so the butterfly chart works
         dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1)) %>%
-        # Get all combinations of data
-        tidyr::complete(YEAR_MONTH, AGE_BAND, GENDER,
-          fill = list(value = 0)
-        ) %>%
         dplyr::group_by(AGE_BAND, GENDER) %>%
         dplyr::do(data = list(sequence = .$value)) %>%
         dplyr::ungroup() %>%

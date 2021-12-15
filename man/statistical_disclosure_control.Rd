@@ -12,6 +12,9 @@ statistical_disclosure_control(df, col, type, original_col = NULL)
 \item{col}{Column to apply it to}
 
 \item{type}{c("count", "percentage")}
+
+\item{original_col}{Original column (if the new column is a percentage and we
+need to calculate it)}
 }
 \value{
 

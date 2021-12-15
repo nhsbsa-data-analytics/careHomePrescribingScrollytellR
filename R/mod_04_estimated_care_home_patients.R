@@ -69,6 +69,9 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
           height = "700px"
         )
       )
+    ),
+    mod_download_ui(
+      id = ns("download_ui_1")
     )
   )
 }
@@ -99,15 +102,51 @@ mod_04_estimated_care_home_patients_server <- function(id) {
     metric_df <- metric_df %>%
       dplyr::filter(dplyr::across(c(BREAKDOWN, SUB_BREAKDOWN_NAME), not_na))
 
-    # Filter the metric data based on the breakdown and format for the plot
+    # Filter the metric data based on the breakdown and format for the plot and
+    # apply statistical disclosure control
     plot_df <- reactive({
       req(input$breakdown)
       req(input$metric)
 
       metric_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown) %>%
-        dplyr::mutate(value = !!dplyr::sym(input$metric))
+        tidyr::complete(
+          YEAR_MONTH, SUB_BREAKDOWN_CODE,
+          fill = list(value = 0)
+        ) %>%
+        dplyr::mutate(value = .data[[input$metric]]) %>%
+        statistical_disclosure_control(
+          col = "value",
+          type = "percentage"
+        )
     })
+    
+    # Swap NAs for "c" for data download
+    download_df <- reactive({
+      
+      req(input$geography)
+      req(input$sub_geography)
+      req(input$count_or_percentage)
+      
+      plot_df() %>%
+        dplyr::mutate(
+          VALUE = ifelse(is.na(value), "c", as.character(value))
+        ) %>%
+        dplyr::select(
+          YEAR_MONTH, 
+          BREAKDOWN, 
+          SUB_BREAKDOWN_CODE, 
+          SUB_BREAKDOWN_NAME,
+          VALUE
+        )
+      
+    })
+    
+    # Add a download button
+    mod_download_server(
+      id = "download_ui_1",
+      export_data = download_df()
+    )
 
     # Filter the map data based on the breakdown and format for the plot
     map_list <- reactive({
@@ -136,23 +175,16 @@ mod_04_estimated_care_home_patients_server <- function(id) {
       max(abs(plot_df()$value), na.rm = TRUE)
     })
 
-    # Format for highchater animation using tidyr::complete
+    # Format for highchater animation
     plot_sequence_series <- reactive({
       req(input$breakdown)
       req(input$metric)
 
-      # Expand plot dataframe to cover all possibilities
-      plot_df_ <- plot_df() %>%
-        tidyr::complete(
-          YEAR_MONTH, SUB_BREAKDOWN_CODE,
-          fill = list(value = 0)
-        )
-
       # Create series (including code and name)
-      plot_df_ %>%
+      plot_df() %>%
         dplyr::group_by(SUB_BREAKDOWN_CODE) %>%
         dplyr::do(sequence = .$value) %>%
-        dplyr::left_join(y = plot_df_) %>%
+        dplyr::left_join(y = plot_df()) %>%
         highcharter::list_parse()
     })
 
@@ -173,13 +205,13 @@ mod_04_estimated_care_home_patients_server <- function(id) {
               "<b>", input$breakdown, ":</b> {point.SUB_BREAKDOWN_NAME}<br><b>",
               switch(input$metric,
                 "COST_PER_PATIENT" =
-                  "Total drug cost:</b> £{point.value:.2f}",
+                  "Total drug cost:</b> £{point.value}",
                 "ITEMS_PER_PATIENT" =
-                  "Number of prescription items:</b> {point.value:.0f}",
+                  "Number of prescription items:</b> {point.value}",
                 "UNIQUE_MEDICINES_PER_PATIENT" =
-                  "Number of unique medicines:</b> {point.value:.0f}",
+                  "Number of unique medicines:</b> {point.value}",
                 "PCT_PATIENTS_TEN_OR_MORE" =
-                  "Patients on ten or more unique medicines:</b> {point.value:.0f}%"
+                  "Patients on ten or more unique medicines:</b> {point.value}%"
               )
             )
           )
