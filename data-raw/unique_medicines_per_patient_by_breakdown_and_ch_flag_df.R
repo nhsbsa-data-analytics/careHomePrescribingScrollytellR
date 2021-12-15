@@ -93,21 +93,12 @@ fact_db <- fact_db %>%
   ) %>%
   mutate(OVERALL = "Overall") # dummy col
 
-# Define the breakdowns
-breakdowns <- list(
-  "Overall" = "OVERALL",
-  "Geographical - Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
-  "Geographical - STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
-  "Geographical - Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_NAME"),
-  "Demographical - Gender" = "GENDER",
-  "Demographical - Age Band" = "AGE_BAND"
-)
-
 # Loop over each breakdown and aggregate
-for (breakdown_name in names(breakdowns)) {
-
+for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
+  
   # Extract the breakdown cols
-  breakdown_cols <- breakdowns[[breakdown_name]]
+  breakdown_cols <-
+    careHomePrescribingScrollytellR::breakdowns[[breakdown_name]]
 
   # Group the table
   tmp_db <- fact_db %>%
