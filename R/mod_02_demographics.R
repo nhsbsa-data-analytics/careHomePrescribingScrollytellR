@@ -220,18 +220,9 @@ mod_02_demographics_server <- function(id) {
         dplyr::summarise(monthly_average = sum(TOTAL_PATIENTS) / 12) %>%
         dplyr::ungroup()
 
-
-
       # monthly_average <- mean(non_overall_df$TOTAL_PATIENTS)
-
-      # Standardise and change all to ceiling?
-      # Isle of Scilly monthly is 8.08. perhaps LA to give 100 instead of 1000?
-      # Need to discuss?
-      if (input$geography == "Local Authority") {
-        monthly_average <- ceiling(monthly_average / 100) * 100
-      } else {
-        monthly_average <- ceiling(monthly_average / 1000) * 1000
-      }
+      # change to the nearest 10
+        monthly_average <- round(monthly_average,-1)
 
       # Output a nicer version
       prettyNum(monthly_average, big.mark = ",", scientific = FALSE)
