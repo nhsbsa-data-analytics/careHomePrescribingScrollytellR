@@ -238,33 +238,29 @@ mod_02_demographics_server <- function(id, export_data) {
       req(input$geography)
       req(input$sub_geography)
       req(input$count_or_percentage)
+      
+      if (input$count_or_percentage == "Count") {
+        
+        sub_geography_df() %>%
+          statistical_disclosure_control(
+            col = "TOTAL_PATIENTS",
+            type = "count"
+          ) %>%
+          dplyr::rename(value = TOTAL_PATIENTS)
+        
+      } else {
 
-      # Rename column to value for highcharter motion
-      sub_geography_df <- sub_geography_df() %>%
-        dplyr::mutate(
-          value =
-            dplyr::case_when(
-              TOTAL_PATIENTS == 0 ~ 0,
-              TOTAL_PATIENTS > 0 & TOTAL_PATIENTS <= 4 ~ NA_real_,
-              TRUE ~ round(TOTAL_PATIENTS, -1)
-            )
-        )
-
-      # If its a percentage then calculate and round to nearest whole number
-      if (input$count_or_percentage == "Percentage") {
-        sub_geography_df <- sub_geography_df %>%
+        sub_geography_df() %>%
           dplyr::group_by(YEAR_MONTH) %>%
-          dplyr::mutate(
-            value = dplyr::case_when(
-              TOTAL_PATIENTS == 0 ~ 0,
-              TOTAL_PATIENTS > 0 & TOTAL_PATIENTS <= 4 ~ NA_real_,
-              TRUE ~ round(TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100, 0)
-            )
+          statistical_disclosure_control(
+            col = "value",
+            type = "percentage",
+            original_col = "TOTAL_PATIENTS"
           ) %>%
           dplyr::ungroup()
+        
       }
 
-      sub_geography_df
     })
 
     # Swap NAs for "c" for data download

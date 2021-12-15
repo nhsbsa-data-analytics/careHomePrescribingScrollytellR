@@ -132,3 +132,67 @@ format_data_raw <- function(df, vars) {
       )
     )
 }
+
+
+#' SDC
+#'
+#' Statistical Disclosure Control
+#'
+#' @param df Dataframe
+#' @param col Column to apply it to
+#' @param type c("count", "percentage") 
+#' @param original_col Original column (if the new column is a percentage and we
+#'   need to calculate it)
+#' @importFrom rlang .data
+#' @return
+statistical_disclosure_control <- function(df, col, type, original_col=NULL) {
+  
+  
+  if (type == "count") {
+    # If its a count then round to the nearest 10
+    
+    df %>%
+      dplyr::mutate(
+        "{col}" := dplyr::case_when(
+          .data[[col]]  == 0 ~ 0,
+          .data[[col]]  > 0 & .data[[col]]  <= 4 ~ NA_real_,
+          TRUE ~ round(.data[[col]] , -1)
+        )
+      )
+    
+  } else {
+    # It's a percentage...
+    
+    if (!is.null(original_col)) {
+      # If there is an original column then apply statistical disclosure control
+      # and then round it to the nearest whole number
+      
+      df %>%
+        dplyr::mutate(
+          "{col}" := dplyr::case_when(
+            .data[[original_col]] == 0 ~ 0,
+            .data[[original_col]] > 0 & {{ original_col }} <= 4 ~ NA_real_,
+            TRUE ~ janitor::round_half_up(
+              round(.data[[original_col]] / sum(.data[[original_col]]) * 100, 0)
+            )
+          )
+          
+        )
+      
+    } else {
+      
+      # Round it to the nearest whole number
+      df %>%
+        dplyr::mutate(
+          "{col}" := dplyr::case_when(
+            .data[[col]]  == 0 ~ 0,
+            .data[[col]]  > 0 & .data[[col]]  <= 4 ~ NA_real_,
+            TRUE ~ janitor::round_half_up(.data[[col]] )
+          )
+        )
+      
+    }
+    
+  }
+
+}
