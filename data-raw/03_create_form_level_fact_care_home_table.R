@@ -256,10 +256,10 @@ paper_patient_db <- paper_fact_db %>%
 # Add the year month information
 paper_patient_db <- paper_patient_db %>%
   mutate(
-    YEAR_MONTH_ID_M2 = YEAR_MONTH_ID - 2,
-    YEAR_MONTH_ID_M1 = YEAR_MONTH_ID - 1,
-    YEAR_MONTH_ID_P1 = YEAR_MONTH_ID + 1,
-    YEAR_MONTH_ID_P2 = YEAR_MONTH_ID + 2
+    YEAR_MONTH_ID_M2 = YEAR_MONTH_ID - 2L,
+    YEAR_MONTH_ID_M1 = YEAR_MONTH_ID - 1L,
+    YEAR_MONTH_ID_P1 = YEAR_MONTH_ID + 1L,
+    YEAR_MONTH_ID_P2 = YEAR_MONTH_ID + 2L
   )
 
 # Define a function that will make the joining process easier
@@ -267,9 +267,13 @@ left_join_address <- function(x, y, year_month_id_col, suffix){
   
   left_join(
     x = x,
-    y = y,
-    by = setNames("YEAR_MONTH_ID", year_month_id_col), # Notice reverse order
-    suffix = c("", paste0(year_month_id_col, suffix)),
+    y = y %>%
+      rename(
+        "{{year_month_id_col}}" := YEAR_MONTH_ID,
+        "POSTCODE_{{year_month_id_col}}_{{suffix}}" := POSTCODE,
+        "SINGLE_LINE_ADDRESS_{{year_month_id_col}}_{{suffix}}" := SINGLE_LINE_ADDRESS
+      ),
+    by = c("YEAR_MONTH", "NHS_NO"),
     copy = TRUE
   )
   
@@ -280,53 +284,53 @@ left_join_address <- function(x, y, year_month_id_col, suffix){
 paper_patient_db <- paper_patient_db %>%
   left_join_address(
     y = eps_single_address_db,
-    year_month_id_col = "YEAR_MONTH_ID",
-    suffix = "_EPS"
+    year_month_id_col = YEAR_MONTH_ID,
+    suffix = EPS
   ) %>%
   left_join_address(
     y = pds_import_db,
-    year_month_id_col = "YEAR_MONTH_ID",
-    suffix = "_PDS"
+    year_month_id_col = YEAR_MONTH_ID,
+    suffix = PDS
   ) %>%
   left_join_address(
     y = eps_single_address_db,
-    year_month_id_col = "YEAR_MONTH_ID_M1",
-    suffix = "_EPS"
+    year_month_id_col = YEAR_MONTH_ID_M1,
+    suffix = EPS
   ) %>%
   left_join_address(
     y = eps_single_address_db,
-    year_month_id_col = "YEAR_MONTH_ID_P1",
-    suffix = "_EPS"
+    year_month_id_col = YEAR_MONTH_ID_P1,
+    suffix = EPS
   ) %>%
   left_join_address(
     y = pds_import_db,
-    year_month_id_col = "YEAR_MONTH_ID_M1",
-    suffix = "_PDS"
+    year_month_id_col = YEAR_MONTH_ID_M1,
+    suffix = PDS
   ) %>%
   left_join_address(
     y = pds_import_db,
-    year_month_id_col = "YEAR_MONTH_ID_P1",
-    suffix = "_PDS"
+    year_month_id_col = YEAR_MONTH_ID_P1,
+    suffix = PDS
   ) %>%
   left_join_address(
     y = eps_single_address_db,
-    year_month_id_col = "YEAR_MONTH_ID_M2",
-    suffix = "_EPS"
+    year_month_id_col = YEAR_MONTH_ID_M2,
+    suffix = EPS
   ) %>%
   left_join_address(
     y = eps_single_address_db,
-    year_month_id_col = "YEAR_MONTH_ID_P2",
-    suffix = "_EPS"
+    year_month_id_col = YEAR_MONTH_ID_P2,
+    suffix = EPS
   ) %>%
   left_join_address(
     y = pds_import_db,
-    year_month_id_col = "YEAR_MONTH_ID_M2",
-    suffix = "_PDS"
+    year_month_id_col = YEAR_MONTH_ID_M2,
+    suffix = PDS
   ) %>%
   left_join_address(
     y = pds_import_db,
-    year_month_id_col = "YEAR_MONTH_ID_P2",
-    suffix = "_PDS"
+    year_month_id_col = YEAR_MONTH_ID_P2,
+    suffix = PDS
   ) %>%
   mutate(
     POSTCODE = coalesce(
