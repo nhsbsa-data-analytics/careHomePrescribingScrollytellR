@@ -86,7 +86,9 @@ mod_02_demographics_ui <- function(id) {
         )
       )
     ),
-    downloadButton(outputId = ns("downloadData"), "Download Data"),
+    mod_download_ui(
+      id = ns("download_ui_1")
+    ),
     br(),
     br(),
     p(
@@ -232,24 +234,23 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Format for highcharter and apply SDC
     plot_df <- reactive({
+      
       req(input$geography)
       req(input$sub_geography)
       req(input$count_or_percentage)
 
       # Rename column to value for highcharter motion
       sub_geography_df <- sub_geography_df() %>%
-        # dplyr::rename(value = TOTAL_PATIENTS) %>%
         dplyr::mutate(
           value =
             dplyr::case_when(
               TOTAL_PATIENTS == 0 ~ 0,
-              TOTAL_PATIENTS > 0 & TOTAL_PATIENTS <= 4 ~ NA_real_, # in the download button, it will be changed to 'c'
+              TOTAL_PATIENTS > 0 & TOTAL_PATIENTS <= 4 ~ NA_real_,
               TRUE ~ round(TOTAL_PATIENTS, -1)
             )
         )
 
-      # If its a percentage then calculate it
-      # round to the nearest numeric value
+      # If its a percentage then calculate and round to nearest whole number
       if (input$count_or_percentage == "Percentage") {
         sub_geography_df <- sub_geography_df %>%
           dplyr::group_by(YEAR_MONTH) %>%
@@ -258,7 +259,7 @@ mod_02_demographics_server <- function(id, export_data) {
               TOTAL_PATIENTS == 0 ~ 0,
               TOTAL_PATIENTS > 0 & TOTAL_PATIENTS <= 4 ~ NA_real_,
               TRUE ~ round(TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100, 0)
-            ) # exclude if <=4 case as users can recalculate from the total count in the count toggle
+            )
           ) %>%
           dplyr::ungroup()
       }
@@ -266,32 +267,26 @@ mod_02_demographics_server <- function(id, export_data) {
       sub_geography_df
     })
 
-
-
-    # need to do little tweak for the downloader as we can't plot c in the chart.
-    # replace NA in value as 'c'
-
+    # Swap NAs for "c" for data download
     download_df <- reactive({
 
-      # Rename column to `Number of patients` for download
-
-      selected_data_download <- plot_df() %>%
-        dplyr::mutate(VALUE = dplyr::case_when(
-          is.na(value) ~ "c",
-          TRUE ~ as.character(value)
-        )) %>%
+      req(input$geography)
+      req(input$sub_geography)
+      req(input$count_or_percentage)
+      
+      plot_df() %>%
+        dplyr::mutate(
+          VALUE = ifelse(is.na(value), "c", as.character(value))
+        ) %>%
         dplyr::select(-value, -TOTAL_PATIENTS)
+      
     })
-
-    output$downloadData <- downloadHandler(
-      filename = function() {
-        paste0(input$sub_geography, "_", input$count_or_percentage, "_", Sys.Date(), ".csv", sep = "")
-      },
-      content = function(con) {
-        write.csv(download_df(), con)
-      }
+    
+    # Add a download button
+    mod_download_server(
+      id = "download_ui_1",
+      export_data = download_df()
     )
-
 
     # Pull the max value
     max_value <- reactive({
@@ -476,9 +471,6 @@ mod_02_demographics_server <- function(id, export_data) {
         )
     })
 
-    return(
-      reactive(download_df)
-    )
   })
 }
 

@@ -1,4 +1,4 @@
-#' download_data UI Function
+#' download UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,37 +7,36 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_download_data_ui <- function(id) {
+mod_download_ui <- function(id) {
   ns <- NS(id)
   tagList(
     downloadButton(
-      outputId = ns("downloaddata"),
+      outputId = ns("download"),
       label = "Download Data"
     )
   )
 }
 
-#' download_data Server Functions
+#' download Server Functions
 #'
 #' @noRd
-mod_download_data_server <- function(id, export_data) { # didn't work...
+mod_download_server <- function(id, export_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-
-    output$downloaddata <- downloadHandler(
+    output$download <- downloadHandler(
       filename = function() {
         paste(Sys.time(), "download.csv")
       },
       content = function(file) {
-        write.csv(export_data(), file)
+        write.csv(export_data, file)
       }
     )
   })
 }
 
 ## To be copied in the UI
-# mod_download_data_ui("download_data_ui_1")
+# mod_download_ui("download_ui_1")
 
 ## To be copied in the server
-# mod_download_data_server("download_data_ui_1")
+# mod_download_server("download_ui_1")
