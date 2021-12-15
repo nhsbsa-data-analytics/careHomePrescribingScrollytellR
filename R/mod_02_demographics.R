@@ -86,6 +86,7 @@ mod_02_demographics_ui <- function(id) {
         )
       )
     ),
+    downloadButton(outputId = ns("downloadData"), "Download Data"),
     br(),
     br(),
     p(
@@ -121,7 +122,7 @@ mod_02_demographics_ui <- function(id) {
 #' 02_demographics Server Functions
 #'
 #' @noRd
-mod_02_demographics_server <- function(id) {
+mod_02_demographics_server <- function(id, export_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -129,6 +130,7 @@ mod_02_demographics_server <- function(id) {
     hcoptslang <- getOption("highcharter.lang")
     hcoptslang$thousandsSep <- ","
     options(highcharter.lang = hcoptslang)
+
 
     # Filter to relevant data for this chart
     patients_by_geography_and_gender_and_age_band_df <-
@@ -199,12 +201,11 @@ mod_02_demographics_server <- function(id) {
       # Calculate the proportions
       p <- c(female_patients, female_85_plus_patients) / total_patients
 
-      # Calculate the ceiling and return the percentage
-      # changed for the consistency?
-      paste0(ceiling(p * 100), "%")
+      paste0(janitor::round_half_up(p * 100), "%")
     })
 
     # Pull monthly average care home patients
+    # same here, we use the raw number and round at the end
     average_monthly_patients <- reactive({
       req(input$geography)
       req(input$sub_geography)
@@ -220,16 +221,16 @@ mod_02_demographics_server <- function(id) {
         dplyr::summarise(monthly_average = sum(TOTAL_PATIENTS) / 12) %>%
         dplyr::ungroup()
 
-      # monthly_average <- mean(non_overall_df$TOTAL_PATIENTS)
+
       # change to the nearest 10
-        monthly_average <- round(monthly_average,-1)
+      monthly_average <- round(monthly_average, -1)
 
       # Output a nicer version
       prettyNum(monthly_average, big.mark = ",", scientific = FALSE)
     })
 
 
-    # Format for highcharter
+    # Format for highcharter and apply SDC
     plot_df <- reactive({
       req(input$geography)
       req(input$sub_geography)
@@ -237,18 +238,60 @@ mod_02_demographics_server <- function(id) {
 
       # Rename column to value for highcharter motion
       sub_geography_df <- sub_geography_df() %>%
-        dplyr::rename(value = TOTAL_PATIENTS)
+        # dplyr::rename(value = TOTAL_PATIENTS) %>%
+        dplyr::mutate(
+          value =
+            dplyr::case_when(
+              TOTAL_PATIENTS == 0 ~ 0,
+              TOTAL_PATIENTS > 0 & TOTAL_PATIENTS <= 4 ~ NA_real_, # in the download button, it will be changed to 'c'
+              TRUE ~ round(TOTAL_PATIENTS, -1)
+            )
+        )
 
       # If its a percentage then calculate it
+      # round to the nearest numeric value
       if (input$count_or_percentage == "Percentage") {
         sub_geography_df <- sub_geography_df %>%
           dplyr::group_by(YEAR_MONTH) %>%
-          dplyr::mutate(value = value / sum(value) * 100) %>%
+          dplyr::mutate(
+            value = dplyr::case_when(
+              TOTAL_PATIENTS == 0 ~ 0,
+              TOTAL_PATIENTS > 0 & TOTAL_PATIENTS <= 4 ~ NA_real_,
+              TRUE ~ round(TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100, 0)
+            ) # exclude if <=4 case as users can recalculate from the total count in the count toggle
+          ) %>%
           dplyr::ungroup()
       }
 
       sub_geography_df
     })
+
+
+
+    # need to do little tweak for the downloader as we can't plot c in the chart.
+    # replace NA in value as 'c'
+
+    download_df <- reactive({
+
+      # Rename column to `Number of patients` for download
+
+      selected_data_download <- plot_df() %>%
+        dplyr::mutate(VALUE = dplyr::case_when(
+          is.na(value) ~ "c",
+          TRUE ~ as.character(value)
+        )) %>%
+        dplyr::select(-value, -TOTAL_PATIENTS)
+    })
+
+    output$downloadData <- downloadHandler(
+      filename = function() {
+        paste0(input$sub_geography, "_", input$count_or_percentage, "_", Sys.Date(), ".csv", sep = "")
+      },
+      content = function(con) {
+        write.csv(download_df(), con)
+      }
+    )
+
 
     # Pull the max value
     max_value <- reactive({
@@ -258,7 +301,6 @@ mod_02_demographics_server <- function(id) {
 
       max(plot_df()$value, na.rm = TRUE)
     })
-
 
     # Format for highcharter animation.
     plot_series_list <- reactive({
@@ -334,14 +376,14 @@ mod_02_demographics_server <- function(id) {
                 outHTML =
                   '<b>Gender: </b>' + this.series.name + '<br>' +
                   '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
-                  '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(Math.round(this.point.y / 10) * 10), 0);
+                  '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0);
 
               } else {
 
                 outHTML =
                   '<b>Gender: </b>' + this.series.name + '<br>' +
                   '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
-                  '<b>Number of patients: </b>' + Math.abs(Math.round(this.point.y / 10) * 10);
+                  '<b>Number of patients: </b>' + Math.abs(this.point.y);
 
               }
 
@@ -378,7 +420,7 @@ mod_02_demographics_server <- function(id) {
               outHTML =
                 '<b>Gender: </b>' + this.series.name + '<br>' +
                 '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
-                '<b>Percentage: </b>' + Math.abs(this.point.y).toFixed(0) + '%';
+                '<b>Percentage: </b>' + Math.abs(this.point.y) + '%';
 
               return outHTML;
             }
@@ -433,6 +475,10 @@ mod_02_demographics_server <- function(id) {
           formatter = highcharter::JS("function () { return '<b>Quintile: </b>' + parseInt(this.point.category) + ' (' + this.point.y + '%)'} ")
         )
     })
+
+    return(
+      reactive(download_df)
+    )
   })
 }
 
