@@ -57,15 +57,18 @@ mod_02_demographics_ui <- function(id) {
         )
       ),
       radioButtons(
-        inputId = ns("count_or_percentage"),
+        inputId = ns("metric"),
         label = "",
-        choices = c("Count", "Percentage"),
+        choices = c(
+          "Count" = "SDC_TOTAL_PATIENTS", 
+          "Percentage" = "SDC_PCT_PATIENTS"
+        ),
         inline = TRUE,
         width = "100%"
       ),
       col_8(
         highcharter::highchartOutput(
-          outputId = ns("demographics"),
+          outputId = ns("patients_by_gender_and_age_band_chart"),
           height = "500px",
           width = "900px"
         )
@@ -82,12 +85,12 @@ mod_02_demographics_ui <- function(id) {
         br(),
         br(),
         uiOutput(
-          ns("text")
+          outputId = ns("chart_text")
         )
       )
     ),
     mod_download_ui(
-      id = ns("download_ui_1")
+      id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
     ),
     br(),
     br(),
@@ -128,146 +131,267 @@ mod_02_demographics_server <- function(id, export_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # comma separate setting
-    hcoptslang <- getOption("highcharter.lang")
-    hcoptslang$thousandsSep <- ","
-    options(highcharter.lang = hcoptslang)
-
-
-    # Filter to relevant data for this chart
-    patients_by_geography_and_gender_and_age_band_df <-
-      careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-      dplyr::filter(
-        dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME, GENDER), not_na)
-      )
-
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
     # Filter the data based on the geography
     geography_df <- reactive({
+      
       req(input$geography)
 
-      patients_by_geography_and_gender_and_age_band_df %>%
+      careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
         dplyr::filter(GEOGRAPHY == input$geography)
+      
+    })
+    
+    # Pull the number of NA sub geography patients
+    patients_in_na_sub_geography <- reactive({
+      
+      req(input$geography)
+      
+      geography_df() %>%
+        dplyr::filter(is.na(SUB_GEOGRAPHY)) %>%
+        # Format number
+        dplyr::mutate(
+          SDC_TOTAL_PATIENTS = ifelse(
+            test = is.na(SDC_TOTAL_PATIENTS), 
+            yes = "c", 
+            no = as.character(SDC_TOTAL_PATIENTS)
+          )
+        ) %>%
+        dplyr::pull(SDC_TOTAL_PATIENTS)
+
     })
 
-    # Update the list of choices for sub geography from the rows in the geography
-    # dataframe
+    # Update the list of choices for sub geography from the non NA rows in the 
+    # geography dataframe
     observeEvent(
       eventExpr = geography_df(),
       handlerExpr = {
         freezeReactiveValue(input, "sub_geography")
         updateSelectInput(
           inputId = "sub_geography",
-          choices = unique(geography_df()$SUB_GEOGRAPHY_NAME)
+          choices = unique(na.omit(geography_df()$SUB_GEOGRAPHY_NAME))
         )
       }
     )
 
     # Filter the data based on the sub geography
     sub_geography_df <- reactive({
+      
       req(input$geography)
       req(input$sub_geography)
-
+      
       geography_df() %>%
         dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography)
+      
     })
-
-    # Pull % of females (and 85+) in sub geography
-    female_ps <- reactive({
+    
+    # Pull overall percentage of female patients
+    percentage_female_patients <- reactive({
+      
       req(input$geography)
       req(input$sub_geography)
-
+      
       # Filter to overall period
       overall_df <- sub_geography_df() %>%
         dplyr::filter(YEAR_MONTH == "Overall")
-
-      # Get the total patients
-      total_patients <- sum(overall_df$TOTAL_PATIENTS)
-
-      # Filter to female patients
-      female_df <- overall_df %>%
-        dplyr::filter(GENDER == "Female")
-
+      
       # Get the total female patients
-      female_patients <- sum(female_df$TOTAL_PATIENTS)
-
-      # Filter to 85+ patients
-      # Female only
-      female_85_plus_df <- overall_df %>%
-        dplyr::filter(GENDER == "Female" & AGE_BAND %in% c("85-89", "90+"))
-
-      # Get the total female 85+ patients
-      female_85_plus_patients <- sum(female_85_plus_df$TOTAL_PATIENTS)
-
-      # Calculate the proportions
-      p <- c(female_patients, female_85_plus_patients) / total_patients
-
-      paste0(janitor::round_half_up(p * 100), "%")
+      female_patients_df <- overall_df %>%
+        dplyr::summarise(
+          TOTAL_FEMALE_PATIENTS = 
+            sum(ifelse(!is.na(GENDER) & GENDER == "Female", TOTAL_PATIENTS, 0)),
+          TOTAL_PATIENTS = sum(TOTAL_PATIENTS)
+        )
+      
+      # Calculate the percentage of patients
+      female_patients_df <- female_patients_df %>%
+        dplyr::mutate(
+          PCT_FEMALE_PATIENTS = TOTAL_FEMALE_PATIENTS / TOTAL_PATIENTS * 100
+        )
+      
+      # Apply SDC to percentage of female patients
+      female_patients_df <- female_patients_df %>%
+        dplyr::mutate(
+          SDC = ifelse(TOTAL_FEMALE_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+          SDC_PCT_FEMALE_PATIENTS =
+            ifelse(
+              test = SDC == 1, 
+              yes = "c",
+              no = as.character(janitor::round_half_up(PCT_FEMALE_PATIENTS))
+            )
+        )
+      
+      # Pull percentage
+      female_patients_df %>%
+        dplyr::pull(SDC_PCT_FEMALE_PATIENTS)
+      
     })
-
-    # Pull monthly average care home patients
-    # same here, we use the raw number and round at the end
-    average_monthly_patients <- reactive({
+    
+    # Pull percentage of elderly female patients
+    percentage_elderly_female_patients <- reactive({
+      
       req(input$geography)
       req(input$sub_geography)
-
-      # Remove the overall category as this is the sum over the year
-      non_overall_df <- sub_geography_df() %>%
-        dplyr::filter(YEAR_MONTH != "Overall")
-
-      # Output the mean
-      # This one will bring average care home by gender and month. we are interested in month
-
-      monthly_average <- non_overall_df %>%
-        dplyr::summarise(monthly_average = sum(TOTAL_PATIENTS) / 12) %>%
-        dplyr::ungroup()
-
-
-      # change to the nearest 10
-      monthly_average <- round(monthly_average, -1)
-
-      # Output a nicer version
-      prettyNum(monthly_average, big.mark = ",", scientific = FALSE)
+      
+      # Filter to overall period
+      overall_df <- sub_geography_df() %>%
+        dplyr::filter(YEAR_MONTH == "Overall")
+      
+      # Get the total elderly female patients
+      elderly_female_patients_df <- overall_df %>%
+        dplyr::summarise(
+          TOTAL_ELDERLY_FEMALE_PATIENTS = sum(
+            ifelse(
+              test = GENDER == "Female" & AGE_BAND %in% c("85-89", "90+"),
+              yes = TOTAL_PATIENTS,
+              no = 0
+            )
+          ),
+          TOTAL_PATIENTS = sum(TOTAL_PATIENTS)
+        )
+      
+      # Calculate the percentage of patients
+      elderly_female_patients_df <- elderly_female_patients_df %>%
+        dplyr::mutate(
+          PCT_ELDERLY_FEMALE_PATIENTS = 
+            TOTAL_ELDERLY_FEMALE_PATIENTS / TOTAL_PATIENTS * 100
+        )
+      
+      # Apply SDC to percentage of elderly female patients
+      elderly_female_patients_df <- elderly_female_patients_df %>%
+        dplyr::mutate(
+          SDC = ifelse(TOTAL_ELDERLY_FEMALE_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+          SDC_PCT_ELDERLY_FEMALE_PATIENTS =
+            ifelse(
+              test = SDC == 1, 
+              yes = "c", 
+              no = as.character(
+                janitor::round_half_up(PCT_ELDERLY_FEMALE_PATIENTS)
+              )
+            )
+        )
+      
+      # Pull percentage
+      elderly_female_patients_df %>%
+        dplyr::pull(SDC_PCT_ELDERLY_FEMALE_PATIENTS)
+      
     })
-
-
-    # Format for highcharter and apply SDC
+    
+    # Pull average monthly patients
+    average_monthly_patients <- reactive({
+      
+      req(input$geography)
+      req(input$sub_geography)
+      
+      # Filter to non overall period
+      non_overall_df <- sub_geography_df() %>%
+        dplyr::filter(YEAR_MONTH == "Overall")
+      
+      # Get the average monthly patients
+      average_monthly_patients_df <- non_overall_df %>%
+        dplyr::summarise(AVERAGE_TOTAL_PATIENTS = sum(TOTAL_PATIENTS) / 12)
+      
+      # Apply SDC to average monthly patients
+      average_monthly_patients_df <- average_monthly_patients_df %>%
+        dplyr::mutate(
+          SDC = ifelse(AVERAGE_TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+          SDC_AVERAGE_TOTAL_PATIENTS =
+            ifelse(
+              test = SDC == 1, 
+              yes = "c", 
+              no = as.character(round(AVERAGE_TOTAL_PATIENTS, -1))
+            )
+        )
+      
+      # Pull average
+      average_monthly_patients_df %>%
+        dplyr::pull(SDC_AVERAGE_TOTAL_PATIENTS)
+      
+    })
+    
+    # Create the reactive text to go inside the chart
+    output$chart_text <- shiny::renderUI({
+      
+      req(input$geography)
+      req(input$sub_geography)
+      
+      tagList(
+        p(
+          id = "medium",
+          ifelse(input$sub_geography == "Overall", "", "In "),
+          input$sub_geography, " we estimate", 
+          tags$b(paste0(percentage_female_patients(), "%")), "of care home ",
+          "patients are females and", 
+          tags$b(paste0(percentage_elderly_female_patients(), "%")), "are ",
+          "females aged 85 or over."
+        ),
+        p(
+          id = "medium",
+          "There are an estimated", tags$b(average_monthly_patients()), 
+          "average number of monthly care home patients."
+        )
+      )
+      
+    })
+    
+    # Pull the metric we are interested in
+    metric_df <- reactive ({
+      
+      req(input$geography)
+      req(input$sub_geography)
+      req(input$metric)
+      
+      sub_geography_df() %>%
+        dplyr::select(
+          dplyr::all_of(
+            c(
+              "YEAR_MONTH", 
+              "GEOGRAPHY",
+              "SUB_GEOGRAPHY_NAME",
+              "SUB_GEOGRAPHY_CODE",
+              "GENDER",
+              "AGE_BAND",
+              input$metric
+            )
+          )
+        )
+      
+    })
+    
+    # Pull the NA gender patients
+    patients_with_na_gender <- reactive({
+      
+      req(input$geography)
+      req(input$sub_geography)
+      req(input$metric)
+      
+      print(metric_df())
+      
+      metric_df() %>%
+        dplyr::filter(YEAR_MONTH == "Overall" & is.na(GENDER)) %>%
+        # Format number
+        dplyr::mutate(
+          "{input$metric}" := ifelse(
+            test = is.na(.data[[input$metric]]), 
+            yes = "c", 
+            no = as.character(.data[[input$metric]])
+          )
+        ) %>%
+        dplyr::pull(.data[[input$metric]])
+      
+    })
+    
+    # Filter out unknown genders for the plot
     plot_df <- reactive({
       
       req(input$geography)
       req(input$sub_geography)
-      req(input$count_or_percentage)
+      req(input$metric)
       
-      # Get all combinations of data
-      plot_df <- sub_geography_df() %>%
-        tidyr::complete(
-          YEAR_MONTH, AGE_BAND, GENDER,
-          fill = list(TOTAL_PATIENTS = 0)
-        )
+      metric_df() %>%
+        dplyr::filter(!is.na(GENDER))
       
-      if (input$count_or_percentage == "Count") {
-        
-        plot_df %>%
-          statistical_disclosure_control(
-            col = "TOTAL_PATIENTS",
-            type = "count"
-          ) %>%
-          dplyr::rename(value = TOTAL_PATIENTS)
-        
-      } else {
-
-        plot_df %>%
-          dplyr::group_by(YEAR_MONTH) %>%
-          statistical_disclosure_control(
-            col = "value",
-            type = "percentage",
-            original_col = "TOTAL_PATIENTS"
-          ) %>%
-          dplyr::ungroup()
-        
-      }
-
     })
 
     # Swap NAs for "c" for data download
@@ -275,40 +399,50 @@ mod_02_demographics_server <- function(id, export_data) {
 
       req(input$geography)
       req(input$sub_geography)
-      req(input$count_or_percentage)
+      req(input$metric)
       
       plot_df() %>%
         dplyr::mutate(
-          VALUE = ifelse(is.na(value), "c", as.character(value))
-        ) %>%
-        dplyr::select(-value, -TOTAL_PATIENTS)
+          "{input$metric}" := ifelse(
+            test = is.na(.data[[input$metric]]), 
+            yes = "c", 
+            no = as.character(.data[[input$metric]])
+          )
+        )
       
     })
     
     # Add a download button
     mod_download_server(
-      id = "download_ui_1",
+      id = "download_patients_by_geography_and_gender_and_age_band_chart",
+      filename = "patients_by_geography_and_gender_and_age_band_chart.csv",
       export_data = download_df()
     )
 
     # Pull the max value
     max_value <- reactive({
+      
       req(input$geography)
       req(input$sub_geography)
-      req(input$count_or_percentage)
+      req(input$metric)
 
-      max(plot_df()$value, na.rm = TRUE)
+      max(plot_df()[[input$metric]], na.rm = TRUE)
+      
     })
 
     # Format for highcharter animation.
     plot_series_list <- reactive({
+      
       req(input$geography)
       req(input$sub_geography)
-      req(input$count_or_percentage)
-
+      req(input$metric)
+      
       plot_df() %>%
         # Negate male values so the butterfly chart works
-        dplyr::mutate(value = value * ifelse(GENDER == "Male", 1, -1)) %>%
+        dplyr::mutate(
+          value = 
+            .data[[input$metric]] * ifelse(GENDER == "Male", 1, -1)
+        ) %>%
         dplyr::group_by(AGE_BAND, GENDER) %>%
         dplyr::do(data = list(sequence = .$value)) %>%
         dplyr::ungroup() %>%
@@ -319,13 +453,14 @@ mod_02_demographics_server <- function(id, export_data) {
     })
 
     # Pyramid plot for age band and gender
-    output$demographics <-
+    output$patients_by_gender_and_age_band_chart <-
       highcharter::renderHighchart({
+        
         req(input$geography)
         req(input$geography)
-        req(input$count_or_percentage)
+        req(input$metric)
 
-        # Create the chart
+        # Create the base of the chart
         chart <- highcharter::highchart() %>%
           highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
           highcharter::hc_add_series_list(x = plot_series_list()) %>%
@@ -334,13 +469,23 @@ mod_02_demographics_server <- function(id, export_data) {
             series = c(0, 1)
           ) %>%
           theme_nhsbsa(palette = "gender") %>%
+          highcharter::hc_caption(
+            text = paste0(
+              "This chart excludes ", patients_with_na_gender(), 
+              ifelse(input$metric == "SDC_TOTAL_PATIENTS", " ", "% "),
+              "patients with an unknown gender."
+            ),
+            margin = 5,
+            align = "right"
+          ) %>%
           highcharter::hc_xAxis(
             title = list(text = "Age Band"),
             categories = sort(unique(plot_df()$AGE_BAND)),
             reversed = FALSE
           )
 
-        if (input$count_or_percentage == "Count") {
+        if (input$metric == "SDC_TOTAL_PATIENTS") {
+          
           chart %>%
             highcharter::hc_yAxis(
               title = list(
@@ -351,10 +496,10 @@ mod_02_demographics_server <- function(id, export_data) {
               labels = list(
                 formatter = htmlwidgets::JS(
                   "
-              function() {
-                return Math.abs(this.value) / 1000;
-              }
-              "
+                    function() {
+                      return Math.abs(this.value) / 1000;
+                    }
+                  "
                 )
               )
             ) %>%
@@ -363,31 +508,33 @@ mod_02_demographics_server <- function(id, export_data) {
               useHTML = TRUE,
               formatter = htmlwidgets::JS(
                 "
-            function() {
-
-              if(Math.abs(this.point.y) >= 1000) {
-
-                outHTML =
-                  '<b>Gender: </b>' + this.series.name + '<br>' +
-                  '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
-                  '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0);
-
-              } else {
-
-                outHTML =
-                  '<b>Gender: </b>' + this.series.name + '<br>' +
-                  '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
-                  '<b>Number of patients: </b>' + Math.abs(this.point.y);
-
-              }
-
-              return(outHTML);
-
-            }
-            "
+                function() {
+    
+                  if(Math.abs(this.point.y) >= 1000) {
+    
+                    outHTML =
+                      '<b>Gender: </b>' + this.series.name + '<br>' +
+                      '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
+                      '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0);
+    
+                  } else {
+    
+                    outHTML =
+                      '<b>Gender: </b>' + this.series.name + '<br>' +
+                      '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
+                      '<b>Number of patients: </b>' + Math.abs(this.point.y);
+    
+                  }
+    
+                  return(outHTML);
+    
+                }
+                "
               )
             )
+          
         } else {
+          
           chart %>%
             highcharter::hc_yAxis(
               title = list(
@@ -398,10 +545,10 @@ mod_02_demographics_server <- function(id, export_data) {
               labels = list(
                 formatter = highcharter::JS(
                   "
-              function() {
-                return Math.abs(this.value);
-              }
-              "
+                    function() {
+                      return Math.abs(this.value);
+                    }
+                  "
                 )
               )
             ) %>%
@@ -409,41 +556,22 @@ mod_02_demographics_server <- function(id, export_data) {
               shared = FALSE,
               formatter = highcharter::JS(
                 "
-            function () {
-
-              outHTML =
-                '<b>Gender: </b>' + this.series.name + '<br>' +
-                '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
-                '<b>Percentage: </b>' + Math.abs(this.point.y) + '%';
-
-              return outHTML;
-            }
-            "
+                  function () {
+      
+                    outHTML =
+                      '<b>Gender: </b>' + this.series.name + '<br>' +
+                      '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
+                      '<b>Percentage: </b>' + Math.abs(this.point.y) + '%';
+      
+                    return outHTML;
+                  }
+                "
               )
             )
+          
         }
+        
       })
-
-    # Create the reactive text to go inside the chart
-    output$text <- shiny::renderUI({
-      req(input$geography)
-      req(input$sub_geography)
-
-      tagList(
-        p(
-          id = "medium",
-          ifelse(input$sub_geography == "Overall", "", "In "),
-          input$sub_geography, " we estimate", tags$b(female_ps()[1]), "of care ",
-          "home patients are females and", tags$b(female_ps()[2]), "are female aged 85 ",
-          "or over."
-        ),
-        p(
-          id = "small",
-          "Average number of monthly care home patients is",
-          tags$b(paste0(average_monthly_patients(), "."))
-        )
-      )
-    })
 
     # Add IMD chart
     output$imd_quintile_chart <- highcharter::renderHighchart({
@@ -456,9 +584,11 @@ mod_02_demographics_server <- function(id, export_data) {
           stacking = "normal"
         ) %>%
         theme_nhsbsa() %>%
-        highcharter::hc_legend(enabled = F) %>%
+        highcharter::hc_legend(enabled = FALSE) %>%
         highcharter::hc_xAxis(
-          categories = c(NA, "1<br>Most<br>deprived", 2:4, "5<br>Least<br>deprived"),
+          categories = c(
+            "1<br>Most<br>deprived", 2:4, "5<br>Least<br>deprived"
+          ),
           title = list(text = "Deprivation quintile")
         ) %>%
         highcharter::hc_yAxis(
@@ -466,7 +596,12 @@ mod_02_demographics_server <- function(id, export_data) {
         ) %>%
         highcharter::hc_tooltip(
           shared = FALSE,
-          formatter = highcharter::JS("function () { return '<b>Quintile: </b>' + parseInt(this.point.category) + ' (' + this.point.y + '%)'} ")
+          formatter = highcharter::JS(
+            "
+            function () { 
+              return '<b>Quintile: </b>' + parseInt(this.point.category) + ' (' + this.point.y + '%)'} 
+            "
+          )
         )
     })
 

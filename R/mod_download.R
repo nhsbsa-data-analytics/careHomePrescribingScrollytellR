@@ -20,14 +20,12 @@ mod_download_ui <- function(id) {
 #' download Server Functions
 #'
 #' @noRd
-mod_download_server <- function(id, export_data) {
+mod_download_server <- function(id, filename, export_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     output$download <- downloadHandler(
-      filename = function() {
-        paste(Sys.time(), "download.csv")
-      },
+      filename = filename,
       content = function(file) {
         write.csv(export_data, file)
       }
