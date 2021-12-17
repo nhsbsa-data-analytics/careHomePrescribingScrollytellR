@@ -83,14 +83,13 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
       GEOGRAPHY = geography_name,
       SUB_GEOGRAPHY_CODE = NA,
       SUB_GEOGRAPHY_NAME = !!dplyr::sym(geography_cols[1]),
-      # NA if SUB_GEOGRAPHY_NAME is NA
       GENDER = ifelse(is.na(SUB_GEOGRAPHY_NAME), NA, GENDER),
       # NA if SUB_GEOGRAPHY_NAME is NA or if GENDER is NA
       AGE_BAND = ifelse(
         test = is.na(SUB_GEOGRAPHY_NAME) | is.na(GENDER), 
         yes = NA, 
         AGE_BAND
-      ),
+      )
     )
   
   # If there are two columns then override the code as the second column

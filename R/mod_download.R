@@ -12,7 +12,8 @@ mod_download_ui <- function(id) {
   tagList(
     downloadButton(
       outputId = ns("download"),
-      label = "Download Data"
+      label = "Download Data",
+      style = "border: 0;"
     )
   )
 }

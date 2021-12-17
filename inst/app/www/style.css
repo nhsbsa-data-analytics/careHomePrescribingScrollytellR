@@ -87,6 +87,11 @@ should be no wider as per NHS guidelines) */
 	max-width: 960px;
 }
 
+/* Set the margin of the radio buttons to 0 */
+.form-group {
+  margin-bottom: 0;
+}
+
 /* Scrolly stuff */
 
 /* Force scrolly sections to be the full width of the container-fluid ^ */
