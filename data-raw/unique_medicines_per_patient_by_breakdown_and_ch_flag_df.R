@@ -141,11 +141,12 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       PATIENTS_TEN_OR_MORE = n_distinct(
         ifelse(UNIQUE_MEDICINES >= 10, NHS_NO, NA)
       ),
-      TOTAL_PATIENTS = n_distinct(NHS_NO)
+      TOTAL_PATIENTS_CHAPTER_TEN = n_distinct(NHS_NO)
     ) %>%
     ungroup() %>%
     mutate(
-      PCT_PATIENTS_TEN_OR_MORE = PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS * 100
+      PCT_PATIENTS_TEN_OR_MORE = 
+        PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS_CHAPTER_TEN * 100
     )
 
   # Add overall mean (average monthly per patient is the metric)
@@ -160,7 +161,7 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
           CH_FLAG
         ) %>%
         summarise(
-          TOTAL_PATIENTS = mean(TOTAL_PATIENTS),
+          TOTAL_PATIENTS_CHAPTER_TEN = mean(TOTAL_PATIENTS_CHAPTER_TEN),
           UNIQUE_MEDICINES_PER_PATIENT = mean(UNIQUE_MEDICINES_PER_PATIENT),
           PATIENTS_TEN_OR_MORE = mean(PATIENTS_TEN_OR_MORE),
           PCT_PATIENTS_TEN_OR_MORE = mean(PCT_PATIENTS_TEN_OR_MORE)
@@ -173,6 +174,7 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
 
     # On the first iteration initialise the table
     unique_medicines_per_patient_by_breakdown_and_ch_flag_db <- tmp_db
+    
   } else {
 
     # Union results to initialised table
@@ -181,6 +183,7 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       y = tmp_db
     )
   }
+  
 }
 
 # Collect
@@ -199,7 +202,7 @@ unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
     # Every CH flag
     CH_FLAG,
     fill = list(
-      TOTAL_PATIENTS = 0,
+      TOTAL_PATIENTS_CHAPTER_TEN = 0,
       PATIENTS_TEN_OR_MORE = 0,
     )
   ) 
@@ -209,7 +212,7 @@ unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
 unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
   unique_medicines_per_patient_by_breakdown_and_ch_flag_df %>%
   mutate(
-    SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+    SDC = ifelse(TOTAL_PATIENTS_CHAPTER_TEN %in% c(1, 2, 3, 4), 1, 0),
     SDC_UNIQUE_MEDICINES_PER_PATIENT = 
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(UNIQUE_MEDICINES_PER_PATIENT)),
     SDC = ifelse(PATIENTS_TEN_OR_MORE %in% c(1, 2, 3, 4), 1, 0),
