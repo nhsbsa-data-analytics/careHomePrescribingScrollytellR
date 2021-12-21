@@ -84,7 +84,7 @@ total <- cross %>%
     )
 
 # DF for 1st plot
-area = total %>% 
+area <- total %>% 
   group_by(YEAR_MONTH) %>% 
   count(CH_FLAG) %>% 
   ungroup() %>% 
