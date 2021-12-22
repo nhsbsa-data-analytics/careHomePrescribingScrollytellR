@@ -115,13 +115,13 @@ monthly_prescribing_status_with_prescribing_df <- area %>%
 monthly_prescribing_status_without_prescribing_df <- area %>% 
   filter(CH_FLAG == "Received no prescribing" | CH_FLAG == "Deceased")
 
-# Add to data-raw/
+# Add to data
 usethis::use_data(
   monthly_prescribing_status_with_prescribing_df,
   overwrite = TRUE
 )
 
-# Add to data-raw/
+# Add to data
 usethis::use_data(
   monthly_prescribing_status_without_prescribing_df,
   overwrite = TRUE

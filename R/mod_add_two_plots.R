@@ -30,6 +30,29 @@ mod_add_two_plots_ui <- function(id){
         )
       )
     ),
+    br(),
+    br(),
+    fluidRow(
+      col_6(
+        highcharter::highchartOutput(
+          outputId = ns("rolling_line"),
+          height = "600px",
+          width = "600px"
+        )
+      )
+    ),
+    br(),
+    br(),
+    fluidRow(
+      col_6(
+        highcharter::highchartOutput(
+          outputId = ns("comparison_line"),
+          height = "500px",
+          width = "900px"
+        )
+      )
+    ),
+    br(),
     br()
   )
 }
@@ -47,9 +70,9 @@ mod_add_two_plots_server <- function(id){
     
     # x-Axis Categories
     month_vec <- with_prescribing %>% 
-      select(MONTH_YEAR) %>% 
-      distinct() %>% 
-      pull()
+      dplyr::select(MONTH_YEAR) %>% 
+      dplyr::distinct() %>% 
+      dplyr::pull()
     
     # Highchart
     output$patient_area <- highcharter::renderHighchart({
@@ -131,6 +154,135 @@ mod_add_two_plots_server <- function(id){
         highcharter::hc_credits(enabled = T) %>% 
         highcharter::hc_colors(c("darkgreen", "lightgreen", "darkblue", "lightblue"))
       
+    })
+    
+    # Load dfs for third plot
+    rolling_pat <- careHomePrescribingScrollytellR::rolling_pat_count_df %>% 
+      dplyr::arrange(FINAL_MONTH)
+    
+    # Month vector for actors
+    month_vec <- rolling_pat %>% 
+      dplyr::select(FINAL_MONTH, YEAR_MONTH) %>% 
+      dplyr::distinct() %>% 
+      dplyr::arrange(FINAL_MONTH) %>% 
+      dplyr::select(YEAR_MONTH) %>% 
+      dplyr::pull()
+    
+    # Line Chart
+    output$rolling_line <- highcharter::renderHighchart({
+      
+      # Plot the data
+      rolling_pat %>% 
+        highcharter::hchart(
+          type = "line",
+          highcharter::hcaes(YEAR_MONTH, PATS, group = NUM_MONTH)
+        ) %>% 
+        highcharter::hc_yAxis(
+          min = 0,
+          title = list(text = "Distinct Patient Count")
+        ) %>% 
+        highcharter::hc_xAxis(
+          title = list(text = "Year Month"),
+          categories = month_vec
+        ) %>% 
+        highcharter::hc_title(
+          text = "Single Month, Rolling 3-Month and Rolling 6-Month Distinct Patient 
+        Counts, for any Care Home Classified Resident Receiving a Prescription"
+        ) %>% 
+        highcharter::hc_tooltip(table = T) %>% 
+        highcharter::hc_credits(enabled = T)
+    })
+    
+    # DF for plot
+    chapter_comp <- careHomePrescribingScrollytellR::chapter_drug_comparison_df
+
+    # Get descending difference vector of chapter names
+    chapter_vec <- chapter_comp %>% 
+      dplyr::mutate(
+        CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
+        ) %>% 
+      tidyr::pivot_wider(names_from = "CH_FLAG", values_from = "PROP") %>% 
+      dplyr::mutate(DIFF = `Care home` - `Non care home`) %>% 
+      dplyr::arrange(desc(DIFF)) %>% 
+      dplyr::select(CHAPTER_DESCR) %>% 
+      dplyr::pull()
+    
+    # Process rssults ready for plot
+    chapter_data <- chapter_comp %>% 
+      dplyr::mutate(
+        CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")
+        ) %>% 
+      tidyr::pivot_wider(names_from = "CH_FLAG", values_from = "PROP") %>% 
+      dplyr::mutate(
+        DIFF = round(`Care home` - `Non care home`, 4) * 100,
+        GREATER = dplyr::case_when(
+          DIFF > 0 ~ "Care homes",
+          DIFF < 0 ~ "Non-care homes",
+          T ~ "Neither"),
+        `Care home` = round(`Care home`, 4) * 100,
+        `Non care home` = round(`Non care home`, 4) * 100,
+        CHAPTER_DESCR = factor(CHAPTER_DESCR, levels = chapter_vec)
+      ) %>% 
+      dplyr::arrange(desc(DIFF))
+    
+    # Comparison Chart
+    output$comparison_line <- highcharter::renderHighchart({
+      
+      highcharter::hchart(
+        object = chapter_data,
+        type = "spline",
+        highcharter::hcaes(CHAPTER_DESCR, DIFF),
+        color = "green"
+        ) %>% 
+        highcharter::hc_yAxis(plotBands = list(
+          list(
+            color = "#fff5f0",
+            from = 0,
+            to = -30
+          ),
+          list(
+            color = "#f7fbff",
+            from = 0,
+            to = 30
+          ))) %>% 
+        highcharter::hc_yAxis(min = -20.5, max = 10.7, inverted = T) %>% 
+        highcharter::hc_plotOptions(spline = list(marker = list(radius = 0))) %>% 
+        highcharter::hc_xAxis(title = list(text = "BNF Chapter Description")) %>% 
+        highcharter::hc_yAxis(title = list(
+          text = "Difference between Care home and <br> non-care home proportions")
+        ) %>% 
+        highcharter::hc_title(
+          text = "<b>The Difference in BNF Chapter-level Prescribing 
+        in Care Home and non-Care Homes<b/>"
+        ) %>% 
+        highcharter::hc_subtitle(
+          text = "Proportions calculated by looking at chapter prescribing against 
+        all prescribing<br>either on a care home or non-care home-level"
+        ) %>% 
+        highcharter::hc_tooltip(
+          headerFormat = "",
+          pointFormat = "<b>BNF Chapter Description:</b> {point.CHAPTER_DESCR}<br>
+        <b>Proportion of Care Home Prescribing:</b> {point.Care home} %<br>
+        <b>Proportion of Non-Care Home Prescribing:</b> {point.Non care home} %<br>
+        <b>Proportion Difference:</b> {point.DIFF} %<br>
+        <b>Proportion Greater in:</b> {point.GREATER}"
+        ) %>% 
+        highcharter::hc_chart(inverted = T) %>% 
+        highcharter::hc_credits(enabled = T) %>% 
+        highcharter::hc_annotations(
+          list(
+            labels = list(
+              list(
+                point = list(x = 200, y = 200),
+                text = "Greater proportion of <br>items in non-care homes"
+              ),
+              list(
+                point = list(x = 200, y = 450),
+                text = "Greater proportion of <br>items in care homes"
+              )
+            )
+          )
+        )
     })
     
   })
