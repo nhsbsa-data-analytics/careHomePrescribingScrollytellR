@@ -157,115 +157,51 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
 
 
     output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
+      
       req(input$metric)
-      # similar to dumbbell chart, make title to dynamic
-      title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
-
-      # NOTE: Not sure how to deal with if statement with tooltip so here I am 
-      # splitting two ways.... (It could improve using JS)
-      if (input$metric == "Items") {
-        highcharter::highchart() %>%
-          highcharter::hc_chart(type = "treemap") %>%
-          highcharter::hc_add_series(
-            data = plot_df(),
-            allowDrillToNode = TRUE,
-            levelIsConstant = FALSE,
-            textOverflow = "clip",
-            drillUpButton = list(text = "<< Back to BNF Chapter"),
-            dataLabels = list(color = "white"),
-            levels = list(
-              list(
-                level = 1,
-                borderWidth = 3,
-                colorByPoint = TRUE,
-                dataLabels = list(
-                  enabled = TRUE,
-                  verticalAlign = "top",
-                  align = "left",
-                  color = "black",
-                  style = list(fontSize = "12px", textOutline = FALSE)
-                )
-              ),
-              list(
-                level = 2,
-                borderWidth = 0.2,
-                dataLabels = list(enabled = FALSE)
+      
+      # Create the shared part of the chart first
+      chart <- highcharter::highchart() %>%
+        highcharter::hc_chart(type = "treemap") %>%
+        highcharter::hc_add_series(
+          data = plot_df(),
+          allowDrillToNode = TRUE,
+          levelIsConstant = FALSE,
+          textOverflow = "clip",
+          drillUpButton = list(text = "<< Back to BNF Chapter"),
+          dataLabels = list(color = "white"),
+          levels = list(
+            list(
+              level = 1,
+              borderWidth = 3,
+              colorByPoint = TRUE,
+              dataLabels = list(
+                enabled = TRUE,
+                verticalAlign = "top",
+                align = "left",
+                color = "black",
+                style = list(fontSize = "12px", textOutline = FALSE)
               )
-            )
-          ) %>%
-          theme_nhsbsa() %>%
-          highcharter::hc_title(
-            text = glue::glue("Number and % of {title} by BNF Chapter and Section"),
-            align = "left"
-          ) %>%
-          highcharter::hc_subtitle(
-            text = "Click points to drill down to BNF Section level"
-          ) %>%
-          # useful: https://www.titanwolf.org/Network/q/9ba6af5e-1a32-404f-aefb-bc9ce6daf227/y (wrap around highcharts.numberFormat)
-          highcharter::hc_tooltip(
-            useHTML = TRUE,
-            formatter = htmlwidgets::JS(
-              "
-              function() {
-              
-                if (this.point.parent == null) {
-                
-                  outHTML = 
-                    '<b> % of total items: </b>' + this.point + '%' + '<br>' + 
-                    '<b> Number of items: </b>' + + Highcharts.numberFormat(this.point.value_total, 0)
-                    
-                  return(outHTML)
-                  
-                } else {
-                
-                  outHTML = 
-                    '<b> % of total items in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + this.point + '%' + '<br>' + 
-                    '<b> Number of items: </b>' + + Highcharts.numberFormat(this.point.value_total, 0)
-                    
-                  return(outHTML)
-                  
-                }
-            }
-            "
+            ),
+            list(
+              level = 2,
+              borderWidth = 0.2,
+              dataLabels = list(enabled = FALSE)
             )
           )
-      } else {
-        highcharter::highchart() %>%
-          highcharter::hc_chart(type = "treemap") %>%
-          highcharter::hc_add_series(
-            data = plot_df(),
-            allowDrillToNode = TRUE,
-            levelIsConstant = FALSE,
-            textOverflow = "clip",
-            drillUpButton = list(text = "<< Back BNF Chapter"),
-            dataLabels = list(color = "white"),
-            levels = list(
-              list(
-                level = 1,
-                borderWidth = 3,
-                colorByPoint = TRUE,
-                dataLabels = list(
-                  enabled = TRUE,
-                  verticalAlign = "top",
-                  align = "left",
-                  color = "black",
-                  style = list(fontSize = "12px", textOutline = FALSE)
-                )
-              ),
-              list(
-                level = 2,
-                borderWidth = 0.2,
-                dataLabels = list(enabled = FALSE)
-              )
-            )
-          ) %>%
-          theme_nhsbsa() %>%
+        ) %>%
+        theme_nhsbsa() %>%
+        highcharter::hc_subtitle(
+          text = "Click points to drill down to BNF Section level"
+        )
+      
+      # Add the tooltip based on the metric
+      if (input$metric == "Items") {
+        
+        chart %>%
           highcharter::hc_title(
-            text = glue::glue("Number and % of {title} by BNF Section and Chapter"),
+            text = "Number and % of prescription items by BNF Chapter and Section",
             align = "left"
-          ) %>%
-          highcharter::hc_subtitle(
-            text = "Click points to drill down to BNF Section level"
           ) %>%
           highcharter::hc_tooltip(
             useHTML = TRUE,
@@ -276,25 +212,62 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
                 if (this.point.parent == null) {
                 
                   outHTML = 
-                    '<b> % of total Net Ingredient Cost (NIC (£)): </b>' + this.point.value + '%' + '<br>' + 
-                    '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(this.point.value_total, 0)
-                  
-                  return(outHTML)
-              
+                    '<b> % of total items: </b>' + this.point.value + '%' + '<br>'
+
                 } else {
-                  
+                
                   outHTML = 
-                    '<b> % of total NIC in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + this.point.value + '%' + '<br>' + 
-                    '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(this.point.value_total, 0)
-                  
-                  return(outHTML)
-                  
+                    '<b> % of total items in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + this.point.value + '%' + '<br>'
+
                 }
+                
+                outHTML = outHTML + 
+                  '<b> Number of items: </b>' + Highcharts.numberFormat(this.point.value_total, 0)
+                
+                return(outHTML)            
+              
               }
               "
             )
           )
-      }
+        
+      } else {
+        
+        chart %>%
+          highcharter::hc_title(
+            text = "Number and % of drug cost by BNF Chapter and Section",
+            align = "left"
+          ) %>%
+          highcharter::hc_tooltip(
+            useHTML = TRUE,
+            formatter = htmlwidgets::JS(
+              "
+              function() {
+              
+                if (this.point.parent == null) {
+                
+                  outHTML = 
+                    '<b> % of total Net Ingredient Cost (NIC (£)): </b>' + this.point.value + '%' + '<br>'
+
+                } else {
+                  
+                  outHTML = 
+                    '<b> % of total NIC in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + this.point.value + '%' + '<br>'
+
+                }
+                
+                outHTML = outHTML +
+                  '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(this.point.value_total, 0)
+                  
+                return(outHTML)
+                
+              }
+            "
+            )
+          )
+        
+      } 
+      
     })
 
 
