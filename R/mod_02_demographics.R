@@ -99,11 +99,8 @@ mod_02_demographics_ui <- function(id) {
         )
       )
     ),
-    fluidRow(
-      style = "background-color: #FFFFFF;",
-      mod_download_ui(
-        id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
-      )
+    mod_download_ui(
+      id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
     ),
     br(),
     br(),
@@ -151,11 +148,8 @@ mod_02_demographics_ui <- function(id) {
         width = "900px"
       )
     ),
-    fluidRow(
-      style = "background-color: #FFFFFF;",
-      mod_download_ui(
-        id = ns("download_patients_by_imd_chart")
-      )
+    mod_download_ui(
+      id = ns("download_patients_by_imd_chart")
     )
   )
 }
@@ -605,7 +599,7 @@ mod_02_demographics_server <- function(id, export_data) {
                     ",
                     switch(
                       input$patients_by_geography_and_gender_and_age_band_metric,
-                      "SDC_TOTAL_PATIENTS" = "'<b>Number of patients: </b>' + Math.abs(this.point.y)",
+                      "SDC_TOTAL_PATIENTS" = "'<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0)",
                       "SDC_PCT_PATIENTS" = "'<b>Percentage of patients: </b>' + Math.abs(this.point.y) + '%'"
                     ),
                     "
@@ -745,7 +739,7 @@ mod_02_demographics_server <- function(id, export_data) {
                 '<b>Quintile: </b>' + parseInt(this.point.category) + '<br>' + ",
                 switch(
                   input$patients_by_imd_metric,
-                  "SDC_TOTAL_PATIENTS" = "'<b>Total patients: </b>' + this.point.y",
+                  "SDC_TOTAL_PATIENTS" = "'<b>Total patients: </b>' + Highcharts.numberFormat(this.point.y, 0)",
                   "SDC_PCT_PATIENTS" = "'<b>Percentage of patients: </b>' + this.point.y + '%'"
                 ),
                 "

@@ -34,26 +34,28 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
     fluidRow(
       style = "background-color: #FFFFFF;",
       col_6(
+        style = "margin-bottom: 0;",
         selectInput(
-          inputId = ns("breakdown"),
+          inputId = ns("geography"),
           label = "Geography",
           choices = c("Region", "STP", "Local Authority"),
           width = "100%"
         )
       ),
       col_6(
+        style = "margin-bottom: 0;",
         selectInput(
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
             "Total drug cost" =
-              "COST_PER_PATIENT",
+              "SDC_COST_PER_PATIENT",
             "Number of prescription items" =
-              "ITEMS_PER_PATIENT",
+              "SDC_ITEMS_PER_PATIENT",
             "Number of unique medicines" =
-              "UNIQUE_MEDICINES_PER_PATIENT",
+              "SDC_UNIQUE_MEDICINES_PER_PATIENT",
             "Patients on ten or more unique medicines" =
-              "PCT_PATIENTS_TEN_OR_MORE"
+              "SDC_PCT_PATIENTS_TEN_OR_MORE"
           ),
           width = "100%"
         )
@@ -71,7 +73,7 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
       )
     ),
     mod_download_ui(
-      id = ns("download_ui_1")
+      id = ns("download_map_chart")
     )
   )
 }
@@ -84,105 +86,146 @@ mod_04_estimated_care_home_patients_server <- function(id) {
     ns <- session$ns
 
     # Join the metrics together
-    metric_df <-
+    combined_df <-
       dplyr::full_join(
         x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_breakdown_and_ch_flag_df,
         y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_breakdown_and_ch_flag_df
       )
 
     # Only interested in care homes and geographical breakdowns
-    metric_df <- metric_df %>%
+    combined_df <- combined_df %>%
       dplyr::filter(
         grepl("Geographical - ", BREAKDOWN),
         CH_FLAG == "Care home"
       ) %>%
       dplyr::mutate(BREAKDOWN = gsub("Geographical - ", "", BREAKDOWN))
-
-    # Filter to relevant data for this chart
-    metric_df <- metric_df %>%
-      dplyr::filter(dplyr::across(c(BREAKDOWN, SUB_BREAKDOWN_NAME), not_na))
-
-    # Filter the metric data based on the breakdown and format for the plot and
-    # apply statistical disclosure control
-    plot_df <- reactive({
-      req(input$breakdown)
+    
+    # Rename the cols 
+    combined_df <- combined_df %>%
+      dplyr::rename(
+        GEOGRAPHY = BREAKDOWN,
+        SUB_GEOGRAPHY_NAME = SUB_BREAKDOWN_NAME,
+        SUB_GEOGRAPHY_CODE = SUB_BREAKDOWN_CODE
+      )
+    
+    # Filter the data based on the geography
+    combined_geography_df <- reactive({
+      
+      req(input$geography)
+      
+      combined_df %>%
+        dplyr::filter(GEOGRAPHY == input$geography)
+      
+    })
+    
+    # Pull the metric we are interested in
+    metric_df <- reactive ({
+      
+      req(input$geography)
       req(input$metric)
-
-      metric_df %>%
-        dplyr::filter(BREAKDOWN == input$breakdown) %>%
-        tidyr::complete(
-          YEAR_MONTH, SUB_BREAKDOWN_CODE,
-          fill = list(value = 0)
+      
+      combined_geography_df() %>%
+        dplyr::mutate(
+          TOTAL_PATIENTS = switch(
+            input$metric,
+            "PCT_PATIENTS_TEN_OR_MORE" = PATIENTS_TEN_OR_MORE,
+            TOTAL_PATIENTS
+          )
         ) %>%
-        dplyr::mutate(value = .data[[input$metric]]) %>%
-        statistical_disclosure_control(
-          col = "value",
-          type = "percentage"
+        dplyr::select(
+          dplyr::all_of(
+            c(
+              "YEAR_MONTH", 
+              "GEOGRAPHY",
+              "SUB_GEOGRAPHY_NAME",
+              "SUB_GEOGRAPHY_CODE",
+              "TOTAL_PATIENTS", # For SDC
+              input$metric
+            )
+          )
         )
+      
+    })
+    
+    # Filter out unknown sub geographys for the plot
+    plot_df <- reactive({
+      
+      req(input$geography)
+      req(input$metric)
+      
+      metric_df() %>%
+        dplyr::filter(!is.na(SUB_GEOGRAPHY_NAME))
+      
     })
     
     # Swap NAs for "c" for data download
     download_df <- reactive({
       
       req(input$geography)
-      req(input$sub_geography)
-      req(input$count_or_percentage)
+      req(input$metric)
       
       plot_df() %>%
         dplyr::mutate(
-          VALUE = ifelse(is.na(value), "c", as.character(value))
+          "{input$metric}" := ifelse(
+            test = is.na(.data[[input$metric]]) & TOTAL_PATIENTS > 0, 
+            yes = "c", 
+            no = as.character(.data[[input$metric]])
+          )
         ) %>%
-        dplyr::select(
-          YEAR_MONTH, 
-          BREAKDOWN, 
-          SUB_BREAKDOWN_CODE, 
-          SUB_BREAKDOWN_NAME,
-          VALUE
-        )
+        dplyr::select(-TOTAL_PATIENTS)
       
     })
     
     # Add a download button
     mod_download_server(
-      id = "download_ui_1",
+      id = "download_map_chart",
+      filename = "map.csv",
       export_data = download_df()
     )
 
     # Filter the map data based on the breakdown and format for the plot
     map_list <- reactive({
-      req(input$breakdown)
+      
+      req(input$geography)
       req(input$metric)
 
       careHomePrescribingScrollytellR::map_df %>%
-        dplyr::filter(BREAKDOWN == input$breakdown) %>%
+        dplyr::filter(GEOGRAPHY == input$geography) %>%
         geojsonsf::sf_geojson() %>%
         jsonlite::fromJSON(simplifyVector = FALSE)
+      
     })
 
     # Pull the min value
     min_value <- reactive({
-      req(input$breakdown)
+      
+      req(input$geography)
       req(input$metric)
 
-      min(abs(plot_df()$value), na.rm = TRUE)
+      min(plot_df()[[input$metric]], na.rm = TRUE)
+      
     })
 
     # Pull the max value
     max_value <- reactive({
-      req(input$breakdown)
+      
+      req(input$geography)
       req(input$metric)
 
-      max(abs(plot_df()$value), na.rm = TRUE)
+      max(plot_df()[[input$metric]], na.rm = TRUE)
+      
     })
 
     # Format for highchater animation
     plot_sequence_series <- reactive({
-      req(input$breakdown)
+      
+      req(input$geography)
       req(input$metric)
 
       # Create series (including code and name)
       plot_df() %>%
-        dplyr::group_by(SUB_BREAKDOWN_CODE) %>%
+        dplyr::rename(value = .data[[input$metric]]) %>%
+        dplyr::group_by(SUB_GEOGRAPHY_CODE) %>%
         dplyr::do(sequence = .$value) %>%
         dplyr::left_join(y = plot_df()) %>%
         highcharter::list_parse()
@@ -190,27 +233,28 @@ mod_04_estimated_care_home_patients_server <- function(id) {
 
     # Create plot
     output$map_chart <- highcharter::renderHighchart({
-      req(input$breakdown)
+      
+      req(input$geography)
       req(input$metric)
-
+      
       highcharter::highchart(type = "map") %>%
         highcharter::hc_chart(marginBottom = 100) %>%
         highcharter::hc_add_series(
           data = plot_sequence_series(),
           mapData = map_list(),
-          joinBy = "SUB_BREAKDOWN_CODE",
+          joinBy = "SUB_GEOGRAPHY_CODE",
           tooltip = list(
             headerFormat = "",
             pointFormat = paste0(
-              "<b>", input$breakdown, ":</b> {point.SUB_BREAKDOWN_NAME}<br><b>",
+              "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
               switch(input$metric,
-                "COST_PER_PATIENT" =
+                "SDC_COST_PER_PATIENT" =
                   "Total drug cost:</b> £{point.value}",
-                "ITEMS_PER_PATIENT" =
+                "SDC_ITEMS_PER_PATIENT" =
                   "Number of prescription items:</b> {point.value}",
-                "UNIQUE_MEDICINES_PER_PATIENT" =
+                "SDC_UNIQUE_MEDICINES_PER_PATIENT" =
                   "Number of unique medicines:</b> {point.value}",
-                "PCT_PATIENTS_TEN_OR_MORE" =
+                "SDC_PCT_PATIENTS_TEN_OR_MORE" =
                   "Patients on ten or more unique medicines:</b> {point.value}%"
               )
             )
@@ -224,7 +268,9 @@ mod_04_estimated_care_home_patients_server <- function(id) {
           enableMouseWheelZoom = TRUE,
           enableDoubleClickZoom = TRUE
         )
+      
     })
+    
   })
 }
 

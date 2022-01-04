@@ -10,10 +10,13 @@
 mod_download_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    downloadButton(
-      outputId = ns("download"),
-      label = "Download Data",
-      style = "border: 0;"
+    fluidRow(
+      style = "background-color: #FFFFFF;",
+      downloadButton(
+        outputId = ns("download"),
+        label = "Download Data",
+        style = "border: 0;"
+      )
     )
   )
 }
