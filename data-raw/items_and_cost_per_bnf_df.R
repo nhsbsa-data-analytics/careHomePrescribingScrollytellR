@@ -68,9 +68,8 @@ items_and_cost_per_bnf_chapter_and_section_df <-
   ungroup() %>%
   # Add %s
   group_by(METRIC, BNF_CHAPTER) %>%
-  mutate(PRP_LEVEL_2 = TOTAL_LEVEL_2 / sum(TOTAL_LEVEL_2)) %>%
+  mutate(PCT_LEVEL_2 = TOTAL_LEVEL_2 / sum(TOTAL_LEVEL_2) * 100) %>%
   ungroup()
-
 
 # Get the total items and cost per BNF chapter (level 1)
 items_and_cost_per_bnf_chapter_df <-
@@ -89,7 +88,7 @@ items_and_cost_per_bnf_chapter_df <- items_and_cost_per_bnf_chapter_df %>%
   ungroup() %>%
   # Add %s
   group_by(METRIC) %>%
-  mutate(PRP_LEVEL_1 = TOTAL_LEVEL_1 / sum(TOTAL_LEVEL_1)) %>%
+  mutate(PCT_LEVEL_1 = TOTAL_LEVEL_1 / sum(TOTAL_LEVEL_1) * 100) %>%
   ungroup()
 
 # Join the two datasets together
@@ -97,6 +96,36 @@ items_and_cost_per_bnf_chapter_and_section_df <-
   left_join(
     x = items_and_cost_per_bnf_chapter_df,
     y = items_and_cost_per_bnf_chapter_and_section_df
+  )
+
+# Apply SDC to total and percentage columns and drop them
+items_and_cost_per_bnf_chapter_and_section_df <- 
+  items_and_cost_per_bnf_chapter_and_section_df %>%
+  mutate(
+    across(
+      .cols = starts_with("TOTAL"), 
+      .fns = ~ round(.x, digits = -3),
+      .names = "SDC_{col}"
+    ),
+    across(
+      .cols = starts_with("PCT"), 
+      .fns = ~ janitor::round_half_up(.x),
+      .names = "SDC_{col}"
+    )
+  ) %>% 
+  select(-c(starts_with("TOTAL"), starts_with("PCT")))
+
+# Reorder cols
+items_and_cost_per_bnf_chapter_and_section_df <- 
+  items_and_cost_per_bnf_chapter_and_section_df %>%
+  select(
+    METRIC, 
+    BNF_CHAPTER, 
+    SDC_TOTAL_LEVEL_1, 
+    SDC_PCT_LEVEL_1, 
+    BNF_SECTION,
+    SDC_TOTAL_LEVEL_2, 
+    SDC_PCT_LEVEL_2
   )
 
 # Get the total items and cost per BNF paragraph to use for the dumbbell chart
@@ -125,16 +154,37 @@ top_20_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
 items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
   inner_join(y = top_20_paragraph_db)
 
-# Calculate the proportions of each group
+# Calculate the percentage of each group and drop the total column
 items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
   group_by(METRIC, CH_FLAG) %>%
-  mutate(PRP = TOTAL / sum(TOTAL)) %>%
-  ungroup()
+  mutate(PCT = TOTAL / sum(TOTAL) * 100) %>%
+  ungroup() %>% 
+  select(-TOTAL)
+
+# Pivot wider by care home flag
+items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
+  mutate(CH_FLAG = ifelse(CH_FLAG == 0L, "PCT_NON_CH", "PCT_CH")) %>%
+  tidyr::pivot_wider(
+    names_from = CH_FLAG,
+    values_from = PCT
+  )
 
 # Reorder the columns, sort and collect
 items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_db %>%
-  relocate(METRIC, BNF_PARAGRAPH) %>%
+  relocate(METRIC, BNF_PARAGRAPH, PCT_CH) %>%
+  arrange(METRIC, desc(PCT_CH)) %>%
   collect()
+
+# Apply SDC to percentage columns and drop normal columns as they aren't needed
+items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_df %>%
+  mutate(
+    across(
+      .cols = starts_with("PCT"), 
+      .fns = ~ janitor::round_half_up(.x),
+      .names = "SDC_{col}"
+    )
+  ) %>% 
+  select(-starts_with("PCT"))
 
 # Add to data-raw/
 usethis::use_data(
