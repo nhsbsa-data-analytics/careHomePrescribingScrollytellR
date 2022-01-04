@@ -131,7 +131,7 @@ items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
   mutate(PRP = TOTAL / sum(TOTAL)) %>%
   ungroup()
 
-# Reorder the columns and collect
+# Reorder the columns, sort and collect
 items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_db %>%
   relocate(METRIC, BNF_PARAGRAPH) %>%
   collect()
