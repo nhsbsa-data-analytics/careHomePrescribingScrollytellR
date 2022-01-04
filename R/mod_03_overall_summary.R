@@ -85,38 +85,86 @@ mod_03_overall_summary_server <- function(id) {
         y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_breakdown_and_ch_flag_df
       )
 
-    # Only interested in care homes
+    # Only interested in the overall period
     metric_df <- metric_df %>%
       dplyr::filter(YEAR_MONTH == "Overall")
-
-    # Filter to relevant data for this chart
-    metric_df <- metric_df %>%
-      dplyr::filter(dplyr::across(c(BREAKDOWN, SUB_BREAKDOWN_NAME), not_na))
-
-    # Tidy the cols
+    
+    # Format cost and percentage cols
     metric_df <- metric_df %>%
       dplyr::mutate(
-        COST_PER_PATIENT = paste0(
-          "£",
-          format(x = round(COST_PER_PATIENT, 0), nsmall = 0)
-        ),
-        ITEMS_PER_PATIENT = round(ITEMS_PER_PATIENT, 0),
-        UNIQUE_MEDICINES_PER_PATIENT = round(UNIQUE_MEDICINES_PER_PATIENT, 0),
-        PCT_PATIENTS_TEN_OR_MORE = paste0(round(PCT_PATIENTS_TEN_OR_MORE, 0), "%")
+        SDC_COST_PER_PATIENT = paste0("£", SDC_COST_PER_PATIENT),
+        SDC_PCT_PATIENTS_TEN_OR_MORE = paste0(SDC_PCT_PATIENTS_TEN_OR_MORE, "%")
       )
 
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
-
     # Filter the data based on the breakdown
     breakdown_df <- reactive({
+      
       req(input$breakdown)
 
       metric_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown)
+      
+    })
+    
+    # Pull the text for the number of NA sub breakdown patients
+    patients_in_na_sub_breakdown_text <- reactive({
+      
+      req(input$breakdown)
+      
+      # Filter to NA sub breakdown
+      na_sub_breakdown_df <- breakdown_df() %>%
+        dplyr::filter(is.na(SUB_BREAKDOWN_NAME))
+      
+      # Apply SDC to total patients
+      na_sub_breakdown_df <- na_sub_breakdown_df %>%
+        dplyr::mutate(
+          SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+          SDC_TOTAL_PATIENTS = 
+            ifelse(SDC == 1, NA_integer_, round(TOTAL_PATIENTS, -1))
+        )
+      
+      # Format the number
+      na_sub_breakdown_df <- na_sub_breakdown_df %>%
+        dplyr::mutate(
+          SDC_TOTAL_PATIENTS = ifelse(
+            test = is.na(SDC_TOTAL_PATIENTS), 
+            yes = "c", 
+            no = as.character(SDC_TOTAL_PATIENTS)
+          )
+        ) 
+      
+      # Extract the values
+      patients_in_na_sub_breakdown <- na_sub_breakdown_df %>%
+        dplyr::pull(SDC_TOTAL_PATIENTS, CH_FLAG)
+      
+      if (length(patients_in_na_sub_breakdown) == 2) {
+        # If both care home and non care home exist
+        
+        paste(
+          "This excludes", patients_in_na_sub_breakdown[1], "care home and", 
+          patients_in_na_sub_breakdown[2], "non care home patients with an ",
+          "unknown sub breakdown."
+        )
+        
+      } else if (length(patients_in_na_sub_breakdown) == 1) {
+        # If only one exists
+        paste(
+          "This excludes", patients_in_na_sub_breakdown, 
+          tolower(names(patients_in_na_sub_breakdown)), "patients with an ",
+          "unknown sub breakdown."
+        )
+        
+      } else {
+        # Nothing
+        ""
+        
+      }
+
     })
 
-    # Update the list of choices for sub breakdown from the rows in the breakdown
+    # Update the list of choices for sub breakdown from the rows in breakdown
     # dataframe
     observeEvent(
       eventExpr = breakdown_df(),
@@ -124,22 +172,28 @@ mod_03_overall_summary_server <- function(id) {
         freezeReactiveValue(input, "sub_breakdown")
         updateSelectInput(
           inputId = "sub_breakdown",
-          choices = unique(breakdown_df()$SUB_BREAKDOWN_NAME)
+          choices = breakdown_df()$SUB_BREAKDOWN_NAME %>%
+            na.omit() %>%
+            unique()
         )
       }
     )
 
-    # Filter the data based on the level and format for the table
+    # Filter the data based on the sub breakdown
     table_df <- reactive({
+      
       req(input$sub_breakdown)
 
       breakdown_df() %>%
         dplyr::filter(SUB_BREAKDOWN_NAME == input$sub_breakdown)
+      
     })
 
     # Create the table
     output$table <- renderUI({
+      
       req(input$sub_breakdown)
+      
       tagList(
         fluidRow(
           col_6(
@@ -157,7 +211,7 @@ mod_03_overall_summary_server <- function(id) {
               care_home = TRUE,
               value = table_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
-                dplyr::pull(COST_PER_PATIENT),
+                dplyr::pull(SDC_COST_PER_PATIENT),
               icon = "coins"
             )
           ),
@@ -167,7 +221,7 @@ mod_03_overall_summary_server <- function(id) {
               care_home = FALSE,
               value = table_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
-                dplyr::pull(COST_PER_PATIENT),
+                dplyr::pull(SDC_COST_PER_PATIENT),
               icon = "coins"
             )
           )
@@ -188,7 +242,7 @@ mod_03_overall_summary_server <- function(id) {
               care_home = TRUE,
               value = table_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
-                dplyr::pull(ITEMS_PER_PATIENT),
+                dplyr::pull(SDC_ITEMS_PER_PATIENT),
               icon = "prescription"
             ),
           ),
@@ -198,7 +252,7 @@ mod_03_overall_summary_server <- function(id) {
               care_home = FALSE,
               value = table_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
-                dplyr::pull(ITEMS_PER_PATIENT),
+                dplyr::pull(SDC_ITEMS_PER_PATIENT),
               icon = "prescription"
             )
           )
@@ -219,7 +273,7 @@ mod_03_overall_summary_server <- function(id) {
               care_home = TRUE,
               value = table_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
-                dplyr::pull(UNIQUE_MEDICINES_PER_PATIENT),
+                dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT),
               icon = "pills"
             )
           ),
@@ -229,7 +283,7 @@ mod_03_overall_summary_server <- function(id) {
               care_home = FALSE,
               value = table_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
-                dplyr::pull(UNIQUE_MEDICINES_PER_PATIENT),
+                dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT),
               icon = "pills"
             )
           )
@@ -250,7 +304,7 @@ mod_03_overall_summary_server <- function(id) {
               care_home = TRUE,
               value = table_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
-                dplyr::pull(PCT_PATIENTS_TEN_OR_MORE),
+                dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE),
               icon = "pills"
             )
           ),
@@ -260,8 +314,16 @@ mod_03_overall_summary_server <- function(id) {
               care_home = FALSE,
               value = table_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
-                dplyr::pull(PCT_PATIENTS_TEN_OR_MORE),
+                dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE),
               icon = "pills"
+            )
+          )
+        ),
+        fluidRow(
+          col_12(
+            p(
+              style = "font-size: 12px; text-align: right; padding-right: 15px;",
+              patients_in_na_sub_breakdown_text()
             )
           )
         )

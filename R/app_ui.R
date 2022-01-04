@@ -43,8 +43,8 @@ app_ui <- function(request) {
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "05_items_and_cost_per_bnf_chapter_and_section_chart",
-                mod_05_items_and_cost_per_bnf_chapter_and_section_chart_ui("05_items_and_cost_per_bnf_chapter_and_section_chart_ui_1")
+                id = "05_items_and_cost_per_bnf",
+                mod_05_items_and_cost_per_bnf_ui("05_items_and_cost_per_bnf_ui_1")
               )
             )
           )
