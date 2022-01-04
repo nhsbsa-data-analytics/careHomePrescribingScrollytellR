@@ -310,10 +310,12 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
         ) %>%
         highcharter::hc_subtitle(
           useHTML = TRUE,
-          text = '<span style = "color:#005EB8; font-size: 20px"> &bull; </span> <b>
-      <span style = font-size: 35px"> older care home patients </span>
-      </b> <span style = "color:#768692; font-size: 20px"> &bull;
-      </span> <b> <span style = font-size: 35px"> older non-care home patients </span>'
+          text = 
+            "
+            <span style = 'color:#005EB8; font-size: 20px'> &bull; </span> <b> <span style = font-size: 35px'> older care home patients </span> </b> 
+            <span style = 'color:#768692; font-size: 20px'> &bull; </span> <b> <span style = font-size: 35px'> older non-care home patients </span>
+            ",
+          align = "center"
         ) %>%
         highcharter::hc_chart(inverted = TRUE) %>%
         theme_nhsbsa() %>%
