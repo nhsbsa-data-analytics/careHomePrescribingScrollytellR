@@ -38,11 +38,11 @@ patients_by_imd_df <- patients_by_imd_db %>%
   collect() %>%
   mutate(
     SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
-    SDC_TOTAL_PATIENTS = 
+    SDC_TOTAL_PATIENTS =
       ifelse(SDC == 1, NA_integer_, round(TOTAL_PATIENTS, -1)),
     SDC_PCT_PATIENTS =
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS))
-  ) %>% 
+  ) %>%
   select(-c(SDC, TOTAL_PATIENTS, PCT_PATIENTS))
 
 # Add to data-raw/

@@ -131,7 +131,6 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
 
     # On the first iteration initialise the table
     items_and_cost_per_patient_by_breakdown_and_ch_flag_db <- tmp_db
-    
   } else {
 
     # Union results to initialised table
@@ -140,10 +139,9 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       y = tmp_db
     )
   }
-  
 }
 
-# Collect 
+# Collect
 items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
   items_and_cost_per_patient_by_breakdown_and_ch_flag_db %>%
   collect()
@@ -153,28 +151,28 @@ items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
   items_and_cost_per_patient_by_breakdown_and_ch_flag_df %>%
   tidyr::complete(
     # Every year month
-    YEAR_MONTH, 
+    YEAR_MONTH,
     # Only breakdowns that already exist
-    tidyr::nesting(BREAKDOWN, SUB_BREAKDOWN_CODE, SUB_BREAKDOWN_NAME), 
+    tidyr::nesting(BREAKDOWN, SUB_BREAKDOWN_CODE, SUB_BREAKDOWN_NAME),
     # Every CH flag
     CH_FLAG,
     fill = list(TOTAL_PATIENTS = 0)
-  ) 
+  )
 
 # Apply SDC to the metrics based on the total patients
 items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
   items_and_cost_per_patient_by_breakdown_and_ch_flag_df %>%
   mutate(
     SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
-    SDC_ITEMS_PER_PATIENT = 
+    SDC_ITEMS_PER_PATIENT =
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(ITEMS_PER_PATIENT)),
     SDC_COST_PER_PATIENT =
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(COST_PER_PATIENT))
-  ) %>% 
+  ) %>%
   select(-SDC)
 
 # Format for highcharter
-items_and_cost_per_patient_by_breakdown_and_ch_flag_df <- 
+items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
   items_and_cost_per_patient_by_breakdown_and_ch_flag_df %>%
   careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
 

@@ -69,14 +69,12 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
 
     # Limit based on metric
     items_and_cost_per_bnf_chapter_and_section_df <- reactive({
-      
       req(input$metric)
-      
+
       careHomePrescribingScrollytellR::items_and_cost_per_bnf_chapter_and_section_df %>%
         dplyr::filter(METRIC == input$metric)
-
     })
-    
+
     # Add a download button
     mod_download_server(
       id = "download_items_and_cost_per_bnf_chapter_and_section_chart",
@@ -116,9 +114,8 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
 
     # Format data for highcharter
     plot_df <- reactive({
-      
       req(input$metric)
-      
+
       dplyr::bind_rows(
         # BNF chapter
         items_and_cost_per_bnf_chapter_and_section_df_1() %>%
@@ -152,14 +149,12 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
           )
       ) %>%
         highcharter::list_parse()
-      
     })
 
 
     output$items_and_cost_per_bnf_chapter_and_section_chart <- highcharter::renderHighchart({
-      
       req(input$metric)
-      
+
       # Create the shared part of the chart first
       chart <- highcharter::highchart() %>%
         highcharter::hc_chart(type = "treemap") %>%
@@ -194,10 +189,9 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
         highcharter::hc_subtitle(
           text = "Click points to drill down to BNF Section level"
         )
-      
+
       # Add the tooltip based on the metric
       if (input$metric == "Items") {
-        
         chart %>%
           highcharter::hc_title(
             text = "Number and % of prescription items by BNF Chapter and Section",
@@ -208,31 +202,29 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
             formatter = htmlwidgets::JS(
               "
               function() {
-              
+
                 if (this.point.parent == null) {
-                
-                  outHTML = 
+
+                  outHTML =
                     '<b> % of total items: </b>' + this.point.value + '%' + '<br>'
 
                 } else {
-                
-                  outHTML = 
+
+                  outHTML =
                     '<b> % of total items in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + this.point.value + '%' + '<br>'
 
                 }
-                
-                outHTML = outHTML + 
+
+                outHTML = outHTML +
                   '<b> Number of items: </b>' + Highcharts.numberFormat(this.point.value_total, 0)
-                
-                return(outHTML)            
-              
+
+                return(outHTML)
+
               }
               "
             )
           )
-        
       } else {
-        
         chart %>%
           highcharter::hc_title(
             text = "Number and % of drug cost by BNF Chapter and Section",
@@ -243,42 +235,38 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
             formatter = htmlwidgets::JS(
               "
               function() {
-              
+
                 if (this.point.parent == null) {
-                
-                  outHTML = 
+
+                  outHTML =
                     '<b> % of total Net Ingredient Cost (NIC (£)): </b>' + this.point.value + '%' + '<br>'
 
                 } else {
-                  
-                  outHTML = 
+
+                  outHTML =
                     '<b> % of total NIC in </b>' + '<b>' + this.point.parent + '</b>'+ ': ' + this.point.value + '%' + '<br>'
 
                 }
-                
+
                 outHTML = outHTML +
                   '<b> Total NIC (£): </b>' + '£' + Highcharts.numberFormat(this.point.value_total, 0)
-                  
+
                 return(outHTML)
-                
+
               }
             "
             )
           )
-        
-      } 
-      
+      }
     })
 
 
     # Process for the dumbbell chart
     items_and_cost_per_bnf_paragraph_df <- reactive({
-      
       req(input$metric)
-      
+
       careHomePrescribingScrollytellR::items_and_cost_per_bnf_paragraph_df %>%
         dplyr::filter(METRIC == input$metric)
-      
     })
 
     # Add a download button
@@ -287,10 +275,9 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
       filename = "items_and_cost_per_bnf_paragraph_df.csv",
       export_data = items_and_cost_per_bnf_paragraph_df()
     )
-    
+
     # Need to work on it
     output$items_and_cost_per_bnf_paragraph_chart <- highcharter::renderHighchart({
-      
       req(input$metric)
 
       title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
@@ -310,9 +297,9 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
         ) %>%
         highcharter::hc_subtitle(
           useHTML = TRUE,
-          text = 
+          text =
             "
-            <span style = 'color:#005EB8; font-size: 20px'> &bull; </span> <b> <span style = font-size: 35px'> older care home patients </span> </b> 
+            <span style = 'color:#005EB8; font-size: 20px'> &bull; </span> <b> <span style = font-size: 35px'> older care home patients </span> </b>
             <span style = 'color:#768692; font-size: 20px'> &bull; </span> <b> <span style = font-size: 35px'> older non-care home patients </span>
             ",
           align = "center"
@@ -343,14 +330,14 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
           formatter = htmlwidgets::JS(
             "
             function() {
-            
-              outHTML = 
-                '<b>' + this.point.BNF_PARAGRAPH + '</b> <br>' + 
-                'Older care home patients: ' + '<b>' + this.point.high + '%' + '</b> <br>' + 
+
+              outHTML =
+                '<b>' + this.point.BNF_PARAGRAPH + '</b> <br>' +
+                'Older care home patients: ' + '<b>' + this.point.high + '%' + '</b> <br>' +
                 'Older non-care home patients: ' + '<b>' + this.point.low + '%' + '</b>'
-                
+
               return(outHTML)
-              
+
             }
             "
           )

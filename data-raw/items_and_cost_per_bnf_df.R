@@ -99,32 +99,32 @@ items_and_cost_per_bnf_chapter_and_section_df <-
   )
 
 # Apply SDC to total and percentage columns and drop them
-items_and_cost_per_bnf_chapter_and_section_df <- 
+items_and_cost_per_bnf_chapter_and_section_df <-
   items_and_cost_per_bnf_chapter_and_section_df %>%
   mutate(
     across(
-      .cols = starts_with("TOTAL"), 
+      .cols = starts_with("TOTAL"),
       .fns = ~ round(.x, digits = -3),
       .names = "SDC_{col}"
     ),
     across(
-      .cols = starts_with("PCT"), 
+      .cols = starts_with("PCT"),
       .fns = ~ janitor::round_half_up(.x),
       .names = "SDC_{col}"
     )
-  ) %>% 
+  ) %>%
   select(-c(starts_with("TOTAL"), starts_with("PCT")))
 
 # Reorder cols
-items_and_cost_per_bnf_chapter_and_section_df <- 
+items_and_cost_per_bnf_chapter_and_section_df <-
   items_and_cost_per_bnf_chapter_and_section_df %>%
   select(
-    METRIC, 
-    BNF_CHAPTER, 
-    SDC_TOTAL_LEVEL_1, 
-    SDC_PCT_LEVEL_1, 
+    METRIC,
+    BNF_CHAPTER,
+    SDC_TOTAL_LEVEL_1,
+    SDC_PCT_LEVEL_1,
     BNF_SECTION,
-    SDC_TOTAL_LEVEL_2, 
+    SDC_TOTAL_LEVEL_2,
     SDC_PCT_LEVEL_2
   )
 
@@ -140,7 +140,7 @@ items_and_cost_per_bnf_paragraph_db <- fact_db %>%
     cols = -c(CH_FLAG, BNF_PARAGRAPH),
     names_to = "METRIC",
     values_to = "TOTAL"
-  ) 
+  )
 
 # For each metric, get the top 20 paragraphs for care homes
 top_20_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
@@ -158,7 +158,7 @@ items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
 items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
   group_by(METRIC, CH_FLAG) %>%
   mutate(PCT = TOTAL / sum(TOTAL) * 100) %>%
-  ungroup() %>% 
+  ungroup() %>%
   select(-TOTAL)
 
 # Pivot wider by care home flag
@@ -179,11 +179,11 @@ items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_db %>%
 items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_df %>%
   mutate(
     across(
-      .cols = starts_with("PCT"), 
+      .cols = starts_with("PCT"),
       .fns = ~ janitor::round_half_up(.x),
       .names = "SDC_{col}"
     )
-  ) %>% 
+  ) %>%
   select(-starts_with("PCT"))
 
 # Add to data-raw/

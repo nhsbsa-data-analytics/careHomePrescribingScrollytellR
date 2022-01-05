@@ -95,7 +95,7 @@ fact_db <- fact_db %>%
 
 # Loop over each breakdown and aggregate
 for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
-  
+
   # Extract the breakdown cols
   breakdown_cols <-
     careHomePrescribingScrollytellR::breakdowns[[breakdown_name]]
@@ -145,7 +145,7 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
     ) %>%
     ungroup() %>%
     mutate(
-      PCT_PATIENTS_TEN_OR_MORE = 
+      PCT_PATIENTS_TEN_OR_MORE =
         PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS_CHAPTER_TEN * 100
     )
 
@@ -174,7 +174,6 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
 
     # On the first iteration initialise the table
     unique_medicines_per_patient_by_breakdown_and_ch_flag_db <- tmp_db
-    
   } else {
 
     # Union results to initialised table
@@ -183,7 +182,6 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       y = tmp_db
     )
   }
-  
 }
 
 # Collect
@@ -196,33 +194,33 @@ unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
   unique_medicines_per_patient_by_breakdown_and_ch_flag_df %>%
   tidyr::complete(
     # Every year month
-    YEAR_MONTH, 
+    YEAR_MONTH,
     # Only breakdowns that already exist
-    tidyr::nesting(BREAKDOWN, SUB_BREAKDOWN_CODE, SUB_BREAKDOWN_NAME), 
+    tidyr::nesting(BREAKDOWN, SUB_BREAKDOWN_CODE, SUB_BREAKDOWN_NAME),
     # Every CH flag
     CH_FLAG,
     fill = list(
       TOTAL_PATIENTS_CHAPTER_TEN = 0,
       PATIENTS_TEN_OR_MORE = 0,
     )
-  ) 
+  )
 
-# Apply SDC to the metrics based on the total patients adn total patients 10 or 
+# Apply SDC to the metrics based on the total patients adn total patients 10 or
 # more
 unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
   unique_medicines_per_patient_by_breakdown_and_ch_flag_df %>%
   mutate(
     SDC = ifelse(TOTAL_PATIENTS_CHAPTER_TEN %in% c(1, 2, 3, 4), 1, 0),
-    SDC_UNIQUE_MEDICINES_PER_PATIENT = 
+    SDC_UNIQUE_MEDICINES_PER_PATIENT =
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(UNIQUE_MEDICINES_PER_PATIENT)),
     SDC = ifelse(PATIENTS_TEN_OR_MORE %in% c(1, 2, 3, 4), 1, 0),
     SDC_PCT_PATIENTS_TEN_OR_MORE =
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS_TEN_OR_MORE))
-  ) %>% 
+  ) %>%
   select(-SDC)
 
 # Format for highcharter
-unique_medicines_per_patient_by_breakdown_and_ch_flag_df <- 
+unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
   unique_medicines_per_patient_by_breakdown_and_ch_flag_df %>%
   careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
 
