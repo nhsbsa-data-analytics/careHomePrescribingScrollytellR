@@ -18,10 +18,57 @@ mod_02_demographics_ui <- function(id) {
       ),
       "receiving prescriptions"
     ),
+    br(),
+    h6("The older care home population fluctuates"),
+    br(),
     p(
-      "Overall, we estimate a monthly average of ", tags$b("285 thousand care home patients,"),
-      " aged 65+ years receiving prescriptions, which accounts for around 4% of patients aged 65+ ",
-      "years receiving prescription items each month."
+      "We estimate 460 thousand patients aged 65+ years received at least one ",
+      "prescription item in a care home during 2020/21 and an average of 285 ",
+      "thousand in any given month. This difference in numbers is explained ",
+      "by two key factors:"
+    ),
+    tags$ul(
+      tags$li(
+        "The population is not stable – some patients become 65 years during ",
+        "the year, some move in or out of the care home and others may die."
+      ),
+      tags$li(
+        "Not all care home patients receive a prescription in every month ",
+        "they are in a care home - we estimate around 7 in 10 do."
+      )
+    ),
+    p(
+      "For this reason, when we calculate per resident estimates, we use the ",
+      "monthly average number of care home patients."
+    ),
+    p(
+      "The chart shows the prescribing status of each of these 460 thousand ",
+      "patients by month during 2020/21."
+    ),
+    fluidRow(
+      align = "center",
+      style = "background-color: #FFFFFF;",
+      h6(
+        "Monthly prescribing status of patients aged 65+ who recieved at ",
+        "least one prescription item in a care home during 2020/21"
+      ),
+      highcharter::highchartOutput(
+        outputId = ns("patients_by_prescribing_status_chart"),
+        height = "500px",
+        width = "900px"
+      )
+    ),
+    br(),
+    h6(
+      "We estimate two thirds of older care home patients are female and 6 in ",
+      "10 are aged 85+ years"
+    ),
+    br(),
+    p(
+      "Overall, we estimate a monthly average of ", 
+      tags$b("285 thousand care home patients,"), " aged 65+ years receiving ",
+      "prescriptions, which accounts for around 4% of patients aged 65+ years ",
+      "receiving prescription items each month."
     ),
     p(
       "Overall, the age and gender profile is broadly comparable to",
@@ -65,7 +112,7 @@ mod_02_demographics_ui <- function(id) {
       ),
       col_8(
         highcharter::highchartOutput(
-          outputId = ns("demographics"),
+          outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
           height = "500px",
           width = "900px"
         )
@@ -111,7 +158,7 @@ mod_02_demographics_ui <- function(id) {
     br(),
     h6("Deprivation quintile of older care home patients in England (2020/21)"),
     highcharter::highchartOutput(
-      outputId = ns("imd_quintile_chart"),
+      outputId = ns("index_of_multiple_deprivation_chart"),
       height = "400px",
       width = "900px"
     )
@@ -129,7 +176,29 @@ mod_02_demographics_server <- function(id) {
     hcoptslang <- getOption("highcharter.lang")
     hcoptslang$thousandsSep <- ","
     options(highcharter.lang = hcoptslang)
-
+    
+    # Patients by prescribing status chart
+    
+    # Create chart
+    output$patients_by_prescribing_status_chart <- 
+      highcharter::renderHighchart({
+      
+        careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
+          dplyr::mutate(YEAR_MONTH = as.character(YEAR_MONTH)) %>%
+          highcharter::hchart(
+            type = "column", 
+            highcharter::hcaes(
+              x = YEAR_MONTH, 
+              y = TOTAL_PATIENTS, 
+              group = PRESCRIBING_STATUS
+            ), 
+            stacking = "normal"
+          )
+        
+      })
+    
+    # Patients by age band and gender chart
+    
     # Filter to relevant data for this chart
     patients_by_geography_and_gender_and_age_band_df <-
       careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
@@ -221,7 +290,6 @@ mod_02_demographics_server <- function(id) {
       prettyNum(monthly_average, big.mark = ",", scientific = FALSE)
     })
 
-
     # Format for highcharter
     plot_df <- reactive({
       req(input$geography)
@@ -276,8 +344,9 @@ mod_02_demographics_server <- function(id) {
     })
 
     # Pyramid plot for age band and gender
-    output$demographics <-
+    output$patients_by_geography_and_gender_and_age_band_chart <-
       highcharter::renderHighchart({
+        
         req(input$geography)
         req(input$geography)
         req(input$count_or_percentage)
@@ -402,8 +471,10 @@ mod_02_demographics_server <- function(id) {
       )
     })
 
+    # Patients by IMD chart
+    
     # Add IMD chart
-    output$imd_quintile_chart <- highcharter::renderHighchart({
+    output$index_of_multiple_deprivation_chart <- highcharter::renderHighchart({
 
       # highcharter plot
       careHomePrescribingScrollytellR::index_of_multiple_deprivation_df %>%
@@ -413,7 +484,7 @@ mod_02_demographics_server <- function(id) {
           stacking = "normal"
         ) %>%
         theme_nhsbsa() %>%
-        highcharter::hc_legend(enabled = F) %>%
+        highcharter::hc_legend(enabled = FALSE) %>%
         highcharter::hc_xAxis(
           categories = c(NA, "1<br>Most<br>deprived", 2:4, "5<br>Least<br>deprived"),
           title = list(text = "Deprivation quintile")
