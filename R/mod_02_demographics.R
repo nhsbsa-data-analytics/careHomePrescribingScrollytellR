@@ -164,12 +164,12 @@ mod_02_demographics_server <- function(id, export_data) {
     # Patients by geography and gender and age band
     
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
-
+    
     # Filter the data based on the geography
     patients_by_geography_and_gender_and_age_band_geography_df <- reactive({
       
       req(input$geography)
-
+      
       careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
         dplyr::filter(GEOGRAPHY == input$geography)
       
@@ -197,9 +197,9 @@ mod_02_demographics_server <- function(id, export_data) {
           )
         ) %>%
         dplyr::pull(SDC_TOTAL_PATIENTS)
-
+      
     })
-
+    
     # Update the list of choices for sub geography from the non NA rows in the 
     # geography dataframe
     observeEvent(
@@ -215,7 +215,7 @@ mod_02_demographics_server <- function(id, export_data) {
         )
       }
     )
-
+    
     # Filter the data based on the sub geography
     patients_by_geography_and_gender_and_age_band_sub_geography_df <- reactive({
       
@@ -330,7 +330,7 @@ mod_02_demographics_server <- function(id, export_data) {
       # Filter to non overall period
       non_overall_df <- 
         patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
-        dplyr::filter(YEAR_MONTH == "Overall")
+        dplyr::filter(YEAR_MONTH != "Overall")
       
       # Get the average monthly patients
       average_monthly_patients_df <- non_overall_df %>%
@@ -372,7 +372,7 @@ mod_02_demographics_server <- function(id, export_data) {
         ),
         p(
           id = "small",
-          "There are an estimated", tags$b(average_monthly_patients()), 
+          "There are an estimated", tags$b(prettyNum(average_monthly_patients(), big.mark = ",", scientific = FALSE)), 
           "average number of monthly care home patients."
         )
       )
@@ -396,7 +396,7 @@ mod_02_demographics_server <- function(id, export_data) {
               "SUB_GEOGRAPHY_CODE",
               "GENDER",
               "AGE_BAND",
-             input$patients_by_geography_and_gender_and_age_band_metric
+              input$patients_by_geography_and_gender_and_age_band_metric
             )
           )
         )
@@ -410,7 +410,7 @@ mod_02_demographics_server <- function(id, export_data) {
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
       
-     patients_by_geography_and_gender_and_age_band_metric_df() %>%
+      patients_by_geography_and_gender_and_age_band_metric_df() %>%
         dplyr::filter(YEAR_MONTH == "Overall" & is.na(GENDER)) %>%
         # Format number
         dplyr::mutate(
@@ -435,10 +435,10 @@ mod_02_demographics_server <- function(id, export_data) {
         dplyr::filter(!is.na(GENDER))
       
     })
-
+    
     # Swap NAs for "c" for data download
     patients_by_geography_and_gender_and_age_band_download_df <- reactive({
-
+      
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
@@ -460,14 +460,14 @@ mod_02_demographics_server <- function(id, export_data) {
       filename = "patients_by_geography_and_gender_and_age_band_chart.csv",
       export_data = patients_by_geography_and_gender_and_age_band_download_df()
     )
-
+    
     # Pull the max value
     max_value <- reactive({
       
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-
+      
       max(
         patients_by_geography_and_gender_and_age_band_plot_df()[[
           input$patients_by_geography_and_gender_and_age_band_metric
@@ -476,7 +476,7 @@ mod_02_demographics_server <- function(id, export_data) {
       )
       
     })
-
+    
     # Format for highcharter animation.
     patients_by_geography_and_gender_and_age_band_plot_series_list <- reactive({
       
@@ -499,7 +499,7 @@ mod_02_demographics_server <- function(id, export_data) {
         dplyr::mutate(name = GENDER) %>%
         highcharter::list_parse()
     })
-
+    
     # Pyramid plot for age band and gender
     output$patients_by_geography_and_gender_and_age_band_chart <-
       highcharter::renderHighchart({
@@ -571,12 +571,12 @@ mod_02_demographics_server <- function(id, export_data) {
                   function() {
                     
                     outHTML = Math.abs(this.value)",
-                      switch(
-                        input$patients_by_geography_and_gender_and_age_band_metric,
-                        "SDC_TOTAL_PATIENTS" = " / 1000",
-                        "SDC_PCT_PATIENTS" = ""
-                      ),
-                      "
+                  switch(
+                    input$patients_by_geography_and_gender_and_age_band_metric,
+                    "SDC_TOTAL_PATIENTS" = " / 1000",
+                    "SDC_PCT_PATIENTS" = ""
+                  ),
+                  "
                     return outHTML
                     
                   }
@@ -597,12 +597,12 @@ mod_02_demographics_server <- function(id, export_data) {
                     '<b>Gender: </b>' + this.series.name + '<br>' +
                     '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
                     ",
-                    switch(
-                      input$patients_by_geography_and_gender_and_age_band_metric,
-                      "SDC_TOTAL_PATIENTS" = "'<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0)",
-                      "SDC_PCT_PATIENTS" = "'<b>Percentage of patients: </b>' + Math.abs(this.point.y) + '%'"
-                    ),
-                    "
+                switch(
+                  input$patients_by_geography_and_gender_and_age_band_metric,
+                  "SDC_TOTAL_PATIENTS" = "'<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0)",
+                  "SDC_PCT_PATIENTS" = "'<b>Percentage of patients: </b>' + Math.abs(this.point.y) + '%'"
+                ),
+                "
                   return outHTML
     
                 }
@@ -737,12 +737,12 @@ mod_02_demographics_server <- function(id, export_data) {
                 
                 outHTML = 
                 '<b>Quintile: </b>' + parseInt(this.point.category) + '<br>' + ",
-                switch(
-                  input$patients_by_imd_metric,
-                  "SDC_TOTAL_PATIENTS" = "'<b>Total patients: </b>' + Highcharts.numberFormat(this.point.y, 0)",
-                  "SDC_PCT_PATIENTS" = "'<b>Percentage of patients: </b>' + this.point.y + '%'"
-                ),
-                "
+              switch(
+                input$patients_by_imd_metric,
+                "SDC_TOTAL_PATIENTS" = "'<b>Total patients: </b>' + Highcharts.numberFormat(this.point.y, 0)",
+                "SDC_PCT_PATIENTS" = "'<b>Percentage of patients: </b>' + this.point.y + '%'"
+              ),
+              "
                 return outHTML
               
               }
@@ -752,7 +752,7 @@ mod_02_demographics_server <- function(id, export_data) {
         )
       
     })
-
+    
   })
 }
 
