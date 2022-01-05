@@ -99,11 +99,11 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
   # Monthly cost per patient by care home flag
   tmp_db <- tmp_db %>%
     summarise(
-      TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01),
       TOTAL_ITEMS = sum(ITEM_COUNT),
+      TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01),
       TOTAL_PATIENTS = n_distinct(NHS_NO),
-      COST_PER_PATIENT = sum(ITEM_PAY_DR_NIC * 0.01) / n_distinct(NHS_NO),
-      ITEMS_PER_PATIENT = sum(ITEM_COUNT) / n_distinct(NHS_NO)
+      ITEMS_PER_PATIENT = sum(ITEM_COUNT) / n_distinct(NHS_NO),
+      COST_PER_PATIENT = sum(ITEM_PAY_DR_NIC * 0.01) / n_distinct(NHS_NO)
     ) %>%
     ungroup()
 
@@ -119,8 +119,9 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
           CH_FLAG
         ) %>%
         summarise(
-          COST_PER_PATIENT = mean(COST_PER_PATIENT),
-          ITEMS_PER_PATIENT = mean(ITEMS_PER_PATIENT)
+          TOTAL_PATIENTS = mean(TOTAL_PATIENTS), # for SDC
+          ITEMS_PER_PATIENT = mean(ITEMS_PER_PATIENT),
+          COST_PER_PATIENT = mean(COST_PER_PATIENT)
         ) %>%
         ungroup()
     )
@@ -140,11 +141,40 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
   }
 }
 
-# Collect and format for highcharter
+# Collect
 items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
   items_and_cost_per_patient_by_breakdown_and_ch_flag_db %>%
-  collect() %>%
-  careHomePrescribingScrollytellR::format_data_raw(vars = "CH_FLAG")
+  collect()
+
+# Get all the possible combinations
+items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
+  items_and_cost_per_patient_by_breakdown_and_ch_flag_df %>%
+  tidyr::complete(
+    # Every year month
+    YEAR_MONTH,
+    # Only breakdowns that already exist
+    tidyr::nesting(BREAKDOWN, SUB_BREAKDOWN_CODE, SUB_BREAKDOWN_NAME),
+    # Every CH flag
+    CH_FLAG,
+    fill = list(TOTAL_PATIENTS = 0)
+  )
+
+# Apply SDC to the metrics based on the total patients
+items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
+  items_and_cost_per_patient_by_breakdown_and_ch_flag_df %>%
+  mutate(
+    SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+    SDC_ITEMS_PER_PATIENT =
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(ITEMS_PER_PATIENT)),
+    SDC_COST_PER_PATIENT =
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(COST_PER_PATIENT))
+  ) %>%
+  select(-SDC)
+
+# Format for highcharter
+items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
+  items_and_cost_per_patient_by_breakdown_and_ch_flag_df %>%
+  careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
 
 # Add to data-raw/
 usethis::use_data(

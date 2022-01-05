@@ -93,21 +93,12 @@ fact_db <- fact_db %>%
   ) %>%
   mutate(OVERALL = "Overall") # dummy col
 
-# Define the breakdowns
-breakdowns <- list(
-  "Overall" = "OVERALL",
-  "Geographical - Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
-  "Geographical - STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
-  "Geographical - Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_NAME"),
-  "Demographical - Gender" = "GENDER",
-  "Demographical - Age Band" = "AGE_BAND"
-)
-
 # Loop over each breakdown and aggregate
-for (breakdown_name in names(breakdowns)) {
+for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
 
   # Extract the breakdown cols
-  breakdown_cols <- breakdowns[[breakdown_name]]
+  breakdown_cols <-
+    careHomePrescribingScrollytellR::breakdowns[[breakdown_name]]
 
   # Group the table
   tmp_db <- fact_db %>%
@@ -150,13 +141,13 @@ for (breakdown_name in names(breakdowns)) {
       PATIENTS_TEN_OR_MORE = n_distinct(
         ifelse(UNIQUE_MEDICINES >= 10, NHS_NO, NA)
       ),
-      TOTAL_PATIENTS = n_distinct(NHS_NO)
+      TOTAL_PATIENTS_CHAPTER_TEN = n_distinct(NHS_NO)
     ) %>%
     ungroup() %>%
     mutate(
-      PCT_PATIENTS_TEN_OR_MORE = PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS * 100
-    ) %>%
-    select(-c(PATIENTS_TEN_OR_MORE, TOTAL_PATIENTS))
+      PCT_PATIENTS_TEN_OR_MORE =
+        PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS_CHAPTER_TEN * 100
+    )
 
   # Add overall mean (average monthly per patient is the metric)
   tmp_db <- tmp_db %>%
@@ -170,7 +161,9 @@ for (breakdown_name in names(breakdowns)) {
           CH_FLAG
         ) %>%
         summarise(
+          TOTAL_PATIENTS_CHAPTER_TEN = mean(TOTAL_PATIENTS_CHAPTER_TEN),
           UNIQUE_MEDICINES_PER_PATIENT = mean(UNIQUE_MEDICINES_PER_PATIENT),
+          PATIENTS_TEN_OR_MORE = mean(PATIENTS_TEN_OR_MORE),
           PCT_PATIENTS_TEN_OR_MORE = mean(PCT_PATIENTS_TEN_OR_MORE)
         ) %>%
         ungroup()
@@ -191,12 +184,45 @@ for (breakdown_name in names(breakdowns)) {
   }
 }
 
-# Collect and format for highcharter
+# Collect
 unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
   unique_medicines_per_patient_by_breakdown_and_ch_flag_db %>%
-  collect() %>%
-  careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
+  collect()
 
+# Get all the possible combinations
+unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
+  unique_medicines_per_patient_by_breakdown_and_ch_flag_df %>%
+  tidyr::complete(
+    # Every year month
+    YEAR_MONTH,
+    # Only breakdowns that already exist
+    tidyr::nesting(BREAKDOWN, SUB_BREAKDOWN_CODE, SUB_BREAKDOWN_NAME),
+    # Every CH flag
+    CH_FLAG,
+    fill = list(
+      TOTAL_PATIENTS_CHAPTER_TEN = 0,
+      PATIENTS_TEN_OR_MORE = 0,
+    )
+  )
+
+# Apply SDC to the metrics based on the total patients adn total patients 10 or
+# more
+unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
+  unique_medicines_per_patient_by_breakdown_and_ch_flag_df %>%
+  mutate(
+    SDC = ifelse(TOTAL_PATIENTS_CHAPTER_TEN %in% c(1, 2, 3, 4), 1, 0),
+    SDC_UNIQUE_MEDICINES_PER_PATIENT =
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(UNIQUE_MEDICINES_PER_PATIENT)),
+    SDC = ifelse(PATIENTS_TEN_OR_MORE %in% c(1, 2, 3, 4), 1, 0),
+    SDC_PCT_PATIENTS_TEN_OR_MORE =
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS_TEN_OR_MORE))
+  ) %>%
+  select(-SDC)
+
+# Format for highcharter
+unique_medicines_per_patient_by_breakdown_and_ch_flag_df <-
+  unique_medicines_per_patient_by_breakdown_and_ch_flag_df %>%
+  careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
 
 # Add to data-raw/
 usethis::use_data(

@@ -10,6 +10,11 @@
 #' @export
 theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
 
+  # Set the thousands seperator
+  hcoptslang <- getOption("highcharter.lang")
+  hcoptslang$thousandsSep <- ","
+  options(highcharter.lang = hcoptslang)
+
   # Load theme from nhsbsaR package
   theme_nhsbsa_hc <- nhsbsaR::theme_nhsbsa_hc(family = "Frutiger W01")
 

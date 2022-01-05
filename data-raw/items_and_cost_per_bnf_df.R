@@ -9,21 +9,16 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 year_month_db <- con %>%
   tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
 
-# Filter to 2020/2021
+# Filter to 2020/2021 FY
 year_month_db <- year_month_db %>%
   filter(FINANCIAL_YEAR == "2020/2021") %>%
   select(YEAR_MONTH)
 
-# Create a lazy table from the care home FACT table
-fact_db <- con %>%
-  tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
-
 # Create a lazy table from the drug DIM table
 drug_db <- con %>%
-  tbl(from = in_schema("SB_DIM", "CDR_DRUG_BNF_DIM"))
+  tbl(from = in_schema("DIM", "CDR_EP_DRUG_BNF_DIM"))
 
-# Combine the chapter / section / paragraph and description and filter to 2020/2021
-
+# Combine the chapter / section / paragraph and description and filter to FY
 drug_db <- drug_db %>%
   inner_join(year_month_db) %>%
   mutate(
@@ -37,17 +32,14 @@ drug_db <- drug_db %>%
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
-# Join the drug information to the FACT table and limit to care home patients
-
+# Join the drug information to the FACT table
 fact_db <- fact_db %>%
-  # filter(CH_FLAG == 1) %>%
   inner_join(
     y = drug_db,
     by = c("YEAR_MONTH", "CALC_PREC_DRUG_RECORD_ID" = "RECORD_ID")
   )
 
 # Get the total items and cost per BNF chapter, section (level 2)
-# care home filter in here as fact_db will be needed for top 20 drugs
 items_and_cost_per_bnf_chapter_and_section_df <- fact_db %>%
   filter(CH_FLAG == 1) %>%
   group_by(BNF_CHAPTER, BNF_SECTION) %>%
@@ -76,9 +68,8 @@ items_and_cost_per_bnf_chapter_and_section_df <-
   ungroup() %>%
   # Add %s
   group_by(METRIC, BNF_CHAPTER) %>%
-  mutate(PRP_LEVEL_2 = TOTAL_LEVEL_2 / sum(TOTAL_LEVEL_2)) %>%
+  mutate(PCT_LEVEL_2 = TOTAL_LEVEL_2 / sum(TOTAL_LEVEL_2) * 100) %>%
   ungroup()
-
 
 # Get the total items and cost per BNF chapter (level 1)
 items_and_cost_per_bnf_chapter_df <-
@@ -97,7 +88,7 @@ items_and_cost_per_bnf_chapter_df <- items_and_cost_per_bnf_chapter_df %>%
   ungroup() %>%
   # Add %s
   group_by(METRIC) %>%
-  mutate(PRP_LEVEL_1 = TOTAL_LEVEL_1 / sum(TOTAL_LEVEL_1)) %>%
+  mutate(PCT_LEVEL_1 = TOTAL_LEVEL_1 / sum(TOTAL_LEVEL_1) * 100) %>%
   ungroup()
 
 # Join the two datasets together
@@ -107,96 +98,100 @@ items_and_cost_per_bnf_chapter_and_section_df <-
     y = items_and_cost_per_bnf_chapter_and_section_df
   )
 
-# This step is for another data frame for dumbbell chart
+# Apply SDC to total and percentage columns and drop them
+items_and_cost_per_bnf_chapter_and_section_df <-
+  items_and_cost_per_bnf_chapter_and_section_df %>%
+  mutate(
+    across(
+      .cols = starts_with("TOTAL"),
+      .fns = ~ round(.x, digits = -3),
+      .names = "SDC_{col}"
+    ),
+    across(
+      .cols = starts_with("PCT"),
+      .fns = ~ janitor::round_half_up(.x),
+      .names = "SDC_{col}"
+    )
+  ) %>%
+  select(-c(starts_with("TOTAL"), starts_with("PCT")))
 
-ch_items_and_cost_per_bnf_para_df <- fact_db %>%
+# Reorder cols
+items_and_cost_per_bnf_chapter_and_section_df <-
+  items_and_cost_per_bnf_chapter_and_section_df %>%
+  select(
+    METRIC,
+    BNF_CHAPTER,
+    SDC_TOTAL_LEVEL_1,
+    SDC_PCT_LEVEL_1,
+    BNF_SECTION,
+    SDC_TOTAL_LEVEL_2,
+    SDC_PCT_LEVEL_2
+  )
+
+# Get the total items and cost per BNF paragraph to use for the dumbbell chart
+items_and_cost_per_bnf_paragraph_db <- fact_db %>%
   group_by(CH_FLAG, BNF_PARAGRAPH) %>%
   summarise(
     Items = sum(ITEM_COUNT),
     `Drug Cost` = sum(ITEM_PAY_DR_NIC * 0.01)
   ) %>%
   ungroup() %>%
-  collect() %>%
-  group_by(CH_FLAG) %>%
+  tidyr::pivot_longer(
+    cols = -c(CH_FLAG, BNF_PARAGRAPH),
+    names_to = "METRIC",
+    values_to = "TOTAL"
+  )
+
+# For each metric, get the top 20 paragraphs for care homes
+top_20_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
+  filter(CH_FLAG == 1) %>%
+  group_by(METRIC) %>%
+  slice_max(order_by = TOTAL, n = 20) %>%
+  ungroup() %>%
+  select(METRIC, BNF_PARAGRAPH)
+
+# Filter items and cost dataframe by these paragraphs
+items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
+  inner_join(y = top_20_paragraph_db)
+
+# Calculate the percentage of each group and drop the total column
+items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
+  group_by(METRIC, CH_FLAG) %>%
+  mutate(PCT = TOTAL / sum(TOTAL) * 100) %>%
+  ungroup() %>%
+  select(-TOTAL)
+
+# Pivot wider by care home flag
+items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
+  mutate(CH_FLAG = ifelse(CH_FLAG == 0L, "PCT_NON_CH", "PCT_CH")) %>%
+  tidyr::pivot_wider(
+    names_from = CH_FLAG,
+    values_from = PCT
+  )
+
+# Reorder the columns, sort and collect
+items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_db %>%
+  relocate(METRIC, BNF_PARAGRAPH, PCT_CH) %>%
+  arrange(METRIC, desc(PCT_CH)) %>%
+  collect()
+
+# Apply SDC to percentage columns and drop normal columns as they aren't needed
+items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_df %>%
   mutate(
-    Items_p = Items / sum(Items),
-    Cost_p = `Drug Cost` / sum(`Drug Cost`)
+    across(
+      .cols = starts_with("PCT"),
+      .fns = ~ janitor::round_half_up(.x),
+      .names = "SDC_{col}"
+    )
   ) %>%
-  ungroup()
-
-# create Items related table
-# top 20 in ch
-ch_items_top_20_df <- ch_items_and_cost_per_bnf_para_df %>%
-  filter(CH_FLAG == 1) %>%
-  slice_max(Items_p, n = 20) %>%
-  select(CH_FLAG, BNF_PARAGRAPH, Items_p) %>%
-  mutate(CH_P = Items_p) %>%
-  select(-c(Items_p, CH_FLAG))
-
-# pull top 20 to filter from non care home
-top20 <- ch_items_top_20_df %>%
-  pull(BNF_PARAGRAPH)
-
-# get equivalent percent in none-ch
-none_ch_item_20_df <- ch_items_and_cost_per_bnf_para_df %>%
-  filter(CH_FLAG == 0) %>%
-  filter(BNF_PARAGRAPH %in% top20) %>%
-  select(CH_FLAG, BNF_PARAGRAPH, Items_p) %>%
-  mutate(NONE_CH_P = Items_p) %>%
-  select(-c(Items_p, CH_FLAG))
-
-# item df for dumbbell chart
-top20_item_df <- ch_items_top_20_df %>%
-  inner_join(
-    y = none_ch_item_20_df,
-    by = "BNF_PARAGRAPH"
-  ) %>%
-  mutate(METRIC = "Items")
-
-
-# repeat again for NIC
-
-ch_nic_top_20_df <- ch_items_and_cost_per_bnf_para_df %>%
-  filter(CH_FLAG == 1) %>%
-  slice_max(Cost_p, n = 20) %>%
-  select(CH_FLAG, BNF_PARAGRAPH, Cost_p) %>%
-  mutate(CH_P = Cost_p) %>%
-  select(-c(Cost_p, CH_FLAG))
-
-# pull top 20 to filter from non care home
-top20_nic <- ch_nic_top_20_df %>%
-  pull(BNF_PARAGRAPH)
-
-# get equivalent percent in none-ch
-none_ch_cost_20_df <- ch_items_and_cost_per_bnf_para_df %>%
-  filter(CH_FLAG == 0) %>%
-  filter(BNF_PARAGRAPH %in% top20_nic) %>%
-  select(CH_FLAG, BNF_PARAGRAPH, Cost_p) %>%
-  mutate(NONE_CH_P = Cost_p) %>%
-  select(-c(Cost_p, CH_FLAG))
-
-top20_cost_df <- ch_nic_top_20_df %>%
-  inner_join(
-    y = none_ch_cost_20_df,
-    by = "BNF_PARAGRAPH"
-  ) %>%
-  mutate(METRIC = "Drug Cost")
-
-# stack them
-top20_df <- bind_rows(top20_cost_df, top20_item_df)
-
-
+  select(-starts_with("PCT"))
 
 # Add to data-raw/
 usethis::use_data(
   items_and_cost_per_bnf_chapter_and_section_df,
   overwrite = TRUE
 )
-
-usethis::use_data(
-  top20_df,
-  overwrite = TRUE
-)
+usethis::use_data(items_and_cost_per_bnf_paragraph_df, overwrite = TRUE)
 
 # Disconnect from database
 DBI::dbDisconnect(con)

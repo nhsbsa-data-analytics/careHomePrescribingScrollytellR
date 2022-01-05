@@ -70,7 +70,6 @@ fact_db <- fact_db %>%
   ) %>%
   mutate(OVERALL = "Overall") # dummy col
 
-
 # Loop over each geography and aggregate
 for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
 
@@ -84,8 +83,13 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
       GEOGRAPHY = geography_name,
       SUB_GEOGRAPHY_CODE = NA,
       SUB_GEOGRAPHY_NAME = !!dplyr::sym(geography_cols[1]),
-      GENDER,
-      AGE_BAND
+      GENDER = ifelse(is.na(SUB_GEOGRAPHY_NAME), NA, GENDER),
+      # NA if SUB_GEOGRAPHY_NAME is NA or if GENDER is NA
+      AGE_BAND = ifelse(
+        test = is.na(SUB_GEOGRAPHY_NAME) | is.na(GENDER),
+        yes = NA,
+        AGE_BAND
+      )
     )
 
   # If there are two columns then override the code as the second column
@@ -120,6 +124,12 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
         ungroup()
     )
 
+  # Calculate the percentage
+  tmp_db <- tmp_db %>%
+    group_by(across(-c(GENDER, AGE_BAND, TOTAL_PATIENTS))) %>%
+    mutate(PCT_PATIENTS = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
+    ungroup()
+
   # Either create the table or append to it
   if (geography_name == "Overall") {
 
@@ -135,10 +145,40 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
   }
 }
 
-# Collect and format for highcharter
+# Collect
 patients_by_geography_and_gender_and_age_band_df <-
   patients_by_geography_and_gender_and_age_band_db %>%
-  collect() %>%
+  collect()
+
+# Get all the possible combinations
+patients_by_geography_and_gender_and_age_band_df <-
+  patients_by_geography_and_gender_and_age_band_df %>%
+  tidyr::complete(
+    # Every year month
+    YEAR_MONTH,
+    # Only geographies that already exist
+    tidyr::nesting(GEOGRAPHY, SUB_GEOGRAPHY_CODE, SUB_GEOGRAPHY_NAME),
+    # Only age band and gender combinations that exist (so we only have NA age
+    # band for NA genders)
+    tidyr::nesting(AGE_BAND, GENDER),
+    fill = list(TOTAL_PATIENTS = 0, PCT_PATIENTS = 0)
+  )
+
+# Apply SDC to total patients and percentage of patients
+patients_by_geography_and_gender_and_age_band_df <-
+  patients_by_geography_and_gender_and_age_band_df %>%
+  mutate(
+    SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+    SDC_TOTAL_PATIENTS =
+      ifelse(SDC == 1, NA_integer_, round(TOTAL_PATIENTS, -1)),
+    SDC_PCT_PATIENTS =
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS))
+  ) %>%
+  select(-SDC)
+
+# Format factors etc and sort
+patients_by_geography_and_gender_and_age_band_df <-
+  patients_by_geography_and_gender_and_age_band_df %>%
   careHomePrescribingScrollytellR::format_data_raw(
     vars = c("GENDER", "AGE_BAND")
   )
