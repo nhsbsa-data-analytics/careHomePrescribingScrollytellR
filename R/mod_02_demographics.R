@@ -58,6 +58,9 @@ mod_02_demographics_ui <- function(id) {
         width = "900px"
       )
     ),
+    mod_download_ui(
+      id = ns("download_patients_by_prescribing_status_chart")
+    ),
     br(),
     h6(
       "We estimate two thirds of older care home patients are female and 6 in ",
@@ -210,6 +213,26 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Patients by prescribing status chart
     
+    # Swap NAs for "c" for data download
+    patients_by_prescribing_status_df <- reactive({
+
+      careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
+        dplyr::mutate(
+          SDC_TOTAL_PATIENTS := ifelse(
+            test = is.na(SDC_TOTAL_PATIENTS),
+            yes = "c",
+            no = as.character(SDC_TOTAL_PATIENTS)
+          )
+        )
+    })
+    
+    # Add a download button
+    mod_download_server(
+      id = "download_patients_by_prescribing_status_chart",
+      filename = "patients_by_prescribing_status_chart.csv",
+      export_data = patients_by_prescribing_status_df()
+    )
+    
     # Create chart
     output$patients_by_prescribing_status_chart <- 
       highcharter::renderHighchart({
@@ -220,12 +243,14 @@ mod_02_demographics_server <- function(id, export_data) {
             type = "column", 
             highcharter::hcaes(
               x = YEAR_MONTH, 
-              y = TOTAL_PATIENTS, 
+              y = SDC_TOTAL_PATIENTS, 
               group = PRESCRIBING_STATUS
             ), 
             stacking = "normal"
           ) %>%
-          theme_nhsbsa()
+          theme_nhsbsa() %>%
+          highcharter::hc_xAxis(title = list(text = "Year Month")) %>%
+          highcharter::hc_yAxis(title = list(text = "Total patients"))
         
       })
     

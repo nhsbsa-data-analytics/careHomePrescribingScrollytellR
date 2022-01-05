@@ -76,6 +76,15 @@ patients_by_prescribing_status_df <-
     )
   )
 
+# Apply SDC to total patient
+patients_by_prescribing_status_df <- patients_by_prescribing_status_df %>%
+  mutate(
+    SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+    SDC_TOTAL_PATIENTS =
+      ifelse(SDC == 1, NA_integer_, round(TOTAL_PATIENTS, -1))
+  ) %>%
+  select(-c(SDC, TOTAL_PATIENTS))
+
 # Add to data
 usethis::use_data(patients_by_prescribing_status_df, overwrite = TRUE)
 
