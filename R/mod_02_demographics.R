@@ -18,9 +18,7 @@ mod_02_demographics_ui <- function(id) {
       ),
       "receiving prescriptions"
     ),
-    br(),
     h6("The older care home population fluctuates"),
-    br(),
     p(
       "We estimate 460 thousand patients aged 65+ years received at least one ",
       "prescription item in a care home during 2020/21 and an average of 285 ",
@@ -29,10 +27,12 @@ mod_02_demographics_ui <- function(id) {
     ),
     tags$ul(
       tags$li(
+        style = "font-size: 16pt;",
         "The population is not stable – some patients become 65 years during ",
         "the year, some move in or out of the care home and others may die."
       ),
       tags$li(
+        style = "font-size: 16pt;",
         "Not all care home patients receive a prescription in every month ",
         "they are in a care home - we estimate around 7 in 10 do."
       )
@@ -63,7 +63,6 @@ mod_02_demographics_ui <- function(id) {
       "We estimate two thirds of older care home patients are female and 6 in ",
       "10 are aged 85+ years"
     ),
-    br(),
     p(
       "Overall, we estimate a monthly average of ", 
       tags$b("285 thousand care home patients,"), " aged 65+ years receiving ",
@@ -225,7 +224,8 @@ mod_02_demographics_server <- function(id, export_data) {
               group = PRESCRIBING_STATUS
             ), 
             stacking = "normal"
-          )
+          ) %>%
+          theme_nhsbsa()
         
       })
     

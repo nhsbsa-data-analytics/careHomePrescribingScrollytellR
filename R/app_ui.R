@@ -47,10 +47,10 @@ app_ui <- function(request) {
                 mod_05_items_and_cost_per_bnf_ui("05_items_and_cost_per_bnf_ui_1")
               ),
               br(),
-              scrollytell::scrolly_section(
-                id = "additional_ch_plots",
-                mod_add_two_plots_ui("add_two_plots_ui_1")
-              )
+              #scrollytell::scrolly_section(
+              #  id = "additional_ch_plots",
+              #  mod_add_two_plots_ui("add_two_plots_ui_1")
+              #)
             )
           )
         )
