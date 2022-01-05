@@ -99,35 +99,31 @@ mod_04_estimated_care_home_patients_server <- function(id) {
         CH_FLAG == "Care home"
       ) %>%
       dplyr::mutate(BREAKDOWN = gsub("Geographical - ", "", BREAKDOWN))
-    
-    # Rename the cols 
+
+    # Rename the cols
     combined_df <- combined_df %>%
       dplyr::rename(
         GEOGRAPHY = BREAKDOWN,
         SUB_GEOGRAPHY_NAME = SUB_BREAKDOWN_NAME,
         SUB_GEOGRAPHY_CODE = SUB_BREAKDOWN_CODE
       )
-    
+
     # Filter the data based on the geography
     combined_geography_df <- reactive({
-      
       req(input$geography)
-      
+
       combined_df %>%
         dplyr::filter(GEOGRAPHY == input$geography)
-      
     })
-    
+
     # Pull the metric we are interested in
-    metric_df <- reactive ({
-      
+    metric_df <- reactive({
       req(input$geography)
       req(input$metric)
-      
+
       combined_geography_df() %>%
         dplyr::mutate(
-          TOTAL_PATIENTS = switch(
-            input$metric,
+          TOTAL_PATIENTS = switch(input$metric,
             "PCT_PATIENTS_TEN_OR_MORE" = PATIENTS_TEN_OR_MORE,
             TOTAL_PATIENTS
           )
@@ -135,7 +131,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
         dplyr::select(
           dplyr::all_of(
             c(
-              "YEAR_MONTH", 
+              "YEAR_MONTH",
               "GEOGRAPHY",
               "SUB_GEOGRAPHY_NAME",
               "SUB_GEOGRAPHY_CODE",
@@ -144,38 +140,33 @@ mod_04_estimated_care_home_patients_server <- function(id) {
             )
           )
         )
-      
     })
-    
+
     # Filter out unknown sub geographys for the plot
     plot_df <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       metric_df() %>%
         dplyr::filter(!is.na(SUB_GEOGRAPHY_NAME))
-      
     })
-    
+
     # Swap NAs for "c" for data download
     download_df <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       plot_df() %>%
         dplyr::mutate(
           "{input$metric}" := ifelse(
-            test = is.na(.data[[input$metric]]) & TOTAL_PATIENTS > 0, 
-            yes = "c", 
+            test = is.na(.data[[input$metric]]) & TOTAL_PATIENTS > 0,
+            yes = "c",
             no = as.character(.data[[input$metric]])
           )
         ) %>%
         dplyr::select(-TOTAL_PATIENTS)
-      
     })
-    
+
     # Add a download button
     mod_download_server(
       id = "download_map_chart",
@@ -185,7 +176,6 @@ mod_04_estimated_care_home_patients_server <- function(id) {
 
     # Filter the map data based on the breakdown and format for the plot
     map_list <- reactive({
-      
       req(input$geography)
       req(input$metric)
 
@@ -193,32 +183,26 @@ mod_04_estimated_care_home_patients_server <- function(id) {
         dplyr::filter(GEOGRAPHY == input$geography) %>%
         geojsonsf::sf_geojson() %>%
         jsonlite::fromJSON(simplifyVector = FALSE)
-      
     })
 
     # Pull the min value
     min_value <- reactive({
-      
       req(input$geography)
       req(input$metric)
 
       min(plot_df()[[input$metric]], na.rm = TRUE)
-      
     })
 
     # Pull the max value
     max_value <- reactive({
-      
       req(input$geography)
       req(input$metric)
 
       max(plot_df()[[input$metric]], na.rm = TRUE)
-      
     })
 
     # Format for highchater animation
     plot_sequence_series <- reactive({
-      
       req(input$geography)
       req(input$metric)
 
@@ -233,10 +217,9 @@ mod_04_estimated_care_home_patients_server <- function(id) {
 
     # Create plot
     output$map_chart <- highcharter::renderHighchart({
-      
       req(input$geography)
       req(input$metric)
-      
+
       highcharter::highchart(type = "map") %>%
         highcharter::hc_chart(marginBottom = 100) %>%
         highcharter::hc_add_series(
@@ -268,9 +251,7 @@ mod_04_estimated_care_home_patients_server <- function(id) {
           enableMouseWheelZoom = TRUE,
           enableDoubleClickZoom = TRUE
         )
-      
     })
-    
   })
 }
 

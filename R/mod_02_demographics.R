@@ -69,7 +69,7 @@ mod_02_demographics_ui <- function(id) {
           inputId = ns("patients_by_geography_and_gender_and_age_band_metric"),
           label = NULL,
           choices = c(
-            "Count" = "SDC_TOTAL_PATIENTS", 
+            "Count" = "SDC_TOTAL_PATIENTS",
             "Percentage" = "SDC_PCT_PATIENTS"
           ),
           inline = TRUE,
@@ -136,7 +136,7 @@ mod_02_demographics_ui <- function(id) {
         inputId = ns("patients_by_imd_metric"),
         label = NULL,
         choices = c(
-          "Count" = "SDC_TOTAL_PATIENTS", 
+          "Count" = "SDC_TOTAL_PATIENTS",
           "Percentage" = "SDC_PCT_PATIENTS"
         ),
         inline = TRUE,
@@ -160,26 +160,23 @@ mod_02_demographics_ui <- function(id) {
 mod_02_demographics_server <- function(id, export_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Patients by geography and gender and age band
-    
+
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
-    
+
     # Filter the data based on the geography
     patients_by_geography_and_gender_and_age_band_geography_df <- reactive({
-      
       req(input$geography)
-      
+
       careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
         dplyr::filter(GEOGRAPHY == input$geography)
-      
     })
-    
+
     # Pull the number of NA sub geography patients
     patients_in_na_sub_geography <- reactive({
-      
       req(input$geography)
-      
+
       patients_by_geography_and_gender_and_age_band_geography_df() %>%
         dplyr::filter(
           is.na(SUB_GEOGRAPHY_NAME),
@@ -191,16 +188,15 @@ mod_02_demographics_server <- function(id, export_data) {
         # Format number
         dplyr::mutate(
           SDC_TOTAL_PATIENTS = ifelse(
-            test = is.na(SDC_TOTAL_PATIENTS), 
-            yes = "c", 
+            test = is.na(SDC_TOTAL_PATIENTS),
+            yes = "c",
             no = as.character(SDC_TOTAL_PATIENTS)
           )
         ) %>%
         dplyr::pull(SDC_TOTAL_PATIENTS)
-      
     })
-    
-    # Update the list of choices for sub geography from the non NA rows in the 
+
+    # Update the list of choices for sub geography from the non NA rows in the
     # geography dataframe
     observeEvent(
       eventExpr = patients_by_geography_and_gender_and_age_band_geography_df(),
@@ -208,79 +204,74 @@ mod_02_demographics_server <- function(id, export_data) {
         freezeReactiveValue(input, "sub_geography")
         updateSelectInput(
           inputId = "sub_geography",
-          choices = 
+          choices =
             patients_by_geography_and_gender_and_age_band_geography_df()$SUB_GEOGRAPHY_NAME %>%
-            na.omit() %>%
-            unique()
+              na.omit() %>%
+              unique()
         )
       }
     )
-    
+
     # Filter the data based on the sub geography
     patients_by_geography_and_gender_and_age_band_sub_geography_df <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
-      
+
       patients_by_geography_and_gender_and_age_band_geography_df() %>%
         dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography)
-      
     })
-    
+
     # Pull overall percentage of female patients
     percentage_female_patients <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
-      
+
       # Filter to overall period
-      overall_df <- 
+      overall_df <-
         patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
         dplyr::filter(YEAR_MONTH == "Overall")
-      
+
       # Get the total female patients
       female_patients_df <- overall_df %>%
         dplyr::summarise(
-          TOTAL_FEMALE_PATIENTS = 
+          TOTAL_FEMALE_PATIENTS =
             sum(ifelse(!is.na(GENDER) & GENDER == "Female", TOTAL_PATIENTS, 0)),
           TOTAL_PATIENTS = sum(TOTAL_PATIENTS)
         )
-      
+
       # Calculate the percentage of patients
       female_patients_df <- female_patients_df %>%
         dplyr::mutate(
           PCT_FEMALE_PATIENTS = TOTAL_FEMALE_PATIENTS / TOTAL_PATIENTS * 100
         )
-      
+
       # Apply SDC to percentage of female patients
       female_patients_df <- female_patients_df %>%
         dplyr::mutate(
           SDC = ifelse(TOTAL_FEMALE_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
           SDC_PCT_FEMALE_PATIENTS =
             ifelse(
-              test = SDC == 1, 
+              test = SDC == 1,
               yes = "c",
               no = as.character(janitor::round_half_up(PCT_FEMALE_PATIENTS))
             )
         )
-      
+
       # Pull percentage
       female_patients_df %>%
         dplyr::pull(SDC_PCT_FEMALE_PATIENTS)
-      
     })
-    
+
     # Pull percentage of elderly female patients
     percentage_elderly_female_patients <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
-      
+
       # Filter to overall period
-      overall_df <- 
+      overall_df <-
         patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
         dplyr::filter(YEAR_MONTH == "Overall")
-      
+
       # Get the total elderly female patients
       elderly_female_patients_df <- overall_df %>%
         dplyr::summarise(
@@ -293,104 +284,98 @@ mod_02_demographics_server <- function(id, export_data) {
           ),
           TOTAL_PATIENTS = sum(TOTAL_PATIENTS)
         )
-      
+
       # Calculate the percentage of patients
       elderly_female_patients_df <- elderly_female_patients_df %>%
         dplyr::mutate(
-          PCT_ELDERLY_FEMALE_PATIENTS = 
+          PCT_ELDERLY_FEMALE_PATIENTS =
             TOTAL_ELDERLY_FEMALE_PATIENTS / TOTAL_PATIENTS * 100
         )
-      
+
       # Apply SDC to percentage of elderly female patients
       elderly_female_patients_df <- elderly_female_patients_df %>%
         dplyr::mutate(
           SDC = ifelse(TOTAL_ELDERLY_FEMALE_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
           SDC_PCT_ELDERLY_FEMALE_PATIENTS =
             ifelse(
-              test = SDC == 1, 
-              yes = "c", 
+              test = SDC == 1,
+              yes = "c",
               no = as.character(
                 janitor::round_half_up(PCT_ELDERLY_FEMALE_PATIENTS)
               )
             )
         )
-      
+
       # Pull percentage
       elderly_female_patients_df %>%
         dplyr::pull(SDC_PCT_ELDERLY_FEMALE_PATIENTS)
-      
     })
-    
+
     # Pull average monthly patients
     average_monthly_patients <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
-      
+
       # Filter to non overall period
-      non_overall_df <- 
+      non_overall_df <-
         patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
         dplyr::filter(YEAR_MONTH != "Overall")
-      
+
       # Get the average monthly patients
       average_monthly_patients_df <- non_overall_df %>%
         dplyr::summarise(AVERAGE_TOTAL_PATIENTS = sum(TOTAL_PATIENTS) / 12)
-      
+
       # Apply SDC to average monthly patients
       average_monthly_patients_df <- average_monthly_patients_df %>%
         dplyr::mutate(
           SDC = ifelse(AVERAGE_TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
           SDC_AVERAGE_TOTAL_PATIENTS =
             ifelse(
-              test = SDC == 1, 
-              yes = "c", 
+              test = SDC == 1,
+              yes = "c",
               no = as.character(round(AVERAGE_TOTAL_PATIENTS, -1))
             )
         )
-      
+
       # Pull average
       average_monthly_patients_df %>%
         dplyr::pull(SDC_AVERAGE_TOTAL_PATIENTS)
-      
     })
-    
+
     # Create the reactive text to go inside the chart
     output$chart_text <- shiny::renderUI({
-      
       req(input$geography)
       req(input$sub_geography)
-      
+
       tagList(
         p(
           id = "medium",
           ifelse(input$sub_geography == "Overall", "", "In "),
-          input$sub_geography, " we estimate", 
+          input$sub_geography, " we estimate",
           tags$b(paste0(percentage_female_patients(), "%")), "of care home ",
-          "patients are females and", 
+          "patients are females and",
           tags$b(paste0(percentage_elderly_female_patients(), "%")), "are ",
           "females aged 85 or over."
         ),
         p(
           id = "small",
-          "There are an estimated", tags$b(prettyNum(average_monthly_patients(), big.mark = ",", scientific = FALSE)), 
+          "There are an estimated", tags$b(prettyNum(average_monthly_patients(), big.mark = ",", scientific = FALSE)),
           "average number of monthly care home patients."
         )
       )
-      
     })
-    
+
     # Pull the metric we are interested in
-    patients_by_geography_and_gender_and_age_band_metric_df <- reactive ({
-      
+    patients_by_geography_and_gender_and_age_band_metric_df <- reactive({
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-      
+
       patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
         dplyr::select(
           dplyr::all_of(
             c(
-              "YEAR_MONTH", 
+              "YEAR_MONTH",
               "GEOGRAPHY",
               "SUB_GEOGRAPHY_NAME",
               "SUB_GEOGRAPHY_CODE",
@@ -400,96 +385,86 @@ mod_02_demographics_server <- function(id, export_data) {
             )
           )
         )
-      
     })
-    
+
     # Pull the NA gender patients
     patients_with_na_gender <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-      
+
       patients_by_geography_and_gender_and_age_band_metric_df() %>%
         dplyr::filter(YEAR_MONTH == "Overall" & is.na(GENDER)) %>%
         # Format number
         dplyr::mutate(
           "{input$patients_by_geography_and_gender_and_age_band_metric}" := ifelse(
-            test = is.na(.data[[input$patients_by_geography_and_gender_and_age_band_metric]]), 
-            yes = "c", 
+            test = is.na(.data[[input$patients_by_geography_and_gender_and_age_band_metric]]),
+            yes = "c",
             no = as.character(.data[[input$patients_by_geography_and_gender_and_age_band_metric]])
           )
         ) %>%
         dplyr::pull(.data[[input$patients_by_geography_and_gender_and_age_band_metric]])
-      
     })
-    
+
     # Filter out unknown genders for the plot
     patients_by_geography_and_gender_and_age_band_plot_df <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-      
+
       patients_by_geography_and_gender_and_age_band_metric_df() %>%
         dplyr::filter(!is.na(GENDER))
-      
     })
-    
+
     # Swap NAs for "c" for data download
     patients_by_geography_and_gender_and_age_band_download_df <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-      
+
       patients_by_geography_and_gender_and_age_band_plot_df() %>%
         dplyr::mutate(
           "{input$patients_by_geography_and_gender_and_age_band_metric}" := ifelse(
-            test = is.na(.data[[input$patients_by_geography_and_gender_and_age_band_metric]]), 
-            yes = "c", 
+            test = is.na(.data[[input$patients_by_geography_and_gender_and_age_band_metric]]),
+            yes = "c",
             no = as.character(.data[[input$patients_by_geography_and_gender_and_age_band_metric]])
           )
         )
-      
     })
-    
+
     # Add a download button
     mod_download_server(
       id = "download_patients_by_geography_and_gender_and_age_band_chart",
       filename = "patients_by_geography_and_gender_and_age_band_chart.csv",
       export_data = patients_by_geography_and_gender_and_age_band_download_df()
     )
-    
+
     # Pull the max value
     max_value <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-      
+
       max(
         patients_by_geography_and_gender_and_age_band_plot_df()[[
-          input$patients_by_geography_and_gender_and_age_band_metric
-        ]], 
+        input$patients_by_geography_and_gender_and_age_band_metric
+        ]],
         na.rm = TRUE
       )
-      
     })
-    
+
     # Format for highcharter animation.
     patients_by_geography_and_gender_and_age_band_plot_series_list <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-      
+
       patients_by_geography_and_gender_and_age_band_plot_df() %>%
         # Negate male values so the butterfly chart works
         dplyr::mutate(
-          value = 
-            .data[[input$patients_by_geography_and_gender_and_age_band_metric]] * 
-            ifelse(GENDER == "Male", 1, -1)
+          value =
+            .data[[input$patients_by_geography_and_gender_and_age_band_metric]] *
+              ifelse(GENDER == "Male", 1, -1)
         ) %>%
         dplyr::group_by(AGE_BAND, GENDER) %>%
         dplyr::do(data = list(sequence = .$value)) %>%
@@ -499,15 +474,14 @@ mod_02_demographics_server <- function(id, export_data) {
         dplyr::mutate(name = GENDER) %>%
         highcharter::list_parse()
     })
-    
+
     # Pyramid plot for age band and gender
     output$patients_by_geography_and_gender_and_age_band_chart <-
       highcharter::renderHighchart({
-        
         req(input$geography)
         req(input$sub_geography)
         req(input$patients_by_geography_and_gender_and_age_band_metric)
-        
+
         # Create the base of the chart
         chart <- highcharter::highchart() %>%
           highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
@@ -515,17 +489,16 @@ mod_02_demographics_server <- function(id, export_data) {
             x = patients_by_geography_and_gender_and_age_band_plot_series_list()
           ) %>%
           highcharter::hc_motion(
-            labels = 
+            labels =
               patients_by_geography_and_gender_and_age_band_plot_df()$YEAR_MONTH %>%
-              unique(),
+                unique(),
             series = c(0, 1)
           ) %>%
           theme_nhsbsa(palette = "gender") %>%
           highcharter::hc_caption(
             text = paste0(
               "This chart excludes ",
-              switch(
-                input$sub_geography,
+              switch(input$sub_geography,
                 "Overall" = "",
                 paste(
                   patients_in_na_sub_geography(), "patients with an unknown ",
@@ -534,8 +507,7 @@ mod_02_demographics_server <- function(id, export_data) {
                 )
               ),
               patients_with_na_gender(),
-              switch(
-                input$patients_by_geography_and_gender_and_age_band_metric,
+              switch(input$patients_by_geography_and_gender_and_age_band_metric,
                 "SDC_TOTAL_PATIENTS" = " ",
                 "SDC_PCT_PATIENTS" = "% "
               ),
@@ -545,18 +517,17 @@ mod_02_demographics_server <- function(id, export_data) {
           ) %>%
           highcharter::hc_xAxis(
             title = list(text = "Age Band"),
-            categories = 
+            categories =
               patients_by_geography_and_gender_and_age_band_plot_df()$AGE_BAND %>%
-              unique() %>%
-              sort(),
+                unique() %>%
+                sort(),
             reversed = FALSE
           ) %>%
           highcharter::hc_yAxis(
             title = list(
               text = paste(
                 "Estimated number of care home patients",
-                switch(
-                  input$patients_by_geography_and_gender_and_age_band_metric,
+                switch(input$patients_by_geography_and_gender_and_age_band_metric,
                   "SDC_TOTAL_PATIENTS" = "(thousands)",
                   "SDC_PCT_PATIENTS" = "as percentage of all care home patients (%)"
                 )
@@ -569,16 +540,15 @@ mod_02_demographics_server <- function(id, export_data) {
                 paste(
                   "
                   function() {
-                    
+
                     outHTML = Math.abs(this.value)",
-                  switch(
-                    input$patients_by_geography_and_gender_and_age_band_metric,
+                  switch(input$patients_by_geography_and_gender_and_age_band_metric,
                     "SDC_TOTAL_PATIENTS" = " / 1000",
                     "SDC_PCT_PATIENTS" = ""
                   ),
                   "
                     return outHTML
-                    
+
                   }
                   "
                 )
@@ -592,105 +562,94 @@ mod_02_demographics_server <- function(id, export_data) {
               paste0(
                 "
                 function() {
-                  
+
                   outHTML =
                     '<b>Gender: </b>' + this.series.name + '<br>' +
                     '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
                     ",
-                switch(
-                  input$patients_by_geography_and_gender_and_age_band_metric,
+                switch(input$patients_by_geography_and_gender_and_age_band_metric,
                   "SDC_TOTAL_PATIENTS" = "'<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0)",
                   "SDC_PCT_PATIENTS" = "'<b>Percentage of patients: </b>' + Math.abs(this.point.y) + '%'"
                 ),
                 "
                   return outHTML
-    
+
                 }
                 "
               )
             )
           )
-        
       })
-    
+
     # Patients by IMD
-    
+
     # Pull the metric we are interested in
-    patients_by_imd_metric_df <- reactive ({
-      
+    patients_by_imd_metric_df <- reactive({
       req(input$patients_by_imd_metric)
-      
+
       careHomePrescribingScrollytellR::patients_by_imd_df %>%
         dplyr::select(
           dplyr::all_of(c("IMD_QUINTILE", input$patients_by_imd_metric))
         )
-      
     })
-    
+
     # Pull the NA IMD patients
     patients_in_na_imd <- reactive({
-      
       req(input$patients_by_imd_metric)
-      
+
       patients_by_imd_metric_df() %>%
         dplyr::filter(is.na(IMD_QUINTILE)) %>%
         # Format number
         dplyr::mutate(
           "{input$patients_by_imd_metric}" := ifelse(
-            test = is.na(.data[[input$patients_by_imd_metric]]), 
-            yes = "c", 
+            test = is.na(.data[[input$patients_by_imd_metric]]),
+            yes = "c",
             no = as.character(.data[[input$patients_by_imd_metric]])
           )
         ) %>%
         dplyr::pull(.data[[input$patients_by_imd_metric]])
-      
     })
-    
+
     # Filter out unknown IMDs for the plot
     patients_by_imd_plot_df <- reactive({
-      
       req(input$patients_by_imd_metric)
-      
+
       patients_by_imd_metric_df() %>%
         dplyr::filter(!is.na(IMD_QUINTILE))
-      
     })
-    
+
     # Swap NAs for "c" for data download
     patients_by_imd_download_df <- reactive({
-      
       req(input$patients_by_imd_metric)
-      
+
       patients_by_imd_plot_df() %>%
         dplyr::mutate(
           "{input$patients_by_imd_metric}" := ifelse(
-            test = is.na(.data[[input$patients_by_imd_metric]]), 
-            yes = "c", 
+            test = is.na(.data[[input$patients_by_imd_metric]]),
+            yes = "c",
             no = as.character(.data[[input$patients_by_imd_metric]])
           )
         )
-      
     })
-    
+
     # Add a download button
     mod_download_server(
       id = "download_patients_by_imd_chart",
       filename = "patients_by_imd_chart.csv",
       export_data = patients_by_imd_download_df()
     )
-    
-    
+
+
     # Add IMD chart
     output$patients_by_imd_chart <- highcharter::renderHighchart({
-      
       req(input$patients_by_imd_metric)
-      
+
       # highcharter plot
       patients_by_imd_plot_df() %>%
         highcharter::hchart(
           type = "column",
           highcharter::hcaes(
-            x = IMD_QUINTILE, 
+            x = IMD_QUINTILE,
             y = .data[[input$patients_by_imd_metric]]
           ),
           stacking = "normal"
@@ -698,10 +657,10 @@ mod_02_demographics_server <- function(id, export_data) {
         theme_nhsbsa() %>%
         highcharter::hc_caption(
           text = paste0(
-            "This chart excludes ", patients_in_na_imd(), 
+            "This chart excludes ", patients_in_na_imd(),
             ifelse(
-              test = input$patients_by_imd_metric == "SDC_TOTAL_PATIENTS", 
-              yes = " ", 
+              test = input$patients_by_imd_metric == "SDC_TOTAL_PATIENTS",
+              yes = " ",
               no = "% "
             ),
             "patients with an unknown IMD quintile."
@@ -719,8 +678,7 @@ mod_02_demographics_server <- function(id, export_data) {
         highcharter::hc_yAxis(
           title = list(
             text = paste(
-              switch(
-                input$patients_by_imd_metric,
+              switch(input$patients_by_imd_metric,
                 "SDC_TOTAL_PATIENTS" = "Number",
                 "SDC_PCT_PATIENTS" = "Percentage"
               ),
@@ -733,26 +691,23 @@ mod_02_demographics_server <- function(id, export_data) {
           formatter = highcharter::JS(
             paste0(
               "
-              function () { 
-                
-                outHTML = 
+              function () {
+
+                outHTML =
                 '<b>Quintile: </b>' + parseInt(this.point.category) + '<br>' + ",
-              switch(
-                input$patients_by_imd_metric,
+              switch(input$patients_by_imd_metric,
                 "SDC_TOTAL_PATIENTS" = "'<b>Total patients: </b>' + Highcharts.numberFormat(this.point.y, 0)",
                 "SDC_PCT_PATIENTS" = "'<b>Percentage of patients: </b>' + this.point.y + '%'"
               ),
               "
                 return outHTML
-              
+
               }
               "
             )
           )
         )
-      
     })
-    
   })
 }
 

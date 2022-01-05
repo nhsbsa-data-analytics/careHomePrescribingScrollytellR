@@ -88,7 +88,7 @@ mod_03_overall_summary_server <- function(id) {
     # Only interested in the overall period
     metric_df <- metric_df %>%
       dplyr::filter(YEAR_MONTH == "Overall")
-    
+
     # Format cost and percentage cols
     metric_df <- metric_df %>%
       dplyr::mutate(
@@ -100,68 +100,61 @@ mod_03_overall_summary_server <- function(id) {
 
     # Filter the data based on the breakdown
     breakdown_df <- reactive({
-      
       req(input$breakdown)
 
       metric_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown)
-      
     })
-    
+
     # Pull the text for the number of NA sub breakdown patients
     patients_in_na_sub_breakdown_text <- reactive({
-      
       req(input$breakdown)
-      
+
       # Filter to NA sub breakdown
       na_sub_breakdown_df <- breakdown_df() %>%
         dplyr::filter(is.na(SUB_BREAKDOWN_NAME))
-      
+
       # Apply SDC to total patients
       na_sub_breakdown_df <- na_sub_breakdown_df %>%
         dplyr::mutate(
           SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
-          SDC_TOTAL_PATIENTS = 
+          SDC_TOTAL_PATIENTS =
             ifelse(SDC == 1, NA_integer_, round(TOTAL_PATIENTS, -1))
         )
-      
+
       # Format the number
       na_sub_breakdown_df <- na_sub_breakdown_df %>%
         dplyr::mutate(
           SDC_TOTAL_PATIENTS = ifelse(
-            test = is.na(SDC_TOTAL_PATIENTS), 
-            yes = "c", 
+            test = is.na(SDC_TOTAL_PATIENTS),
+            yes = "c",
             no = as.character(SDC_TOTAL_PATIENTS)
           )
-        ) 
-      
+        )
+
       # Extract the values
       patients_in_na_sub_breakdown <- na_sub_breakdown_df %>%
         dplyr::pull(SDC_TOTAL_PATIENTS, CH_FLAG)
-      
+
       if (length(patients_in_na_sub_breakdown) == 2) {
         # If both care home and non care home exist
-        
+
         paste(
-          "This excludes", patients_in_na_sub_breakdown[1], "care home and", 
+          "This excludes", patients_in_na_sub_breakdown[1], "care home and",
           patients_in_na_sub_breakdown[2], "non care home patients with an ",
           "unknown sub breakdown."
         )
-        
       } else if (length(patients_in_na_sub_breakdown) == 1) {
         # If only one exists
         paste(
-          "This excludes", patients_in_na_sub_breakdown, 
+          "This excludes", patients_in_na_sub_breakdown,
           tolower(names(patients_in_na_sub_breakdown)), "patients with an ",
           "unknown sub breakdown."
         )
-        
       } else {
         # Nothing
         ""
-        
       }
-
     })
 
     # Update the list of choices for sub breakdown from the rows in breakdown
@@ -181,19 +174,16 @@ mod_03_overall_summary_server <- function(id) {
 
     # Filter the data based on the sub breakdown
     table_df <- reactive({
-      
       req(input$sub_breakdown)
 
       breakdown_df() %>%
         dplyr::filter(SUB_BREAKDOWN_NAME == input$sub_breakdown)
-      
     })
 
     # Create the table
     output$table <- renderUI({
-      
       req(input$sub_breakdown)
-      
+
       tagList(
         fluidRow(
           col_6(
