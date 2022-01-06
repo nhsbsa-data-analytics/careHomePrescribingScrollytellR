@@ -54,7 +54,7 @@ mod_02_demographics_ui <- function(id) {
       ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_prescribing_status_chart"),
-        height = "500px",
+        height = "350px",
         width = "900px"
       )
     ),
