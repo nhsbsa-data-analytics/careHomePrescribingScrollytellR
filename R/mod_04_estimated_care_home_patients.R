@@ -132,9 +132,9 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
 mod_04_estimated_care_home_patients_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Map
-    
+
     # Join the metrics together
     combined_map_df <-
       dplyr::full_join(
@@ -302,51 +302,48 @@ mod_04_estimated_care_home_patients_server <- function(id) {
           enableDoubleClickZoom = TRUE
         )
     })
-    
+
     # Cost per patient by gender and age band and care home flag line chart
-    
+
     # Combine the care home flag and gender into a joint metric
-    cost_per_patient_by_gender_and_age_band_and_ch_flag_df <- 
+    cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
       careHomePrescribingScrollytellR::cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
       dplyr::mutate(CH_FLAG_AND_GENDER = paste(CH_FLAG, GENDER, sep = " - "))
-    
+
     # Filter out unknown genders for the plot
     plot_line_df <- reactive({
-      
       cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
-        dplyr::filter(!is.na(GENDER))
-      
+        dplyr::filter(!is.na(GENDER)) # need to keep the unknown for the caveat
     })
-    
+
+
+
     # Create chart
-    output$cost_per_patient_by_gender_and_age_band_and_ch_flag_chart <- 
+    output$cost_per_patient_by_gender_and_age_band_and_ch_flag_chart <-
       highcharter::renderHighchart({
-      
-      highcharter::hchart(
-        object = plot_line_df(),
-        type = "line",
-        highcharter::hcaes(
-          x = AGE_BAND, 
-          y = SDC_COST_PER_PATIENT, 
-          group = CH_FLAG_AND_GENDER
-        )
-      ) %>% 
-        highcharter::hc_yAxis(
-          min = 0,
-          max = 150,
-          title = list(text = "Mean Cost per Patient (£)")
-        ) %>% 
-        highcharter::hc_xAxis(title = list(text = "Patient Age Band")) %>% 
-        highcharter::hc_title(text = "Mean Care Home Patient Drug Cost per 
-        Age Band for the Financial Year 2020/21") %>% 
-        highcharter::hc_tooltip(
-          pointFormat = "<b>{point.CH_FLAG_AND_GENDER}:</b> £{point.COST_PER_PATIENT:,.2f}"
-        ) %>% 
-        highcharter::hc_credits(enabled = T) %>% 
-        highcharter::hc_colors(c("darkgreen", "lightgreen", "darkblue", "lightblue"))
-      
-    })
-    
+        highcharter::hchart(
+          object = plot_line_df(),
+          type = "line",
+          highcharter::hcaes(
+            x = AGE_BAND,
+            y = SDC_COST_PER_PATIENT,
+            group = CH_FLAG_AND_GENDER
+          )
+        ) %>%
+          highcharter::hc_yAxis(
+            min = 0,
+            max = 150,
+            title = list(text = "Mean Cost per Patient (£)")
+          ) %>%
+          highcharter::hc_xAxis(title = list(text = "Patient Age Band")) %>%
+          highcharter::hc_title(text = "Mean Care Home Patient Drug Cost per
+        Age Band for the Financial Year 2020/21") %>%
+          highcharter::hc_tooltip(
+            pointFormat = "<b>{point.CH_FLAG_AND_GENDER}:</b> £{point.COST_PER_PATIENT:,.2f}"
+          ) %>%
+          highcharter::hc_credits(enabled = T) %>%
+          highcharter::hc_colors(c("darkgreen", "lightgreen", "darkblue", "lightblue"))
+      })
   })
 }
 

@@ -15,15 +15,15 @@ cip_db <- con %>%
 # Limit FACT table to NHS numbers with at least some care home prescribing
 care_home_patient_fact_db <- fact_db %>%
   semi_join(
-    y = fact_db %>% 
-      filter(CH_FLAG == 1L) %>% 
+    y = fact_db %>%
+      filter(CH_FLAG == 1L) %>%
       select(NHS_NO),
     copy = TRUE
   )
 
 # Get the max care home flag for each patient in each month
 patients_by_prescribing_status_db <- care_home_patient_fact_db %>%
-  group_by(YEAR_MONTH, NHS_NO) %>% 
+  group_by(YEAR_MONTH, NHS_NO) %>%
   summarise(CH_FLAG = max(CH_FLAG)) %>%
   ungroup()
 
@@ -34,7 +34,7 @@ patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>%
 # Indicate if patient is deceased
 patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>%
   left_join(
-    y = cip_db %>% 
+    y = cip_db %>%
       mutate(
         YMOD = as.integer(TO_CHAR(DOD, "YYYYMM")),
         DECEASED = 1L # Join where YEAR_MONTH after YMOD
@@ -43,7 +43,7 @@ patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>%
     sql_on = "LHS.NHS_NO = RHS.NHS_NO AND LHS.YEAR_MONTH > RHS.YMOD",
     suffix = c("", ".y"),
     copy = TRUE
-  ) %>% 
+  ) %>%
   select(-NHS_NO.y)
 
 # Categorise the patient in each year month
@@ -59,7 +59,7 @@ patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>%
   )
 
 # Aggregate to year month
-patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>% 
+patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>%
   count(YEAR_MONTH, PRESCRIBING_STATUS, name = "TOTAL_PATIENTS") %>%
   arrange(YEAR_MONTH, PRESCRIBING_STATUS)
 
@@ -70,8 +70,8 @@ patients_by_prescribing_status_df <-
   # Move deceased to last factor
   mutate(
     PRESCRIBING_STATUS = forcats::fct_relevel(
-      PRESCRIBING_STATUS, 
-      "Deceased", 
+      PRESCRIBING_STATUS,
+      "Deceased",
       after = Inf
     )
   )
