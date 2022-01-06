@@ -97,7 +97,9 @@ cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
 # Format for highcharter
 cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
   cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
-  careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
+  careHomePrescribingScrollytellR::format_data_raw(
+    c("GENDER", "AGE_BAND", "CH_FLAG")
+  )
 
 # Add to data-raw/
 usethis::use_data(
