@@ -30,6 +30,17 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
       "there is a smaller proportion of care home patients aged 90+ years on ",
       "10 more drugs than other age groups."
     ),
+    h6(
+      "The estimated average monthly drug cost for older care home patients ",
+      "is around twice that for non-care home patients"
+    ),
+    p(
+      "Overall, older care home patients receive around 1.4 times more ",
+      "prescription items and unique medicines per patient per month than ",
+      "non-care home older patients. At around twice the drug cost. These ",
+      "prescribing metrics vary by age, gender and geography. The chart below ",
+      "allows you to explore them."
+    ),
     br(),
     fluidRow(
       style = "background-color: #FFFFFF;",
@@ -74,7 +85,36 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
     ),
     mod_download_ui(
       id = ns("download_map_chart")
-    )
+    ),
+    br(),
+    h6(
+      "The estimated average monthly drug cost is highest for care home ",
+      "patients aged 65 to 69 years"
+    ),
+    p(
+      "Average drug costs and volumes per patient per month are higher for ",
+      "care home patients than non-care home patients across all age and ",
+      "gender groups except females aged 90+ years, where items per patient ",
+      "is marginally higher among non-care home patients. The greatest ",
+      "differences are between younger care home and non-care home patients, ",
+      "aged 65 to 69 years."
+    ),
+    p(
+      "Among care home patients, average drug costs per patient per month ",
+      "decrease as age increases, whereas the reverse is true for non-care ",
+      "home patients. They are highest for the males and female care home ",
+      "patients aged 65 to 69 years, and over 1.5 times higher than for 90+ ",
+      "year care home patients. Drug costs are also higher for male care home ",
+      "patients than females in all age groups. "
+    ),
+    p(
+      "The number of prescription items and are broadly similar by age and ",
+      "gender, although there is a smaller proportion of care home patients ",
+      "aged 90+ years on 10 more drugs than other age groups. And this group ",
+      "is lowest on all four prescribing metrics, with females being lower ",
+      "than males."
+    ),
+    p("These patterns can be seen in the charts below.")
   )
 }
 
