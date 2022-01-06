@@ -174,7 +174,6 @@ mod_02_demographics_ui <- function(id) {
       "variation."
     ),
     br(),
-    h6("Deprivation quintile of older care home patients in England (2020/21)"),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
