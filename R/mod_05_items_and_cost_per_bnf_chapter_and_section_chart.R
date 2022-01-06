@@ -18,8 +18,8 @@ mod_05_items_and_cost_per_bnf_ui <- function(id) {
         text = "BNF",
         tooltip = tooltip_text$bnf_code
       ),
-      "chapter. This chapter also accounts for 24% of drug cost. Analgesics is ",
-      "the most common BNF section within the Central Nervous System."
+      "chapter. This chapter also accounts for 24% of drug cost. Analgesics ",
+      "is the most common BNF section within the Central Nervous System."
     ),
     br(),
     br(),
