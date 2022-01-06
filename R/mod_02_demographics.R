@@ -128,15 +128,11 @@ mod_02_demographics_ui <- function(id) {
       col_8(
         highcharter::highchartOutput(
           outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
-          height = "500px",
+          height = "400px",
           width = "900px"
         )
       ),
       col_3(
-        br(),
-        br(),
-        br(),
-        br(),
         br(),
         br(),
         br(),
