@@ -14,6 +14,7 @@ app_server <- function(input, output, session) {
   mod_04_estimated_care_home_patients_server("04_estimated_care_home_patients_ui_1")
   mod_05_items_and_cost_per_bnf_server("05_items_and_cost_per_bnf_ui_1")
   mod_08_footer_server("08_footer_ui_1")
+  #mod_add_two_plots_server("add_two_plots_ui_1")
   mod_definitions_server("definitions_ui_1")
 
   output$scrolly <- scrollytell::renderScrollytell({

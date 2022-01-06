@@ -104,7 +104,7 @@ format_data_raw <- function(df, vars) {
       )
     )
 
-  # Breakdown is a hierachy
+  # Breakdown is a hierarchy
   if ("BREAKDOWN" %in% names(df)) {
     df <- df %>%
       dplyr::mutate(

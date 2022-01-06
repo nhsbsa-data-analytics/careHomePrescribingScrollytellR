@@ -18,10 +18,59 @@ mod_02_demographics_ui <- function(id) {
       ),
       "receiving prescriptions"
     ),
+    h6("The older care home population fluctuates"),
     p(
-      "Overall, we estimate a monthly average of ", tags$b("285 thousand care home patients,"),
-      " aged 65+ years receiving prescriptions, which accounts for around 4% of patients aged 65+ ",
-      "years receiving prescription items each month."
+      "We estimate 460 thousand patients aged 65+ years received at least one ",
+      "prescription item in a care home during 2020/21 and an average of 285 ",
+      "thousand in any given month. This difference in numbers is explained ",
+      "by two key factors:"
+    ),
+    tags$ul(
+      tags$li(
+        style = "font-size: 16pt;",
+        "The population is not stable – some patients become 65 years during ",
+        "the year, some move in or out of the care home and others may die."
+      ),
+      tags$li(
+        style = "font-size: 16pt;",
+        "Not all care home patients receive a prescription in every month ",
+        "they are in a care home - we estimate around 7 in 10 do."
+      )
+    ),
+    p(
+      "For this reason, when we calculate per resident estimates, we use the ",
+      "monthly average number of care home patients."
+    ),
+    p(
+      "The chart shows the prescribing status of each of these 460 thousand ",
+      "patients by month during 2020/21."
+    ),
+    fluidRow(
+      align = "center",
+      style = "background-color: #FFFFFF;",
+      h6(
+        "Monthly prescribing status of patients aged 65+ who recieved at ",
+        "least one prescription item in a care home during 2020/21"
+      ),
+      highcharter::highchartOutput(
+        outputId = ns("patients_by_prescribing_status_chart"),
+        height = "500px",
+        width = "900px"
+      )
+    ),
+    mod_download_ui(
+      id = ns("download_patients_by_prescribing_status_chart")
+    ),
+    br(),
+    h6(
+      "We estimate two thirds of older care home patients are female and 6 in ",
+      "10 are aged 85+ years"
+    ),
+    p(
+      "Overall, we estimate a monthly average of ", 
+      tags$b("285 thousand care home patients,"), " aged 65+ years receiving ",
+      "prescriptions, which accounts for around 4% of patients aged 65+ years ",
+      "receiving prescription items each month."
     ),
     p(
       "Overall, the age and gender profile is broadly comparable to",
@@ -125,6 +174,7 @@ mod_02_demographics_ui <- function(id) {
       "variation."
     ),
     br(),
+    h6("Deprivation quintile of older care home patients in England (2020/21)"),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
@@ -161,7 +211,57 @@ mod_02_demographics_server <- function(id, export_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Patients by geography and gender and age band
+    # Patients by prescribing status chart
+    
+    # Swap NAs for "c" for data download
+    patients_by_prescribing_status_df <- reactive({
+
+      careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
+        dplyr::mutate(
+          SDC_TOTAL_PATIENTS := ifelse(
+            test = is.na(SDC_TOTAL_PATIENTS),
+            yes = "c",
+            no = as.character(SDC_TOTAL_PATIENTS)
+          )
+        )
+    })
+    
+    # Add a download button
+    mod_download_server(
+      id = "download_patients_by_prescribing_status_chart",
+      filename = "patients_by_prescribing_status_chart.csv",
+      export_data = patients_by_prescribing_status_df()
+    )
+    
+    # Create chart
+    output$patients_by_prescribing_status_chart <- 
+      highcharter::renderHighchart({
+      
+        careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
+          dplyr::mutate(YEAR_MONTH = as.character(YEAR_MONTH)) %>%
+          highcharter::hchart(
+            type = "column", 
+            highcharter::hcaes(
+              x = YEAR_MONTH, 
+              y = SDC_TOTAL_PATIENTS, 
+              group = PRESCRIBING_STATUS
+            ), 
+            stacking = "normal"
+          ) %>%
+          theme_nhsbsa() %>%
+          highcharter::hc_xAxis(title = list(text = "Year Month")) %>%
+          highcharter::hc_yAxis(title = list(text = "Total patients"))
+        
+      })
+    
+    # Patients by geography and gender and age band chart
+    
+    # Filter to relevant data for this chart
+    patients_by_geography_and_gender_and_age_band_df <-
+      careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
+      dplyr::filter(
+        dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME, GENDER), not_na)
+      )
 
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
@@ -478,6 +578,7 @@ mod_02_demographics_server <- function(id, export_data) {
     # Pyramid plot for age band and gender
     output$patients_by_geography_and_gender_and_age_band_chart <-
       highcharter::renderHighchart({
+        
         req(input$geography)
         req(input$sub_geography)
         req(input$patients_by_geography_and_gender_and_age_band_metric)
@@ -581,7 +682,7 @@ mod_02_demographics_server <- function(id, export_data) {
           )
       })
 
-    # Patients by IMD
+    # Patients by IMD chart
 
     # Pull the metric we are interested in
     patients_by_imd_metric_df <- reactive({
@@ -639,9 +740,9 @@ mod_02_demographics_server <- function(id, export_data) {
       export_data = patients_by_imd_download_df()
     )
 
-
     # Add IMD chart
     output$patients_by_imd_chart <- highcharter::renderHighchart({
+      
       req(input$patients_by_imd_metric)
 
       # highcharter plot
