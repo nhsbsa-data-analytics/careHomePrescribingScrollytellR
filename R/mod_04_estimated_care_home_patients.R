@@ -44,6 +44,11 @@ mod_04_estimated_care_home_patients_ui <- function(id) {
     br(),
     fluidRow(
       style = "background-color: #FFFFFF;",
+      h6(
+        style = "text-align: center;",
+        "Estimated average monthly prescribing metrics for care home ",
+        "patients in England by geography (2020/21)"
+      ),
       col_6(
         style = "margin-bottom: 0;",
         selectInput(
