@@ -23,9 +23,9 @@ mod_03_overall_summary_ui <- function(id) {
       )
     ),
     p(
-      "Overall, older care home patients receive around 1.4 times more prescription items  ",
-      "and unique medicines per patient per month than non-care home older patients.",
-      " At around twice the drug cost."
+      "Overall, older care home patients receive around 1.4 times more ",
+      "prescription items and unique medicines per patient per month than ",
+      "non-care home older patients. At around twice the drug cost."
     ),
     br(),
     fluidRow(
@@ -70,9 +70,10 @@ mod_03_overall_summary_ui <- function(id) {
       uiOutput(ns("table"))
     ),
     p(
-      "Drug costs and volumes are higher for care home patients than non-care home patients ",
-      "across all age and gender groups except females aged 90+ years. The greatest differences ",
-      "are between younger care home and non-care home patients."
+      "Drug costs and volumes are higher for care home patients than non-care ",
+      "home patients across all age and gender groups except females aged 90+ ",
+      "years. The greatest differences are between younger care home and ",
+      "non-care home patients."
     )
   )
 }
