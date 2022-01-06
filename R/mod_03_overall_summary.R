@@ -30,6 +30,12 @@ mod_03_overall_summary_ui <- function(id) {
     br(),
     fluidRow(
       style = "background-color: #FFFFFF;",
+      h6(
+        style = "text-align: center;",
+        "Estimated average monthly prescribing metrics for older care home ",
+        "and non-care home patients in England by geography, age band or ",
+        "gender (2020/21)"
+      ),
       col_6(
         selectInput(
           inputId = ns("breakdown"),
