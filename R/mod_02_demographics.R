@@ -437,29 +437,6 @@ mod_02_demographics_server <- function(id, export_data) {
         dplyr::pull(SDC_AVERAGE_TOTAL_PATIENTS)
     })
 
-    # Create the reactive text to go inside the chart
-    output$chart_text <- shiny::renderUI({
-      req(input$geography)
-      req(input$sub_geography)
-
-      tagList(
-        p(
-          id = "medium",
-          ifelse(input$sub_geography == "Overall", "", "In "),
-          input$sub_geography, " we estimate",
-          tags$b(paste0(percentage_female_patients(), "%")), "of care home ",
-          "patients are females and",
-          tags$b(paste0(percentage_elderly_female_patients(), "%")), "are ",
-          "females aged 85 or over."
-        ),
-        p(
-          id = "small",
-          "There are an estimated", tags$b(prettyNum(average_monthly_patients(), big.mark = ",", scientific = FALSE)),
-          "average number of monthly care home patients."
-        )
-      )
-    })
-
     # Pull the metric we are interested in
     patients_by_geography_and_gender_and_age_band_metric_df <- reactive({
       req(input$geography)
@@ -539,13 +516,14 @@ mod_02_demographics_server <- function(id, export_data) {
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-
+      
       max(
         patients_by_geography_and_gender_and_age_band_plot_df()[[
         input$patients_by_geography_and_gender_and_age_band_metric
         ]],
         na.rm = TRUE
       )
+
     })
 
     # Format for highcharter animation.
@@ -577,8 +555,20 @@ mod_02_demographics_server <- function(id, export_data) {
         req(input$geography)
         req(input$sub_geography)
         req(input$patients_by_geography_and_gender_and_age_band_metric)
+        
+        # Process annotations
+        text <- paste(
+          ifelse(input$sub_geography == "Overall", "", "In"),
+          input$sub_geography, "we estimate",
+          tags$b(paste0(percentage_female_patients(), "%")), "of care home",
+          "patients are females and",
+          tags$b(paste0(percentage_elderly_female_patients(), "%")), "are",
+          "females aged 85 or over.<br><br>There are an estimated",
+          tags$b(prettyNum(average_monthly_patients(), big.mark = ",", scientific = FALSE)),
+          "average number of monthly care home patients."
+        )
 
-        # Create the base of the chart
+        # Create the chart
         chart <- highcharter::highchart() %>%
           highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
           highcharter::hc_add_series_list(
@@ -611,6 +601,33 @@ mod_02_demographics_server <- function(id, export_data) {
             ),
             align = "right"
           ) %>%
+          highcharter::hc_annotations(
+            list(
+              labels = list(
+                list(
+                  point = list(
+                    x = - 0.5, 
+                    # Need -1 otherwise it fails when max_value() is axis max
+                    y = max_value() - 1,
+                    xAxis = 0, 
+                    yAxis = 0
+                  ), 
+                  text = text,
+                  style = list(
+                    width = 200, 
+                    fontSize = "10pt"
+                  )
+                )
+              ),
+              labelOptions = list(
+                backgroundColor = "#FFFFFF",
+                borderWidth = 0,
+                align = "right",
+                verticalAlign = "top",
+                useHTML = TRUE
+              )
+            )
+          ) %>%
           highcharter::hc_xAxis(
             title = list(text = "Age Band"),
             categories =
@@ -629,8 +646,8 @@ mod_02_demographics_server <- function(id, export_data) {
                 )
               )
             ),
-            min = -ceiling(max_value() / 5) * 5,
-            max = ceiling(max_value() / 5) * 5,
+            min = -max_value(),
+            max = max_value(),
             labels = list(
               formatter = highcharter::JS(
                 paste(
