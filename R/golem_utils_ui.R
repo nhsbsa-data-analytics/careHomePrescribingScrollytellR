@@ -242,8 +242,8 @@ rep_br <- function(times = 1) {
 #' @examples
 #' enurl("https://www.thinkr.fr", "ThinkR")
 #' @importFrom shiny tags
-enurl <- function(url, text) {
-  tags$a(href = url, text)
+enurl <- function(text, url) {
+  tags$a(text, href = url, target = "_blank")
 }
 
 #' Columns wrappers

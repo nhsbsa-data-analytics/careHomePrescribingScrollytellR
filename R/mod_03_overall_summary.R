@@ -144,17 +144,23 @@ mod_03_overall_summary_server <- function(id) {
           patients_in_na_sub_breakdown[2], "non care home patients with an ",
           "unknown sub breakdown."
         )
+        
       } else if (length(patients_in_na_sub_breakdown) == 1) {
         # If only one exists
+        
         paste(
           "This excludes", patients_in_na_sub_breakdown,
           tolower(names(patients_in_na_sub_breakdown)), "patients with an ",
           "unknown sub breakdown."
         )
-      } else {
+      
+        } else {
         # Nothing
-        ""
-      }
+        
+          ""
+      
+        }
+    
     })
 
     # Update the list of choices for sub breakdown from the rows in breakdown

@@ -74,13 +74,11 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "Overall, the age and gender profile is broadly comparable to",
-      a(
-        "ONS Estimates of care home patients from April 2020.",
-        href = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales",
-        target = "_blank"
+      enurl(
+        text = "ONS Estimates of care home patients from April 2020.",
+        url = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales"
       ),
     ),
-    br(),
     br(),
     fluidRow(
       align = "center",
@@ -112,7 +110,7 @@ mod_02_demographics_ui <- function(id) {
           )
         )
       ),
-      col_12(
+      tags$div(
         style = "margin-bottom: 0;",
         radioButtons(
           inputId = ns("patients_by_geography_and_gender_and_age_band_metric"),
@@ -125,23 +123,10 @@ mod_02_demographics_ui <- function(id) {
           width = "100%"
         )
       ),
-      col_8(
-        highcharter::highchartOutput(
-          outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
-          height = "400px",
-          width = "900px"
-        )
-      ),
-      col_3(
-        br(),
-        br(),
-        br(),
-        br(),
-        br(),
-        br(),
-        uiOutput(
-          outputId = ns("chart_text")
-        )
+      highcharter::highchartOutput(
+        outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
+        height = "400px",
+        width = "900px"
       )
     ),
     mod_download_ui(
@@ -149,13 +134,27 @@ mod_02_demographics_ui <- function(id) {
     ),
     br(),
     br(),
+    h6(
+      "Similar proportions of older care home patients live in residential ",
+      "and nursing homes"
+    ),
     p(
       "Based on CQC data, we estimate similar proportions of care home ",
       "patients aged 65+ living in ", tags$b("residential homes"), " (40%) ",
       "and ", tags$b("nursing homes"), " (37%) each month.", "A small ",
       "percentage (2%) appear in both settings and there are 21% who we were ",
-      "unable to match against a residential or nursing home within CQC ",
-      "dataset."
+      "unable to match against a residential or nursing home in the ",
+      enurl(
+        text = "CQC dataset.",
+        url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"
+      )
+    ),
+    p(
+      "TODO: Add nursing / residential chart here..."
+    ),
+    h6(
+      "There is little variation in numbers of older care home patients by ",
+      "deprivation"
     ),
     p(
       "Care home patient's prescriptions were allocated an ",

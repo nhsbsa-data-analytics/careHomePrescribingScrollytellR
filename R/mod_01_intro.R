@@ -18,7 +18,6 @@ mod_01_intro_ui <- function(id) {
       ),
       " in England"
     ),
-    br(),
     p(
       "In this article we provide unique insight into primary care ",
       "prescribing patterns for ",
@@ -28,14 +27,12 @@ mod_01_intro_ui <- function(id) {
       ),
       " in England during 2020/21."
     ),
-    br(),
     p(
       "We estimate that there was a monthly average of", tags$b("285 thousand"),
       " care home patients receiving prescriptions each month in 2020/21. ",
       "They received an estimated 35 million prescription items at a cost of ",
       tags$b("£320 million"), " during 2020/21."
     ),
-    br(),
     p(
       "This accounts for around 4% of ",
       tippy(
@@ -50,20 +47,19 @@ mod_01_intro_ui <- function(id) {
       ),
       "during 2020/21."
     ),
-    br(),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
       "matches primary care prescription address data to care home addresses ",
       "in ",
       enurl(
-        url = "https://www.ordnancesurvey.co.uk/business-government/products/addressbase",
-        text = "AddressBase Plus"
+        text = "AddressBase Plus",
+        url = "https://www.ordnancesurvey.co.uk/business-government/products/addressbase"
       ),
       "to create a prescribing dataset. The matching method has been ",
       "available as an ",
       enurl(
-        url = "https://github.com/nhsbsa-data-analytics/addressMatchR",
-        text = "R package"
+        text = "R package",
+        url = "https://github.com/nhsbsa-data-analytics/addressMatchR"
       ),
       "."
     ),
