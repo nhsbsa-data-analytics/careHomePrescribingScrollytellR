@@ -72,7 +72,6 @@ fact_db <- fact_db %>%
     y = year_month_db,
     copy = TRUE
   ) %>%
-  relocate(YEAR_MONTH_ID) %>%
   group_by(
     YEAR_MONTH_ID,
     YEAR_MONTH,
