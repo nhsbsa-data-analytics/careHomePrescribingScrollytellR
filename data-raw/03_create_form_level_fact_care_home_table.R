@@ -249,7 +249,10 @@ paper_fact_db <- fact_db %>%
 
 # Get the patients and months that we want an address for
 paper_patient_db <- paper_fact_db %>% 
-  filter(YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L)  %>%
+  filter(
+    CALC_AGE >= 65L,
+    YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
+  ) %>%
   distinct(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO)
 
 # Add the year month information
@@ -270,7 +273,8 @@ left_join_address <- function(x, y, year_month_id_col, suffix){
       rename(
         "{{year_month_id_col}}" := YEAR_MONTH_ID,
         "POSTCODE_{{year_month_id_col}}_{{suffix}}" := POSTCODE,
-        "SINGLE_LINE_ADDRESS_{{year_month_id_col}}_{{suffix}}" := SINGLE_LINE_ADDRESS
+        "SINGLE_LINE_ADDRESS_{{year_month_id_col}}_{{suffix}}" := 
+          SINGLE_LINE_ADDRESS
       ),
     by = c("YEAR_MONTH", "NHS_NO"),
     copy = TRUE
