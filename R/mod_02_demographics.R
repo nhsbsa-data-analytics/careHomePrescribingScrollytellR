@@ -38,7 +38,7 @@ mod_02_demographics_ui <- function(id) {
       )
     ),
     p(
-      "For this reason, when we calculate per resident estimates, we use the ",
+      "For this reason, when we calculate per patient estimates, we use the ",
       "monthly average number of care home patients."
     ),
     p(
@@ -73,7 +73,7 @@ mod_02_demographics_ui <- function(id) {
       "receiving prescription items each month."
     ),
     p(
-      "Overall, the age and gender profile is broadly comparable to",
+      "The age and gender profile is broadly comparable to",
       enurl(
         text = "ONS Estimates of care home patients from April 2020.",
         url = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales"
@@ -133,15 +133,14 @@ mod_02_demographics_ui <- function(id) {
       id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
     ),
     br(),
-    br(),
     h6(
       "Similar proportions of older care home patients live in residential ",
       "and nursing homes"
     ),
     p(
-      "Based on CQC data, we estimate similar proportions of care home ",
-      "patients aged 65+ living in ", tags$b("residential homes"), " (40%) ",
-      "and ", tags$b("nursing homes"), " (37%) each month.", "A small ",
+      "We estimate similar proportions of care home patients aged 65+ living ",
+      "in ", tags$b("residential homes"), " (40%) and ", 
+      tags$b("nursing homes"), " (37%) on average each month.", "A small ",
       "percentage (2%) appear in both settings and there are 21% who we were ",
       "unable to match against a residential or nursing home in the ",
       enurl(
@@ -158,12 +157,11 @@ mod_02_demographics_ui <- function(id) {
       a("Index of Multiple Deprivation (IMD)",
         href = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019",
         target = "_blank"
-      ), " and associated ",
-      "decile based on the area in which the care home is located. On ",
-      "average, the proportion is very close to 20% in each ",
+      ), 
+      " rank and associated quintile based on the area in which the care home ",
+      "is located. On average, the proportion is very close to 20% in each ",
       tags$b("IMD quintile,"),
-      " which suggests equal distribution and little ",
-      "variation."
+      " which suggests equal distribution and little variation."
     ),
     br(),
     fluidRow(
