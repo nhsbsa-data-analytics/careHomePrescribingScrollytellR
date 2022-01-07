@@ -80,6 +80,7 @@ fact_db <- fact_db %>%
     PF_ID,
     PATIENT_IDENTIFIED,
     NHS_NO,
+    CALC_AGE,
     EPS_FLAG
   ) %>%
   summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
@@ -372,15 +373,18 @@ paper_fact_db <- paper_fact_db %>%
 
 # Combine EPS and paper data with the FACT
 
-# Stack EPS and paper back together and get rid of the periods we aren't 
-# interested in
+# Stack EPS and paper back together
 fact_db <- union_all(
   x = eps_fact_db %>%
-    select(-YEAR_MONTH_ID, ITEM_COUNT) %>%
-    filter(YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L), 
+    select(-c(YEAR_MONTH_ID, ITEM_COUNT)) %>%
+    # Remember to filter unwanted periods from the EPS FACT table (as it 
+    # includes the buffer used to find addresses for paper forms)
+    filter(
+      CALC_AGE >= 65L,
+      YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
+    ), 
   y = paper_fact_db %>%    
-    select(-YEAR_MONTH_ID, ITEM_COUNT) %>%
-    filter(YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L)
+    select(-c(YEAR_MONTH_ID, ITEM_COUNT))
 )
 
 # Tidy postcode and format single line addresses for tokenisation
@@ -393,4 +397,4 @@ fact_db %>%
   nhsbsaR::oracle_create_table(table_name = "INT615_FORM_LEVEL_FACT_CARE_HOME")
 
 # Disconnect from database
-DBI::dbDisconnect(con)
+DBI::dbDisconnect(con_dalp)
