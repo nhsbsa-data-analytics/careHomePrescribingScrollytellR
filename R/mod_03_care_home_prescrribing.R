@@ -232,48 +232,45 @@ mod_03_care_home_prescribing_ui <- function(id) {
 mod_03_care_home_prescribing_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Join the 2 metric datasets together
     metric_df <-
       dplyr::full_join(
         x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_breakdown_and_ch_flag_df,
         y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_breakdown_and_ch_flag_df
       )
-    
+
     # Overall summary boxes
-    
+
     # Only interested in the overall period
     summary_df <- metric_df %>%
       dplyr::filter(YEAR_MONTH == "Overall")
-    
+
     # Format cost and percentage cols
     summary_df <- summary_df %>%
       dplyr::mutate(
         SDC_COST_PER_PATIENT = paste0("£", SDC_COST_PER_PATIENT),
         SDC_PCT_PATIENTS_TEN_OR_MORE = paste0(SDC_PCT_PATIENTS_TEN_OR_MORE, "%")
       )
-    
+
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
-    
+
     # Filter the data based on the breakdown
     summary_breakdown_df <- reactive({
-      
       req(input$breakdown)
-      
+
       summary_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown)
-      
     })
-    
+
     # Pull the text for the number of NA sub breakdown patients
     patients_in_na_sub_breakdown_text <- reactive({
-      
       req(input$breakdown)
-      
+
       # Filter to NA sub breakdown
       na_sub_breakdown_df <- summary_breakdown_df() %>%
         dplyr::filter(is.na(SUB_BREAKDOWN_NAME))
-      
+
       # Apply SDC to total patients
       na_sub_breakdown_df <- na_sub_breakdown_df %>%
         dplyr::mutate(
@@ -281,7 +278,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           SDC_TOTAL_PATIENTS =
             ifelse(SDC == 1, NA_integer_, round(TOTAL_PATIENTS, -1))
         )
-      
+
       # Format the number
       na_sub_breakdown_df <- na_sub_breakdown_df %>%
         dplyr::mutate(
@@ -291,38 +288,34 @@ mod_03_care_home_prescribing_server <- function(id) {
             no = as.character(SDC_TOTAL_PATIENTS)
           )
         )
-      
+
       # Extract the values
       patients_in_na_sub_breakdown <- na_sub_breakdown_df %>%
         dplyr::pull(SDC_TOTAL_PATIENTS, CH_FLAG)
-      
+
       if (length(patients_in_na_sub_breakdown) == 2) {
         # If both care home and non care home exist
-        
+
         paste(
           "This excludes", patients_in_na_sub_breakdown[1], "care home and",
           patients_in_na_sub_breakdown[2], "non care home patients with an ",
           "unknown sub breakdown."
         )
-        
       } else if (length(patients_in_na_sub_breakdown) == 1) {
         # If only one exists
-        
+
         paste(
           "This excludes", patients_in_na_sub_breakdown,
           tolower(names(patients_in_na_sub_breakdown)), "patients with an ",
           "unknown sub breakdown."
         )
-        
       } else {
         # Nothing
-        
+
         ""
-        
       }
-      
     })
-    
+
     # Update the list of choices for sub breakdown from the rows in breakdown
     # dataframe
     observeEvent(
@@ -337,22 +330,19 @@ mod_03_care_home_prescribing_server <- function(id) {
         )
       }
     )
-    
+
     # Filter the data based on the sub breakdown
     summary_table_df <- reactive({
-      
       req(input$sub_breakdown)
-      
+
       summary_breakdown_df() %>%
         dplyr::filter(SUB_BREAKDOWN_NAME == input$sub_breakdown)
-      
     })
-    
+
     # Create the table
     output$summary_table <- renderUI({
-      
       req(input$sub_breakdown)
-      
+
       tagList(
         fluidRow(
           col_6(
@@ -487,55 +477,50 @@ mod_03_care_home_prescribing_server <- function(id) {
           )
         )
       )
-      
     })
-    
+
     # Cost per patient by gender and age band and care home flag line chart
-    
+
     # Combine the care home flag and gender into a joint metric
-    cost_per_patient_by_gender_and_age_band_and_ch_flag_df <- 
+    cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
       careHomePrescribingScrollytellR::cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
       dplyr::mutate(CH_FLAG_AND_GENDER = paste(CH_FLAG, GENDER, sep = " - "))
-    
+
     # Filter out unknown genders for the plot
     plot_line_df <- reactive({
-      
       cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
         dplyr::filter(!is.na(GENDER))
-      
     })
-    
+
     # Create chart
-    output$cost_per_patient_by_gender_and_age_band_and_ch_flag_chart <- 
+    output$cost_per_patient_by_gender_and_age_band_and_ch_flag_chart <-
       highcharter::renderHighchart({
-        
         highcharter::hchart(
           object = plot_line_df(),
           type = "line",
           highcharter::hcaes(
-            x = AGE_BAND, 
-            y = SDC_COST_PER_PATIENT, 
+            x = AGE_BAND,
+            y = SDC_COST_PER_PATIENT,
             group = CH_FLAG_AND_GENDER
           )
-        ) %>% 
+        ) %>%
           highcharter::hc_yAxis(
             min = 0,
             max = 150,
             title = list(text = "Mean Cost per Patient (£)")
-          ) %>% 
-          highcharter::hc_xAxis(title = list(text = "Patient Age Band")) %>% 
-          highcharter::hc_title(text = "Mean Care Home Patient Drug Cost per 
-        Age Band for the Financial Year 2020/21") %>% 
+          ) %>%
+          highcharter::hc_xAxis(title = list(text = "Patient Age Band")) %>%
+          highcharter::hc_title(text = "Mean Care Home Patient Drug Cost per
+        Age Band for the Financial Year 2020/21") %>%
           highcharter::hc_tooltip(
             pointFormat = "<b>{point.CH_FLAG_AND_GENDER}:</b> £{point.COST_PER_PATIENT:,.2f}"
-          ) %>% 
-          highcharter::hc_credits(enabled = T) %>% 
+          ) %>%
+          highcharter::hc_credits(enabled = T) %>%
           highcharter::hc_colors(c("darkgreen", "lightgreen", "darkblue", "lightblue"))
-        
       })
-    
+
     # Map
-    
+
     # Only interested in care homes and geographical breakdowns
     map_df <- metric_df %>%
       dplyr::filter(
@@ -543,7 +528,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         CH_FLAG == "Care home"
       ) %>%
       dplyr::mutate(BREAKDOWN = gsub("Geographical - ", "", BREAKDOWN))
-    
+
     # Rename the cols
     map_df <- map_df %>%
       dplyr::rename(
@@ -551,26 +536,23 @@ mod_03_care_home_prescribing_server <- function(id) {
         SUB_GEOGRAPHY_NAME = SUB_BREAKDOWN_NAME,
         SUB_GEOGRAPHY_CODE = SUB_BREAKDOWN_CODE
       )
-    
+
     # Filter the data based on the geography
     map_geography_df <- reactive({
-      
       req(input$geography)
-      
+
       map_df %>%
         dplyr::filter(GEOGRAPHY == input$geography)
     })
-    
+
     # Pull the metric we are interested in
     map_metric_df <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       map_geography_df() %>%
         dplyr::mutate(
-          TOTAL_PATIENTS = switch(
-            input$metric,
+          TOTAL_PATIENTS = switch(input$metric,
             "PCT_PATIENTS_TEN_OR_MORE" = PATIENTS_TEN_OR_MORE,
             TOTAL_PATIENTS
           )
@@ -587,39 +569,33 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         )
-      
     })
-    
+
     # Filter out unknown sub geographys for the plot
     plot_map_df <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       map_metric_df() %>%
         dplyr::filter(!is.na(SUB_GEOGRAPHY_NAME))
-      
     })
-    
-    # Create a table of the top 5 and bottom 5 results in the overall month to 
+
+    # Create a table of the top 5 and bottom 5 results in the overall month to
     # go alongside the map
     output$map_table <- DT::renderDataTable(
-      
       expr = {
-        
         req(input$geography)
         req(input$metric)
-        
+
         # Get a nice name for the metric
-        nice_metric_name <- switch(
-          input$metric,
+        nice_metric_name <- switch(input$metric,
           "SDC_COST_PER_PATIENT" = "Total drug cost (£)",
           "SDC_ITEMS_PER_PATIENT" = "Number of prescription items",
           "SDC_UNIQUE_MEDICINES_PER_PATIENT" = "Number of unique medicines",
-          "SDC_PCT_PATIENTS_TEN_OR_MORE" = 
+          "SDC_PCT_PATIENTS_TEN_OR_MORE" =
             "Patients on ten or more unique medicines (%)"
         )
-        
+
         # Format the table
         plot_map_df() %>%
           dplyr::filter(YEAR_MONTH == "Overall") %>%
@@ -629,21 +605,17 @@ mod_03_care_home_prescribing_server <- function(id) {
             "{input$geography}" := SUB_GEOGRAPHY_NAME,
             "{nice_metric_name}" := .data[[input$metric]]
           )
-        
       },
-      
-      options = list(dom = "t", scrollCollapse = TRUE, paging = FALSE, scrollY = '500px'),
+      options = list(dom = "t", scrollCollapse = TRUE, paging = FALSE, scrollY = "500px"),
       filter = "none"
-      
     )
-    
-    
+
+
     # Swap NAs for "c" for data download
     download_map_df <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       plot_map_df() %>%
         dplyr::mutate(
           "{input$metric}" := ifelse(
@@ -653,55 +625,47 @@ mod_03_care_home_prescribing_server <- function(id) {
           )
         ) %>%
         dplyr::select(-TOTAL_PATIENTS)
-      
     })
-    
+
     # Add a download button
     mod_download_server(
       id = "download_map_chart",
       filename = "map_chart.csv",
       export_data = download_map_df()
     )
-    
+
     # Filter the map data based on the breakdown and format for the plot
     map_list <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       careHomePrescribingScrollytellR::map_df %>%
         dplyr::filter(GEOGRAPHY == input$geography) %>%
         geojsonsf::sf_geojson() %>%
         jsonlite::fromJSON(simplifyVector = FALSE)
-      
     })
-    
+
     # Pull the min value
     min_value <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       min(plot_map_df()[[input$metric]], na.rm = TRUE)
-      
     })
-    
+
     # Pull the max value
     max_value <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       max(plot_map_df()[[input$metric]], na.rm = TRUE)
-      
     })
-    
+
     # Format for highchater animation
     plot_map_sequence_series <- reactive({
-      
       req(input$geography)
       req(input$metric)
-      
+
       # Create series (including code and name)
       plot_map_df() %>%
         dplyr::rename(value = .data[[input$metric]]) %>%
@@ -709,15 +673,13 @@ mod_03_care_home_prescribing_server <- function(id) {
         dplyr::do(sequence = .$value) %>%
         dplyr::left_join(y = plot_map_df()) %>%
         highcharter::list_parse()
-      
     })
-    
+
     # Create plot
     output$map_chart <- highcharter::renderHighchart({
-      
       req(input$geography)
       req(input$metric)
-      
+
       highcharter::highchart(type = "map") %>%
         highcharter::hc_chart(marginBottom = 100) %>%
         highcharter::hc_add_series(
@@ -728,8 +690,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             headerFormat = "",
             pointFormat = paste0(
               "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
-              switch(
-                input$metric,
+              switch(input$metric,
                 "SDC_COST_PER_PATIENT" =
                   "Total drug cost:</b> £{point.value}",
                 "SDC_ITEMS_PER_PATIENT" =
@@ -750,13 +711,12 @@ mod_03_care_home_prescribing_server <- function(id) {
           enableMouseWheelZoom = TRUE,
           enableDoubleClickZoom = TRUE
         )
-      
     })
-    
+
     # Cost per patient by gender and age band and care home flag line chart
-    
+
     # Combine the care home flag and gender into a joint metric
-    
+
     combined_df <-
       dplyr::full_join(
         x = careHomePrescribingScrollytellR::items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
@@ -764,11 +724,11 @@ mod_03_care_home_prescribing_server <- function(id) {
         y = careHomePrescribingScrollytellR::unique_medicines_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
           dplyr::mutate(CH_FLAG_AND_GENDER = paste(CH_FLAG, GENDER, sep = " - "))
       )
-    
+
     # Pull the metric we are interested in
     age_gender_by_metric_df <- reactive({
       req(input$age_gender_by_metric)
-      
+
       combined_df %>%
         dplyr::filter(!is.na(GENDER)) %>%
         dplyr::select(
@@ -776,13 +736,13 @@ mod_03_care_home_prescribing_server <- function(id) {
         ) %>%
         dplyr::mutate(value = .data[[input$age_gender_by_metric]])
     })
-    
+
     # Swap NAs for "c" for data download
     age_gender_by_metric_download_df <- reactive({
       req(input$age_gender_by_metric)
-      
-      age_gender_by_metric_df() %>% 
-        dplyr::select(-c(CH_FLAG_AND_GENDER,value)) %>% 
+
+      age_gender_by_metric_df() %>%
+        dplyr::select(-c(CH_FLAG_AND_GENDER, value)) %>%
         dplyr::mutate(
           "{input$age_gender_by_metric}" := ifelse(
             test = is.na(.data[[input$age_gender_by_metric]]),
@@ -791,57 +751,58 @@ mod_03_care_home_prescribing_server <- function(id) {
           )
         )
     })
-    
+
     mod_download_server(
       id = "download_patient_by_gender_and_age_band_and_ch_flag_chart",
       filename = "patient_by_gender_and_age_band_and_ch_flag_chart.csv",
       export_data = age_gender_by_metric_download_df()
     )
-    
+
     # Pull NAs from the selected metric,
     # aggregation is different depends on the metric
     age_gender_by_metric_na <- reactive({
       req(input$age_gender_by_metric)
-      
+
       df <- combined_df %>%
         dplyr::filter(is.na(GENDER)) %>%
         dplyr::summarise(
-          UNKNOWN_PAT_COUNT = round(janitor::round_half_up(sum(TOTAL_PATIENTS)),-1),
-          UNKNOWN_PAT_CHAPTER_TEN = round(janitor::round_half_up(sum(TOTAL_PATIENTS_CHAPTER_TEN)),-1)) %>%
+          UNKNOWN_PAT_COUNT = round(janitor::round_half_up(sum(TOTAL_PATIENTS)), -1),
+          UNKNOWN_PAT_CHAPTER_TEN = round(janitor::round_half_up(sum(TOTAL_PATIENTS_CHAPTER_TEN)), -1)
+        ) %>%
         dplyr::ungroup()
-      
+
       if (input$age_gender_by_metric %in% c("SDC_COST_PER_PATIENT", "SDC_ITEMS_PER_PATIENT")) {
         return(df$UNKNOWN_PAT_COUNT)
       } else {
         return(df$UNKNOWN_PAT_CHAPTER_TEN)
       }
     })
-    
-    
+
+
     # Pull the min value
     min_value_line <- reactive({
       req(input$age_gender_by_metric)
       min(age_gender_by_metric_df()[[input$age_gender_by_metric]], na.rm = TRUE)
     })
-    
+
     # Pull the max value
     max_value_line <- reactive({
       req(input$age_gender_by_metric)
       max(age_gender_by_metric_df()[[input$age_gender_by_metric]], na.rm = TRUE)
     })
-    
+
     # had to do this way as we want to keep ch/non ch by gender
     female_ch <- fa_to_png_to_datauri(name = "female", width = 14, fill = "#003087")
     female_non_ch <- fa_to_png_to_datauri(name = "female", width = 14, fill = "#768692")
-    male_ch <- fa_to_png_to_datauri(name = "male",  width = 14, fill = "#003087")
+    male_ch <- fa_to_png_to_datauri(name = "male", width = 14, fill = "#003087")
     male_non_ch <- fa_to_png_to_datauri(name = "male", width = 14, fill = "#768692")
-    
+
     output$patient_by_gender_and_age_band_and_ch_flag_chart <- highcharter::renderHighchart({
       req(input$age_gender_by_metric)
-      
-      highcharter::highchart() %>% 
+
+      highcharter::highchart() %>%
         highcharter::hc_add_series(
-          data = age_gender_by_metric_df() %>% dplyr::filter(CH_FLAG == 'Care home' & GENDER == "Female"),
+          data = age_gender_by_metric_df() %>% dplyr::filter(CH_FLAG == "Care home" & GENDER == "Female"),
           type = "line",
           highcharter::hcaes(
             x = AGE_BAND,
@@ -850,10 +811,10 @@ mod_03_care_home_prescribing_server <- function(id) {
           name = "Care home - Female",
           color = "#003087",
           marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = female_ch)),
-          icon = female_ch 
-        ) %>% 
+          icon = female_ch
+        ) %>%
         highcharter::hc_add_series(
-          data = age_gender_by_metric_df() %>% dplyr::filter(CH_FLAG == 'Care home' & GENDER == "Male"),
+          data = age_gender_by_metric_df() %>% dplyr::filter(CH_FLAG == "Care home" & GENDER == "Male"),
           type = "line",
           highcharter::hcaes(
             x = AGE_BAND,
@@ -862,10 +823,10 @@ mod_03_care_home_prescribing_server <- function(id) {
           name = "Care home - Male",
           color = "#003087",
           marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_ch)),
-          icon = male_ch 
-        ) %>% 
+          icon = male_ch
+        ) %>%
         highcharter::hc_add_series(
-          data = age_gender_by_metric_df() %>% dplyr::filter(CH_FLAG == 'Non care home' & GENDER == "Female"),
+          data = age_gender_by_metric_df() %>% dplyr::filter(CH_FLAG == "Non care home" & GENDER == "Female"),
           type = "line",
           highcharter::hcaes(
             x = AGE_BAND,
@@ -874,10 +835,10 @@ mod_03_care_home_prescribing_server <- function(id) {
           name = "Care home - Female",
           color = "#768692",
           marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = female_non_ch)),
-          icon = female_non_ch 
-        ) %>% 
+          icon = female_non_ch
+        ) %>%
         highcharter::hc_add_series(
-          data = age_gender_by_metric_df() %>% dplyr::filter(CH_FLAG == 'Non care home' & GENDER == "Male"),
+          data = age_gender_by_metric_df() %>% dplyr::filter(CH_FLAG == "Non care home" & GENDER == "Male"),
           type = "line",
           highcharter::hcaes(
             x = AGE_BAND,
@@ -886,8 +847,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           name = "Care home - Male",
           color = "#768692",
           marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_non_ch)),
-          icon = male_non_ch 
-        ) %>% 
+          icon = male_non_ch
+        ) %>%
         theme_nhsbsa(stack = NA) %>%
         highcharter::hc_yAxis(
           min = min_value_line(),
@@ -895,10 +856,10 @@ mod_03_care_home_prescribing_server <- function(id) {
           title = list(
             text = paste(
               switch(input$age_gender_by_metric,
-                     "SDC_COST_PER_PATIENT" = "Average drug cost",
-                     "SDC_ITEMS_PER_PATIENT" = "Average number of prescription items",
-                     "SDC_UNIQUE_MEDICINES_PER_PATIENT" = "Average number of unique medicines",
-                     "SDC_PCT_PATIENTS_TEN_OR_MORE" = "Average % of patients prescbiring ten or more unique medicines"
+                "SDC_COST_PER_PATIENT" = "Average drug cost",
+                "SDC_ITEMS_PER_PATIENT" = "Average number of prescription items",
+                "SDC_UNIQUE_MEDICINES_PER_PATIENT" = "Average number of unique medicines",
+                "SDC_PCT_PATIENTS_TEN_OR_MORE" = "Average % of patients prescbiring ten or more unique medicines"
               )
             )
           )
@@ -907,34 +868,30 @@ mod_03_care_home_prescribing_server <- function(id) {
         highcharter::hc_title(text = paste(
           "Estimated average",
           switch(input$age_gender_by_metric,
-                 "SDC_COST_PER_PATIENT" = "drug cost per patient",
-                 "SDC_ITEMS_PER_PATIENT" = "number of prescription items per patient",
-                 "SDC_UNIQUE_MEDICINES_PER_PATIENT" = "number of unique medicines per patient",
-                 "SDC_PCT_PATIENTS_TEN_OR_MORE" = "percentage of patients prescbiring ten or more unique medicines"
+            "SDC_COST_PER_PATIENT" = "drug cost per patient",
+            "SDC_ITEMS_PER_PATIENT" = "number of prescription items per patient",
+            "SDC_UNIQUE_MEDICINES_PER_PATIENT" = "number of unique medicines per patient",
+            "SDC_PCT_PATIENTS_TEN_OR_MORE" = "percentage of patients prescbiring ten or more unique medicines"
           ),
           "per month in England by age group and gender (2020/21)"
         )) %>%
         highcharter::hc_tooltip(
           shared = TRUE,
-          headerFormat = "<b> {point.value} </b>", 
+          headerFormat = "<b> {point.value} </b>",
           valueSuffix = switch(input$age_gender_by_metric,
-                               "SDC_PCT_PATIENTS_TEN_OR_MORE" = "%"
+            "SDC_PCT_PATIENTS_TEN_OR_MORE" = "%"
           ),
           valuePrefix = switch(input$age_gender_by_metric,
-                               "SDC_COST_PER_PATIENT" = "£")
+            "SDC_COST_PER_PATIENT" = "£"
+          )
         ) %>%
         highcharter::hc_caption(
           text = paste0(
-            "This chart excludes ", prettyNum(age_gender_by_metric_na(),big.mark = ","), " of care home patients."
+            "This chart excludes ", prettyNum(age_gender_by_metric_na(), big.mark = ","), " of care home patients."
           )
-        ) %>% 
+        ) %>%
         highcharter::hc_credits(enabled = T)
     })
-    
-    
-    
-    
-    
   })
 }
 

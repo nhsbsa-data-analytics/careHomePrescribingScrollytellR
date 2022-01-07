@@ -140,7 +140,7 @@ format_data_raw <- function(df, vars) {
 
 #' fontawesome save to datauri
 #' taken from https://jkunst.com/highcharter/articles/fontawesome.html
-#' 
+#'
 #' @param name fontawsome name
 #' @param vars Grouping variables
 #'
@@ -148,11 +148,9 @@ format_data_raw <- function(df, vars) {
 #' @export
 
 fa_to_png_to_datauri <- function(name, ...) {
-  
   tmpfl <- tempfile(fileext = ".png")
-  
+
   fontawesome::fa_png(name, file = tmpfl, ...)
-  
+
   knitr::image_uri(tmpfl)
-  
 }
