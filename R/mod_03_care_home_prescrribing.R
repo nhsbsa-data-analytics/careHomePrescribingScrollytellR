@@ -822,7 +822,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           ),
           name = "Care home - Male",
           color = "#003087",
-          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_ch),radius = 2),
+          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_ch), radius = 2),
           icon = male_ch
         ) %>%
         highcharter::hc_add_series(
