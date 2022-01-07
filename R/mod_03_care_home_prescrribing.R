@@ -792,10 +792,10 @@ mod_03_care_home_prescribing_server <- function(id) {
     })
 
     # had to do this way as we want to keep ch/non ch by gender
-    female_ch <- fa_to_png_to_datauri(name = "female", width = 14, fill = "#003087")
-    female_non_ch <- fa_to_png_to_datauri(name = "female", width = 14, fill = "#768692")
-    male_ch <- fa_to_png_to_datauri(name = "male", width = 14, fill = "#003087")
-    male_non_ch <- fa_to_png_to_datauri(name = "male", width = 14, fill = "#768692")
+    female_ch <- fa_to_png_to_datauri(name = "female", width = 13, fill = "#003087")
+    female_non_ch <- fa_to_png_to_datauri(name = "female", width = 13, fill = "#768692")
+    male_ch <- fa_to_png_to_datauri(name = "male", width = 10, fill = "#003087")
+    male_non_ch <- fa_to_png_to_datauri(name = "male", width = 10, fill = "#768692")
 
     output$patient_by_gender_and_age_band_and_ch_flag_chart <- highcharter::renderHighchart({
       req(input$age_gender_by_metric)
@@ -810,7 +810,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           ),
           name = "Care home - Female",
           color = "#003087",
-          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = female_ch)),
+          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = female_ch), radius = 2),
           icon = female_ch
         ) %>%
         highcharter::hc_add_series(
@@ -822,7 +822,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           ),
           name = "Care home - Male",
           color = "#003087",
-          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_ch)),
+          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_ch),radius = 2),
           icon = male_ch
         ) %>%
         highcharter::hc_add_series(
@@ -834,7 +834,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           ),
           name = "Care home - Female",
           color = "#768692",
-          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = female_non_ch)),
+          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = female_non_ch), radius = 2),
           icon = female_non_ch
         ) %>%
         highcharter::hc_add_series(
@@ -846,7 +846,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           ),
           name = "Care home - Male",
           color = "#768692",
-          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_non_ch)),
+          marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_non_ch), radius = 2),
           icon = male_non_ch
         ) %>%
         theme_nhsbsa(stack = NA) %>%
