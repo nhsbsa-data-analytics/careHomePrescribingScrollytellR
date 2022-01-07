@@ -38,7 +38,7 @@ mod_02_demographics_ui <- function(id) {
       )
     ),
     p(
-      "For this reason, when we calculate per resident estimates, we use the ",
+      "For this reason, when we calculate per patient estimates, we use the ",
       "monthly average number of care home patients."
     ),
     p(
@@ -54,7 +54,7 @@ mod_02_demographics_ui <- function(id) {
       ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_prescribing_status_chart"),
-        height = "500px",
+        height = "350px",
         width = "900px"
       )
     ),
@@ -73,14 +73,12 @@ mod_02_demographics_ui <- function(id) {
       "receiving prescription items each month."
     ),
     p(
-      "Overall, the age and gender profile is broadly comparable to",
-      a(
-        "ONS Estimates of care home patients from April 2020.",
-        href = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales",
-        target = "_blank"
+      "The age and gender profile is broadly comparable to",
+      enurl(
+        text = "ONS Estimates of care home patients from April 2020.",
+        url = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales"
       ),
     ),
-    br(),
     br(),
     fluidRow(
       align = "center",
@@ -112,7 +110,7 @@ mod_02_demographics_ui <- function(id) {
           )
         )
       ),
-      col_12(
+      tags$div(
         style = "margin-bottom: 0;",
         radioButtons(
           inputId = ns("patients_by_geography_and_gender_and_age_band_metric"),
@@ -125,56 +123,47 @@ mod_02_demographics_ui <- function(id) {
           width = "100%"
         )
       ),
-      col_8(
-        highcharter::highchartOutput(
-          outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
-          height = "500px",
-          width = "900px"
-        )
-      ),
-      col_3(
-        br(),
-        br(),
-        br(),
-        br(),
-        br(),
-        br(),
-        br(),
-        br(),
-        br(),
-        br(),
-        uiOutput(
-          outputId = ns("chart_text")
-        )
+      highcharter::highchartOutput(
+        outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
+        height = "400px",
+        width = "900px"
       )
     ),
     mod_download_ui(
       id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
     ),
     br(),
-    br(),
+    h6(
+      "Similar proportions of older care home patients live in residential ",
+      "and nursing homes"
+    ),
     p(
-      "Based on CQC data, we estimate similar proportions of care home ",
-      "patients aged 65+ living in ", tags$b("residential homes"), " (40%) ",
-      "and ", tags$b("nursing homes"), " (37%) each month.", "A small ",
+      "We estimate similar proportions of care home patients aged 65+ living ",
+      "in ", tags$b("residential homes"), " (40%) and ",
+      tags$b("nursing homes"), " (37%) on average each month.", "A small ",
       "percentage (2%) appear in both settings and there are 21% who we were ",
-      "unable to match against a residential or nursing home within CQC ",
-      "dataset."
+      "unable to match against a residential or nursing home in the ",
+      enurl(
+        text = "CQC dataset.",
+        url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"
+      )
+    ),
+    h6(
+      "There is little variation in numbers of older care home patients by ",
+      "deprivation"
     ),
     p(
       "Care home patient's prescriptions were allocated an ",
       a("Index of Multiple Deprivation (IMD)",
         href = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019",
         target = "_blank"
-      ), " and associated ",
-      "decile based on the area in which the care home is located. On ",
-      "average, the proportion is very close to 20% in each ",
+      ),
+      " rank and associated quintile based on the area in which the care home ",
+      "is located. On average, the proportion is very close to 20% in each ",
       tags$b("IMD quintile,"),
-      " which suggests equal distribution and little ",
-      "variation."
+      " which suggests equal distribution and little variation."
     ),
     br(),
-    h6("Deprivation quintile of older care home patients in England (2020/21)"),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
@@ -439,29 +428,6 @@ mod_02_demographics_server <- function(id, export_data) {
         dplyr::pull(SDC_AVERAGE_TOTAL_PATIENTS)
     })
 
-    # Create the reactive text to go inside the chart
-    output$chart_text <- shiny::renderUI({
-      req(input$geography)
-      req(input$sub_geography)
-
-      tagList(
-        p(
-          id = "medium",
-          ifelse(input$sub_geography == "Overall", "", "In "),
-          input$sub_geography, " we estimate",
-          tags$b(paste0(percentage_female_patients(), "%")), "of care home ",
-          "patients are females and",
-          tags$b(paste0(percentage_elderly_female_patients(), "%")), "are ",
-          "females aged 85 or over."
-        ),
-        p(
-          id = "small",
-          "There are an estimated", tags$b(prettyNum(average_monthly_patients(), big.mark = ",", scientific = FALSE)),
-          "average number of monthly care home patients."
-        )
-      )
-    })
-
     # Pull the metric we are interested in
     patients_by_geography_and_gender_and_age_band_metric_df <- reactive({
       req(input$geography)
@@ -579,7 +545,19 @@ mod_02_demographics_server <- function(id, export_data) {
         req(input$sub_geography)
         req(input$patients_by_geography_and_gender_and_age_band_metric)
 
-        # Create the base of the chart
+        # Process annotations
+        text <- paste(
+          ifelse(input$sub_geography == "Overall", "", "In"),
+          input$sub_geography, "we estimate",
+          tags$b(paste0(percentage_female_patients(), "%")), "of care home",
+          "patients are females and",
+          tags$b(paste0(percentage_elderly_female_patients(), "%")), "are",
+          "females aged 85 or over.<br><br>There are an estimated",
+          tags$b(prettyNum(average_monthly_patients(), big.mark = ",", scientific = FALSE)),
+          "average number of monthly care home patients."
+        )
+
+        # Create the chart
         chart <- highcharter::highchart() %>%
           highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
           highcharter::hc_add_series_list(
@@ -612,6 +590,33 @@ mod_02_demographics_server <- function(id, export_data) {
             ),
             align = "right"
           ) %>%
+          highcharter::hc_annotations(
+            list(
+              labels = list(
+                list(
+                  point = list(
+                    x = -0.5,
+                    # Need -1 otherwise it fails when max_value() is axis max
+                    y = max_value() - 1,
+                    xAxis = 0,
+                    yAxis = 0
+                  ),
+                  text = text,
+                  style = list(
+                    width = 200,
+                    fontSize = "10pt"
+                  )
+                )
+              ),
+              labelOptions = list(
+                backgroundColor = "#FFFFFF",
+                borderWidth = 0,
+                align = "right",
+                verticalAlign = "top",
+                useHTML = TRUE
+              )
+            )
+          ) %>%
           highcharter::hc_xAxis(
             title = list(text = "Age Band"),
             categories =
@@ -630,8 +635,8 @@ mod_02_demographics_server <- function(id, export_data) {
                 )
               )
             ),
-            min = -ceiling(max_value() / 5) * 5,
-            max = ceiling(max_value() / 5) * 5,
+            min = -max_value(),
+            max = max_value(),
             labels = list(
               formatter = highcharter::JS(
                 paste(
@@ -778,7 +783,7 @@ mod_02_demographics_server <- function(id, export_data) {
                 "SDC_TOTAL_PATIENTS" = "Number",
                 "SDC_PCT_PATIENTS" = "Percentage"
               ),
-              "of care home patients."
+              "of care home patients"
             )
           )
         ) %>%
