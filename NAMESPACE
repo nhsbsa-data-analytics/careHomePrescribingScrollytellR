@@ -2,6 +2,7 @@
 
 export("%>%")
 export(breakdowns)
+export(fa_to_png_to_datauri)
 export(format_data_raw)
 export(geographys)
 export(run_app)

@@ -50,8 +50,9 @@ patient_db <- patient_db %>%
       AGE < 80 ~ "75-79",
       AGE < 85 ~ "80-84",
       AGE < 90 ~ "85-89",
-      TRUE ~ "90+")
+      TRUE ~ "90+"
     )
+  )
 
 # Join fact data to patient level dimension
 fact_db <- fact_db %>%
@@ -60,50 +61,54 @@ fact_db <- fact_db %>%
     copy = TRUE
   )
 
-# Monthly cost per patient by care home flag
-cost_per_patient_by_gender_and_age_band_and_ch_flag_db <- fact_db %>%
+# Monthly items and cost per patient by care home flag
+items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_db <- fact_db %>%
   group_by(YEAR_MONTH, GENDER, AGE_BAND, CH_FLAG) %>%
   summarise(
     TOTAL_PATIENTS = n_distinct(NHS_NO),
+    ITEMS_PER_PATIENT = sum(ITEM_COUNT) / n_distinct(NHS_NO),
     COST_PER_PATIENT = sum(ITEM_PAY_DR_NIC * 0.01) / n_distinct(NHS_NO)
   ) %>%
   ungroup()
 
 # Add overall mean
-cost_per_patient_by_gender_and_age_band_and_ch_flag_db <- 
-  cost_per_patient_by_gender_and_age_band_and_ch_flag_db %>%
+items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_db <-
+  items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_db %>%
   group_by(GENDER, AGE_BAND, CH_FLAG) %>%
   summarise(
     TOTAL_PATIENTS = mean(TOTAL_PATIENTS), # for SDC
+    ITEMS_PER_PATIENT = mean(ITEMS_PER_PATIENT),
     COST_PER_PATIENT = mean(COST_PER_PATIENT)
   ) %>%
   ungroup()
 
 # Collect
-cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
-  cost_per_patient_by_gender_and_age_band_and_ch_flag_db %>%
+items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
+  items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_db %>%
   collect()
 
 # Apply SDC based on the total patients
-cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
-  cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
+items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
+  items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
   mutate(
     SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+    SDC_ITEMS_PER_PATIENT =
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(ITEMS_PER_PATIENT, 1)),
     SDC_COST_PER_PATIENT =
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(COST_PER_PATIENT))
   ) %>%
   select(-SDC)
 
 # Format for highcharter
-cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
-  cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
+items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
+  items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df %>%
   careHomePrescribingScrollytellR::format_data_raw(
     c("GENDER", "AGE_BAND", "CH_FLAG")
   )
 
 # Add to data-raw/
 usethis::use_data(
-  cost_per_patient_by_gender_and_age_band_and_ch_flag_df,
+  items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df,
   overwrite = TRUE
 )
 

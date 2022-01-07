@@ -67,7 +67,7 @@ mod_02_demographics_ui <- function(id) {
       "10 are aged 85+ years"
     ),
     p(
-      "Overall, we estimate a monthly average of ", 
+      "Overall, we estimate a monthly average of ",
       tags$b("285 thousand care home patients,"), " aged 65+ years receiving ",
       "prescriptions, which accounts for around 4% of patients aged 65+ years ",
       "receiving prescription items each month."
@@ -139,7 +139,7 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "We estimate similar proportions of care home patients aged 65+ living ",
-      "in ", tags$b("residential homes"), " (40%) and ", 
+      "in ", tags$b("residential homes"), " (40%) and ",
       tags$b("nursing homes"), " (37%) on average each month.", "A small ",
       "percentage (2%) appear in both settings and there are 21% who we were ",
       "unable to match against a residential or nursing home in the ",
@@ -157,7 +157,7 @@ mod_02_demographics_ui <- function(id) {
       a("Index of Multiple Deprivation (IMD)",
         href = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019",
         target = "_blank"
-      ), 
+      ),
       " rank and associated quintile based on the area in which the care home ",
       "is located. On average, the proportion is very close to 20% in each ",
       tags$b("IMD quintile,"),
@@ -201,10 +201,9 @@ mod_02_demographics_server <- function(id, export_data) {
     ns <- session$ns
 
     # Patients by prescribing status chart
-    
+
     # Swap NAs for "c" for data download
     patients_by_prescribing_status_df <- reactive({
-
       careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
         dplyr::mutate(
           SDC_TOTAL_PATIENTS := ifelse(
@@ -214,37 +213,35 @@ mod_02_demographics_server <- function(id, export_data) {
           )
         )
     })
-    
+
     # Add a download button
     mod_download_server(
       id = "download_patients_by_prescribing_status_chart",
       filename = "patients_by_prescribing_status_chart.csv",
       export_data = patients_by_prescribing_status_df()
     )
-    
+
     # Create chart
-    output$patients_by_prescribing_status_chart <- 
+    output$patients_by_prescribing_status_chart <-
       highcharter::renderHighchart({
-      
         careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
           dplyr::mutate(YEAR_MONTH = as.character(YEAR_MONTH)) %>%
           highcharter::hchart(
-            type = "column", 
+            type = "column",
             highcharter::hcaes(
-              x = YEAR_MONTH, 
-              y = SDC_TOTAL_PATIENTS, 
+              x = YEAR_MONTH,
+              y = SDC_TOTAL_PATIENTS,
               group = PRESCRIBING_STATUS
-            ), 
+            ),
             stacking = "normal"
           ) %>%
           theme_nhsbsa() %>%
           highcharter::hc_xAxis(title = list(text = "Year Month")) %>%
           highcharter::hc_yAxis(title = list(text = "Total patients"))
-        
       })
-    
+
     # Patients by geography and gender and age band chart
-    
+
     # Filter to relevant data for this chart
     patients_by_geography_and_gender_and_age_band_df <-
       careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
@@ -510,14 +507,13 @@ mod_02_demographics_server <- function(id, export_data) {
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-      
+
       max(
         patients_by_geography_and_gender_and_age_band_plot_df()[[
         input$patients_by_geography_and_gender_and_age_band_metric
         ]],
         na.rm = TRUE
       )
-
     })
 
     # Format for highcharter animation.
@@ -545,11 +541,10 @@ mod_02_demographics_server <- function(id, export_data) {
     # Pyramid plot for age band and gender
     output$patients_by_geography_and_gender_and_age_band_chart <-
       highcharter::renderHighchart({
-        
         req(input$geography)
         req(input$sub_geography)
         req(input$patients_by_geography_and_gender_and_age_band_metric)
-        
+
         # Process annotations
         text <- paste(
           ifelse(input$sub_geography == "Overall", "", "In"),
@@ -600,15 +595,15 @@ mod_02_demographics_server <- function(id, export_data) {
               labels = list(
                 list(
                   point = list(
-                    x = - 0.5, 
+                    x = -0.5,
                     # Need -1 otherwise it fails when max_value() is axis max
                     y = max_value() - 1,
-                    xAxis = 0, 
+                    xAxis = 0,
                     yAxis = 0
-                  ), 
+                  ),
                   text = text,
                   style = list(
-                    width = 200, 
+                    width = 200,
                     fontSize = "10pt"
                   )
                 )
@@ -748,7 +743,6 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Add IMD chart
     output$patients_by_imd_chart <- highcharter::renderHighchart({
-      
       req(input$patients_by_imd_metric)
 
       # highcharter plot
