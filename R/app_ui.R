@@ -33,24 +33,15 @@ app_ui <- function(request) {
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "03_overall_summary",
-                mod_03_overall_summary_ui("03_overall_summary_ui_1")
-              ),
-              br(),
-              scrollytell::scrolly_section(
-                id = "04_estimated_care_home_patients",
-                mod_04_estimated_care_home_patients_ui("04_estimated_care_home_patients_ui_1")
+                id = "03_care_home_prescribing",
+                mod_03_care_home_prescribing_ui("03_care_home_prescribing_ui_1")
               ),
               br(),
               scrollytell::scrolly_section(
                 id = "05_items_and_cost_per_bnf",
                 mod_05_items_and_cost_per_bnf_ui("05_items_and_cost_per_bnf_ui_1")
               ),
-              br(),
-              # scrollytell::scrolly_section(
-              #  id = "additional_ch_plots",
-              #  mod_add_two_plots_ui("add_two_plots_ui_1")
-              # )
+              br()
             )
           )
         )
@@ -80,7 +71,7 @@ golem_add_external_resources <- function() {
   add_resource_path(
     "www", app_sys("app/www")
   )
-
+  
   tags$head(
     favicon(),
     bundle_resources(
