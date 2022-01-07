@@ -348,9 +348,8 @@ mod_04_estimated_care_home_patients_server <- function(id) {
       df <- combined_df %>%
         dplyr::filter(is.na(GENDER)) %>%
         dplyr::summarise(
-          UNKNOWN_PAT_COUNT = sum(TOTAL_PATIENTS),
-          UNKNOWN_PAT_CHAPTER_TEN = sum(TOTAL_PATIENTS_CHAPTER_TEN)
-        ) %>%
+          UNKNOWN_PAT_COUNT = round(janitor::round_half_up(sum(TOTAL_PATIENTS)),-1),
+          UNKNOWN_PAT_CHAPTER_TEN = round(janitor::round_half_up(sum(TOTAL_PATIENTS_CHAPTER_TEN)),-1)) %>%
         dplyr::ungroup()
 
       if (input$age_gender_by_metric %in% c("SDC_COST_PER_PATIENT", "SDC_ITEMS_PER_PATIENT")) {
@@ -364,14 +363,12 @@ mod_04_estimated_care_home_patients_server <- function(id) {
     # Pull the min value
     min_value_line <- reactive({
       req(input$age_gender_by_metric)
-
       min(age_gender_by_metric_df()[[input$age_gender_by_metric]], na.rm = TRUE)
     })
 
     # Pull the max value
     max_value_line <- reactive({
       req(input$age_gender_by_metric)
-
       max(age_gender_by_metric_df()[[input$age_gender_by_metric]], na.rm = TRUE)
     })
 
@@ -417,15 +414,24 @@ mod_04_estimated_care_home_patients_server <- function(id) {
         )) %>%
         highcharter::hc_tooltip(
           shared = TRUE,
-          headerFormat = "<b> {point.value} </b>", valueSuffix = switch(input$age_gender_by_metric,
-            "SDC_PCT_PATIENTS_TEN_OR_MORE" = "%"
-          )
+          headerFormat = "<b> {point.value} </b>", 
+          valueSuffix = switch(input$age_gender_by_metric,
+                               "SDC_PCT_PATIENTS_TEN_OR_MORE" = "%"
+                               ),
+          valuePrefix = switch(input$age_gender_by_metric,
+                               "SDC_COST_PER_PATIENT" = "£")
         ) %>%
+        highcharter::hc_caption(
+          text = paste0(
+            "This chart excludes ", prettyNum(age_gender_by_metric_na(),big.mark = ","), " of care home patients."
+          )
+        ) %>% 
         highcharter::hc_credits(enabled = T) %>%
-        highcharter::hc_colors(c("#768692", "#768692", "#003087", "#003087"))
+        highcharter::hc_colors(c("#768692", "#768692", "#003087", "#003087")) 
     })
   })
 }
+
 
 ## To be copied in the UI
 # mod_04_estimated_care_home_patients_ui("04_estimated_care_home_patients_ui_1")

@@ -778,7 +778,7 @@ mod_02_demographics_server <- function(id, export_data) {
                 "SDC_TOTAL_PATIENTS" = "Number",
                 "SDC_PCT_PATIENTS" = "Percentage"
               ),
-              "of care home patients"
+              "of care home patients."
             )
           )
         ) %>%
