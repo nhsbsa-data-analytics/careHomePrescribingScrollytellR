@@ -16,7 +16,7 @@ mod_01_intro_ui <- function(id) {
         text = "older care home patients",
         tooltip = tooltip_text$care_home
       ),
-      " in England"
+      " in England in 2020/21"
     ),
     p(
       "In this article we provide unique insight into primary care ",
@@ -70,9 +70,9 @@ mod_01_intro_ui <- function(id) {
       "ensure value."
     ),
     p(
-      "This is an experimental piece of work and we are interested in ",
-      "collaboration and refining the methodology so that it can be used in ",
-      "NHS information systems in future."
+      "This is an experimental piece of work. We welcome feedback, ",
+      "collaboration and refinement of the methodology so that it can be used ",
+      "in NHSBSA information systems and we can develop additional analyses."
     )
   )
 }
