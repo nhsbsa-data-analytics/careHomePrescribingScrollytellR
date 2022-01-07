@@ -30,6 +30,7 @@ Imports:
   cqcr,
   dbplyr,
   dplyr,
+  DT,
   forcats,
   geojsonsf,
   glue,
