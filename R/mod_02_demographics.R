@@ -139,7 +139,7 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "We estimate similar proportions of care home patients aged 65+ living ",
-      "in ", tags$b("residential homes"), " (40%) and ", 
+      "in ", tags$b("residential homes"), " (40%) and ",
       tags$b("nursing homes"), " (37%) on average each month.", "A small ",
       "percentage (2%) appear in both settings and there are 21% who we were ",
       "unable to match against a residential or nursing home in the ",
@@ -157,7 +157,7 @@ mod_02_demographics_ui <- function(id) {
       a("Index of Multiple Deprivation (IMD)",
         href = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019",
         target = "_blank"
-      ), 
+      ),
       " rank and associated quintile based on the area in which the care home ",
       "is located. On average, the proportion is very close to 20% in each ",
       tags$b("IMD quintile,"),
@@ -507,14 +507,13 @@ mod_02_demographics_server <- function(id, export_data) {
       req(input$geography)
       req(input$sub_geography)
       req(input$patients_by_geography_and_gender_and_age_band_metric)
-      
+
       max(
         patients_by_geography_and_gender_and_age_band_plot_df()[[
         input$patients_by_geography_and_gender_and_age_band_metric
         ]],
         na.rm = TRUE
       )
-
     })
 
     # Format for highcharter animation.
@@ -545,7 +544,7 @@ mod_02_demographics_server <- function(id, export_data) {
         req(input$geography)
         req(input$sub_geography)
         req(input$patients_by_geography_and_gender_and_age_band_metric)
-        
+
         # Process annotations
         text <- paste(
           ifelse(input$sub_geography == "Overall", "", "In"),
@@ -557,7 +556,7 @@ mod_02_demographics_server <- function(id, export_data) {
           tags$b(prettyNum(average_monthly_patients(), big.mark = ",", scientific = FALSE)),
           "average number of monthly care home patients."
         )
-        
+
         # Create the chart
         chart <- highcharter::highchart() %>%
           highcharter::hc_chart(type = "bar", marginBottom = 100) %>%
@@ -596,15 +595,15 @@ mod_02_demographics_server <- function(id, export_data) {
               labels = list(
                 list(
                   point = list(
-                    x = - 0.5, 
+                    x = -0.5,
                     # Need -1 otherwise it fails when max_value() is axis max
                     y = max_value() - 1,
-                    xAxis = 0, 
+                    xAxis = 0,
                     yAxis = 0
-                  ), 
+                  ),
                   text = text,
                   style = list(
-                    width = 200, 
+                    width = 200,
                     fontSize = "10pt"
                   )
                 )
