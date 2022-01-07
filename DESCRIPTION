@@ -51,7 +51,8 @@ Imports:
   shinyWidgets,
   tidyr,
   tinter,
-  tippy
+  tippy,
+  rsvg 
 Remotes:
   evanodell/cqcr,
   nhsbsa-data-analytics/addressMatchR,
