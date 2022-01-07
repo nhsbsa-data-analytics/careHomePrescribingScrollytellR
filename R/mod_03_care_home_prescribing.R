@@ -765,6 +765,7 @@ mod_03_care_home_prescribing_server <- function(id) {
 
       df <- combined_df %>%
         dplyr::filter(is.na(GENDER)) %>%
+        dplyr::group_by(CH_FLAG) %>%
         dplyr::summarise(
           UNKNOWN_PAT_COUNT = round(janitor::round_half_up(sum(TOTAL_PATIENTS)), -1),
           UNKNOWN_PAT_CHAPTER_TEN = round(janitor::round_half_up(sum(TOTAL_PATIENTS_CHAPTER_TEN)), -1)
@@ -834,7 +835,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             x = AGE_BAND,
             y = value
           ),
-          name = "Care home - Female",
+          name = "Non care home - Female",
           color = "#768692",
           marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = female_non_ch), radius = 2),
           icon = female_non_ch
@@ -846,14 +847,14 @@ mod_03_care_home_prescribing_server <- function(id) {
             x = AGE_BAND,
             y = value
           ),
-          name = "Care home - Male",
+          name = "Non care home - Male",
           color = "#768692",
           marker = list(symbol = stringr::str_glue("url({data_uri})", data_uri = male_non_ch), radius = 2),
           icon = male_non_ch
         ) %>%
         theme_nhsbsa(stack = NA) %>%
         highcharter::hc_yAxis(
-          min = min_value_line(),
+          min = 0,
           max = max_value_line(),
           title = list(
             text = paste(
@@ -892,7 +893,8 @@ mod_03_care_home_prescribing_server <- function(id) {
         ) %>%
         highcharter::hc_caption(
           text = paste0(
-            "This chart excludes ", prettyNum(age_gender_by_metric_na(), big.mark = ","), " of care home patients."
+            "This chart excludes ", prettyNum(age_gender_by_metric_na()[1], big.mark = ","), " of care home patients and ",
+            prettyNum(age_gender_by_metric_na()[2], big.mark = ","), " of non care home patients."
           )
         ) %>%
         highcharter::hc_credits(enabled = T)
