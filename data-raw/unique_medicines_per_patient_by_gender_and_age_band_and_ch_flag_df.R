@@ -128,7 +128,7 @@ unique_medicines_per_patient_by_gender_and_age_band_and_ch_flag_df <-
   mutate(
     SDC = ifelse(TOTAL_PATIENTS_CHAPTER_TEN %in% c(1, 2, 3, 4), 1, 0),
     SDC_UNIQUE_MEDICINES_PER_PATIENT =
-      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(UNIQUE_MEDICINES_PER_PATIENT)),
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(UNIQUE_MEDICINES_PER_PATIENT,1)),
     SDC = ifelse(PATIENTS_TEN_OR_MORE %in% c(1, 2, 3, 4), 1, 0),
     SDC_PCT_PATIENTS_TEN_OR_MORE =
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS_TEN_OR_MORE))

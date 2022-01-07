@@ -165,7 +165,7 @@ items_and_cost_per_patient_by_breakdown_and_ch_flag_df <-
   mutate(
     SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
     SDC_ITEMS_PER_PATIENT =
-      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(ITEMS_PER_PATIENT)),
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(ITEMS_PER_PATIENT,1)),
     SDC_COST_PER_PATIENT =
       ifelse(SDC == 1, NA_integer_, janitor::round_half_up(COST_PER_PATIENT))
   ) %>%
