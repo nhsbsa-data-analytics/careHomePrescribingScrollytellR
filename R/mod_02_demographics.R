@@ -149,9 +149,6 @@ mod_02_demographics_ui <- function(id) {
         url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"
       )
     ),
-    p(
-      "TODO: Add nursing / residential chart here..."
-    ),
     h6(
       "There is little variation in numbers of older care home patients by ",
       "deprivation"
