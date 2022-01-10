@@ -250,20 +250,18 @@ pds_import_db <- pds_import_db %>%
 # Get a single postcode and address per EPS patient
 eps_single_address_db <- eps_fact_db %>%
   filter(!is.na(POSTCODE)) %>%
-  # Keep the address with the biggest item count in each postcode 
-  group_by(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO, POSTCODE, SINGLE_LINE_ADDRESS) %>%
-  summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
-  ungroup() %>%
-  group_by(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO, POSTCODE) %>%
-  slice_max(order_by = ITEM_COUNT, with_ties = FALSE) %>%
-  ungroup() %>%
-  select(-ITEM_COUNT) %>%
-  # Remove patients with multiple postcodes
+  # Remove patients with multiple postcodes in the same month
   group_by(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO) %>%
   mutate(POSTCODE_COUNT = n_distinct(POSTCODE)) %>%
-  ungroup() %>%
   filter(POSTCODE_COUNT == 1) %>%
-  select(-POSTCODE_COUNT)
+  select(-POSTCODE_COUNT) %>%
+  # And keep their address with the biggest item count in each postcode 
+  group_by(POSTCODE, SINGLE_LINE_ADDRESS, .add = TRUE) %>%
+  summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
+  ungroup(POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  slice_max(order_by = ITEM_COUNT, with_ties = FALSE) %>%
+  ungroup() %>% 
+  select(-ITEM_COUNT)
 
 # Get the PDS patients that we need to find an address for
 
