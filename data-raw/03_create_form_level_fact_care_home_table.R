@@ -1,7 +1,7 @@
 library(dplyr)
 library(dbplyr)
 
-# Set up connection to DALP and DWCP
+# Set up connection to DWCP and DALP
 con_dwcp <- nhsbsaR::con_nhsbsa(database = "DWCP")
 con_dalp <- nhsbsaR::con_nhsbsa(database = "DALP")
 
@@ -26,7 +26,7 @@ year_month_db <- con_dalp %>%
 fact_db <- con_dalp %>%
   tbl(from = in_schema("AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
 
-# Create a lazy table from SCD2 payload message table 
+# Create a lazy table from SCD2 payload message table
 eps_payload_messages_db <- con_dalp %>% 
   tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")))
 
@@ -88,6 +88,18 @@ fact_db <- fact_db %>%
 
 # EPS payload message data
 
+# First we have to create a filtered version of EPS payload message data in DALP
+
+# Check if the table exists DALP
+exists_dalp_eps_payload <- con_dalp %>%
+  DBI::dbExistsTable(name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
+
+# Drop any existing table beforehand
+if (exists_dalp_eps_payload) {
+  con_dwcp %>%
+    DBI::dbRemoveTable(name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
+}
+
 # Create the single line address and subset columns
 eps_payload_messages_db <- eps_payload_messages_db %>%
   # Bring back ETP data from the month previous until 2 months after (and buffer 
@@ -111,6 +123,17 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
     POSTCODE = PAT_ADDRESS_POSTCODE, 
     SINGLE_LINE_ADDRESS
   )
+
+# Write the table to DALP
+eps_payload_messages_db %>%
+  nhsbsaR::oracle_create_table(
+    table_name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA"
+  )
+
+# Create a lazy table in DALP from filtered version of 
+# SCD2_ETP_DY_PAYLOAD_MSG_DATA
+eps_payload_messages_db <- con_dalp %>% 
+  tbl(from = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
 
 # Join back to an EPS subset of the FACT table
 eps_fact_db <- fact_db %>%
