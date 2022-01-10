@@ -298,7 +298,7 @@ left_join_address <- function(x, y, year_month_id_col, suffix){
         "SINGLE_LINE_ADDRESS_{{year_month_id_col}}_{{suffix}}" := 
           SINGLE_LINE_ADDRESS
       ),
-    by = c("YEAR_MONTH", "NHS_NO"),
+    by = c(rlang::as_name(rlang::enquo(year_month_id_col)), "NHS_NO"),
     copy = TRUE
   )
   
