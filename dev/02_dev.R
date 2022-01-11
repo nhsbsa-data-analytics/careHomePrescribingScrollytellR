@@ -40,11 +40,24 @@ usethis::use_data_raw( name = "my_dataset", open = FALSE )
 ## Tests ----
 ## Add one line by test you want to create
 usethis::use_test( "app" )
+usethis::use_package( "purrr" )
+usethis::use_package( "readr" )
+usethis::use_package( "janitor" )
+usethis::use_package( "dplyr" )
+# Manually added statistiekcbs/scrollytell to DESCRIPTION
+usethis::use_package( "highcharter" )
+usethis::use_package( "magrittr" )
+usethis::use_package( "shinyWidgets" )
+usethis::use_package( "dplyr")
+usethis::use_package( "NHSRtheme")
+usethis::use_package( "scrollytell")
+usethis::use_package( "tidyr")
+
 
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("nhsbsaShinyR")
+usethis::use_vignette("careHomePrescribingScrollytellR")
 devtools::build_vignettes()
 
 ## Code Coverage----

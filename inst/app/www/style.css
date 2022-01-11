@@ -41,10 +41,20 @@ h3 { font-size: 24pt; }
 h4 { font-size: 22pt; }
 h5 { font-size: 20pt; }
 h6 { font-size: 18pt; }
-p  { font-size: 16pt; }
-li { font-size: 16pt; }
+p  { font-size: 16pt; text-align: justify;}
+/*li { font-size: 16pt; }*/ /*tooltip requires and too many to change by span so remove for now*/
 a  { font-size: 16pt; }
 em { font-size: 16pt; }
+
+
+/*paragraph for the inside chart different font size */
+#small{
+  font-size: 10pt;
+}
+
+#medium{
+  font-size: 11pt;
+}
 
 
 /* Make hyperlinks blue and underlined */
@@ -52,6 +62,18 @@ a {
   color: var(--nhs-blue); 
   text-decoration: underline
 }
+
+/* hover BNF reduce space */
+ul.frames {
+  font-size: 0;
+}
+
+ul.frames li {
+  font-size: 14px; 
+  font-size:1.4rem;
+  display: inline;
+}
+
 
 /* General shiny stuff */
 
@@ -63,4 +85,72 @@ should be no wider as per NHS guidelines) */
 .container-fluid {
   background-color: var(--nhs-pale-grey);
 	max-width: 960px;
+}
+
+/* Set the margin of the radio buttons to 0 */
+.form-group {
+  margin-bottom: 0;
+}
+
+/* Scrolly stuff */
+
+/* Force scrolly sections to be the full width of the container-fluid ^ */
+.scrolly-sections { width: 100% !important; }
+
+
+.scrolly-graph {
+	margin: 0px !important;
+	padding: 0px;
+	z-index: 1;
+	top: 10px;
+	font-size: 16px !important;
+	background-color: var(--nhs-pale-grey);
+	opacity: 0.8;
+	width: 50%;
+}
+
+/* Tippy stuff */
+
+.tippy-box {
+  font-size: 15px !important;
+}
+
+.tippy {
+  text-decoration: underline;
+}
+
+.tippy-content{
+	transition-duration: 325ms;
+	transition-delay: 54ms;
+	background: var(--nhs-pale-grey) none repeat scroll 0% 0%;
+	padding: 4px;
+	text-align: left;
+}
+
+.tippy-popper {
+  font-size: 15px !important;
+}
+
+.tippy-tooltip{
+    font-size: 15px !important;
+    color: var(--nhs-black);
+    background-color: var(--nhs-pale-grey) !important;
+}
+
+.tippy-backdrop {
+  background-color: var(--nhs-pale-grey);
+
+}
+
+/* NavBar stuff */
+
+/* Make NavBar links stick when scrolling */
+.col-sm-2 {
+  z-index: 10;
+  position: fixed; 
+}
+
+/* Make NavBar links stick when scrolling */
+.nav-pills > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
+  background-color: var(--nhs-mid-grey);
 }

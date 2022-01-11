@@ -10,6 +10,11 @@
 #' @export
 theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
 
+  # Set the thousands seperator
+  hcoptslang <- getOption("highcharter.lang")
+  hcoptslang$thousandsSep <- ","
+  options(highcharter.lang = hcoptslang)
+
   # Load theme from nhsbsaR package
   theme_nhsbsa_hc <- nhsbsaR::theme_nhsbsa_hc(family = "Frutiger W01")
 
@@ -36,92 +41,116 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
     highcharter::hc_credits(enabled = TRUE)
 }
 
+#' Define the breakdowns
+#'
+#' Define the labels of the breakdowns (in order of hierarchy) with the columns
+#' that are used to aggregate (if there are two colums then the second is the
+#' code)
+#'
+#' @export
+breakdowns <- list(
+  "Overall" = "OVERALL",
+  "Geographical - Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
+  "Geographical - STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
+  "Geographical - Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE"),
+  "Demographical - Gender" = "GENDER",
+  "Demographical - Age Band" = "AGE_BAND"
+)
 
-#' Add a care home flag
+
+#' Define the geographys
 #'
-#' Add a care home flag to the data
+#' Define the labels of the geographys (in order of hierarchy) with the columns
+#' that are used to aggregate (if there are two colums then the second is the
+#' code)
 #'
-#' @param df 
-#' @param address_col
-#' @param use_addressbase_plus_class_col
+#' @export
+geographys <- list(
+  "Overall" = "OVERALL",
+  "Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
+  "STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
+  "Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE")
+)
+
+#' Format data-raw table
+#'
+#' Deal with factors and sort table.
+#'
+#' @param df Dataframe
+#' @param vars Grouping variables
 #'
 #' @return
 #' @export
-calc_care_home_flag <- function(
-  df, 
-  address_col, 
-  use_addressbase_plus_class_col=FALSE
-) {
-  
+format_data_raw <- function(df, vars) {
+
+  # Initially sort the factors
   df <- df %>%
-  
-    # Regex check for care home / non care home words (as the class isn't always
-    # perfect)
-    dplyr::mutate(
-      # If it has this in the name then it is probably a care home
-      # CARE-HOME / CARE HOME / NURSING-HOME / NURSING-HOME / etc
-      CH_WORD = ifelse(
-        test = (
-          {{ address_col }} %LIKE% "%CARE HOME%" |
-          {{ address_col }} %LIKE% "%CARE-HOME%" |
-          {{ address_col }} %LIKE% "%NURSING HOME%" |
-          {{ address_col }} %LIKE% "%NURSING-HOME%" |
-          {{ address_col }} %LIKE% "%RESIDENTIAL HOME%" |
-          {{ address_col }} %LIKE% "%RESIDENTIAL-HOME%" |
-          {{ address_col }} %LIKE% "%REST HOME%" |
-          {{ address_col }} %LIKE% "%REST-HOME%"
-        ),
-        yes = 1,
-        no = 0
-      ),
-      # If it has this in then it is definitely not a care home
-      NON_CH_WORD = ifelse(
-        test = (
-          {{ address_col }} %LIKE% "%ABOVE%" |
-          {{ address_col }} %LIKE% "%CARAVAN%" |
-          {{ address_col }} %LIKE% "%CHILDREN%" |
-          {{ address_col }} %LIKE% "%CONVENT%" |
-          {{ address_col }} %LIKE% "%HOLIDAY%" |
-          {{ address_col }} %LIKE% "%MARINA%" |
-          {{ address_col }} %LIKE% "%MOBILE%" |
-          {{ address_col }} %LIKE% "%MONASTERY%" |
-          {{ address_col }} %LIKE% "%NO FIXED ABODE%" |
-          {{ address_col }} %LIKE% "%RESORT%" |
-          {{ address_col }} %LIKE% "%RECOVERY%"
-        ),
-        yes = 1,
-        no = 0
+    dplyr::arrange(
+      dplyr::across(
+        dplyr::any_of(
+          c("YEAR_MONTH", "SUB_BREAKDOWN_NAME", "SUB_GEOGRAPHY_NAME", vars)
+        )
       )
     )
-  
-  # Calculate the care home flag
-  if (use_addressbase_plus_class_col) {
-    # If we have the AddressBase plus class then we can use that
+
+  # Move overall to the first category
+  df <- df %>%
+    dplyr::mutate(
+      dplyr::across(
+        .cols = dplyr::any_of(
+          c("YEAR_MONTH", "SUB_BREAKDOWN_NAME", "SUB_GEOGRAPHY_NAME")
+        ),
+        .fns = ~ forcats::fct_relevel(.x, "Overall")
+      )
+    )
+
+  # Breakdown is a hierarchy
+  if ("BREAKDOWN" %in% names(df)) {
     df <- df %>%
       dplyr::mutate(
-        CH_FLAG = ifelse(
-          test = 
-            (CLASS == "RI01" | CH_WORD == 1) & (NON_CH_WORD == 0),
-          yes = 1,
-          no = 0
-        )
+        BREAKDOWN = forcats::fct_relevel(BREAKDOWN, names(breakdowns))
       )
-    
-  } else {
-    # Otherwise just use the single line address field
-    df <- df %>%
-      dplyr::mutate(
-        CH_FLAG = ifelse(
-          test = CH_WORD == 1 & NON_CH_WORD == 0, 
-          yes = 1, 
-          no = 0
-        )
-      )
-    
   }
-  
-  # Drop the calculated columns
+
+  # Geography is a hierachy
+  if ("GEOGRAPHY" %in% names(df)) {
+    df <- df %>%
+      dplyr::mutate(
+        GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, names(geographys))
+      )
+  }
+
+  # Sort final dataframe by new factors
   df %>%
-    dplyr::select(-c(CH_WORD, NON_CH_WORD))
-    
+    dplyr::arrange(
+      dplyr::across(
+        dplyr::any_of(
+          c(
+            "YEAR_MONTH",
+            "BREAKDOWN",
+            "SUB_BREAKDOWN_NAME",
+            "GEOGRAPHY",
+            "SUB_GEOGRAPHY_NAME",
+            vars
+          )
+        )
+      )
+    )
+}
+
+#' fontawesome save to datauri
+#' taken from https://jkunst.com/highcharter/articles/fontawesome.html
+#'
+#' @param name fontawsome name
+#' @param vars Grouping variables
+#'
+#' @return
+#' @export
+
+fa_to_png_to_datauri <- function(name, ...) {
+  tmpfl <- tempfile(fileext = ".png")
+
+  fontawesome::fa_png(name, file = tmpfl, ...)
+
+  knitr::image_uri(tmpfl)
 }

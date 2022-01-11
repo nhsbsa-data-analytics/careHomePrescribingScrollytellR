@@ -5,16 +5,18 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
+
   # Your application server logic
-  moduleServer(id = "00_header_1", module = mod_00_header_server)
-  moduleServer(id = "01_intro_1", module = mod_01_intro_server)
-  moduleServer(
-    id = "items_per_patient_chart_1",
-    module = mod_items_per_patient_chart_server
-  )
-  moduleServer(
-    id = "patients_by_gender_and_age_band_chart_1",
-    module = mod_patients_by_gender_and_age_band_chart_server
-  )
-  moduleServer(id = "99_footer_1", module = mod_99_footer_server)
+  mod_00_header_server("00_header_ui_1")
+  mod_01_intro_server("01_intro_ui_1")
+  mod_02_demographics_server("02_demographics_ui_1")
+  mod_03_care_home_prescribing_server("03_care_home_prescribing_ui_1")
+  mod_05_items_and_cost_per_bnf_server("05_items_and_cost_per_bnf_ui_1")
+  mod_08_footer_server("08_footer_ui_1")
+  # mod_add_two_plots_server("add_two_plots_ui_1")
+  mod_definitions_server("definitions_ui_1")
+
+  output$scrolly <- scrollytell::renderScrollytell({
+    scrollytell::scrollytell()
+  })
 }

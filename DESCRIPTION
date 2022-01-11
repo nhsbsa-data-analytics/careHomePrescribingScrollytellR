@@ -17,22 +17,53 @@ Authors@R:
       person(given = "Adnan",
              family = "Shroufi",
              role = "ctb",
-             email = "adnan.shroufi@nhs.net"))
+             email = "adnan.shroufi@nhs.net"),
+      person(given = "Kayoung",
+             family = "Goffe",
+             role = "ctb",
+             email = "kayoung.goffe1@nhs.net"))
 Description: This R package has been developed by NHS Business Services Authority Data Analytics Learning Lab to use a combination of analytics and user research to explore prescribing in care homes in England. 
 License: Apache License (>= 2)
 Imports: 
-    config (>= 0.3.1),
-    golem (>= 0.3.1),
-    shiny (>= 1.6.0),
-    markdown,
-    highcharter,
-    nhsbsaR,
-    addressMatchR
+  addressMatchR,
+  config (>= 0.3.1),
+  cqcr,
+  dbplyr,
+  dplyr,
+  DT,
+  forcats,
+  geojsonsf,
+  glue,
+  golem (>= 0.3.1),
+  highcharter,
+  janitor,
+  jsonlite,
+  magrittr,
+  markdown,
+  NHSRtheme,
+  nhsbsaR,
+  pkgload,
+  purrr,
+  readr,
+  scrollytell,
+  sf,
+  shiny (>= 1.6.0),
+  shinyWidgets,
+  tidyr,
+  tinter,
+  tippy,
+  rsvg 
 Remotes:
-    nhsbsa-data-analytics/nhsbsaR
-    nhsbsa-data-analytics/addressMatchR
+  evanodell/cqcr,
+  nhsbsa-data-analytics/addressMatchR,
+  nhsbsa-data-analytics/nhsbsaR,
+  statistiekcbs/scrollytell,
+  tidyverse/dbplyr
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
 Depends: 
     R (>= 2.10)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
