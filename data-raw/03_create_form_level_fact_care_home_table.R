@@ -211,6 +211,7 @@ fact_db <- fact_db %>%
     EPS_FLAG,
     PART_DATE = EPS_PART_DATE,
     EPM_ID,
+    PATIENT_IDENTIFIED,
     NHS_NO,
     CALC_AGE,
     ITEM_COUNT
