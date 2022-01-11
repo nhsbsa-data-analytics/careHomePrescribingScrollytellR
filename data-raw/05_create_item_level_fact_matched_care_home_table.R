@@ -32,6 +32,14 @@ form_fact_db <- con %>%
 patient_address_match_db <- con %>%
   tbl(from = "INT615_ADDRESS_MATCHED_CARE_HOME")
 
+# Create a lazy table from the geography lookup table (Region, STP and LA)
+postcode_db <- con %>%
+  tbl(from = "INT615_POSTCODE_LOOKUP")
+
+# Create a lazy table from the drug DIM table
+drug_db <- con %>%
+  tbl(from = in_schema("DIM", "CDR_EP_DRUG_BNF_DIM"))
+
 # Create item level FACT table
 
 # Filter to elderly patients in 2020/2021 and required columns
@@ -57,6 +65,7 @@ item_fact_db <- item_fact_db %>%
     EPM_ID,
     PATIENT_IDENTIFIED,
     NHS_NO,
+    PDS_GENDER,
     CALC_AGE,
     CALC_PREC_DRUG_RECORD_ID,
     ITEM_COUNT,
@@ -78,6 +87,84 @@ item_fact_db <- item_fact_db %>%
     copy = TRUE
   ) %>%
   tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
+
+# Tidy care home flag and join the postcode info
+item_fact_db <- item_fact_db %>%
+  mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")) %>%
+  left_join(
+    y = postcode_db,
+    copy = TRUE
+  ) %>%
+  relocate(PCD_REGION_CODE:IMD_QUINTILE, .after = POSTCODE)
+
+# Add the drug information
+item_fact_db <- item_fact_db %>%
+  left_join(
+    y = drug_db %>%
+      filter(YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L) %>%
+      select(
+        YEAR_MONTH,
+        CALC_PREC_DRUG_RECORD_ID = RECORD_ID,
+        BNF_CHAPTER,
+        CHAPTER_DESCR,
+        BNF_SECTION,
+        SECTION_DESCR,
+        BNF_PARAGRAPH,
+        PARAGRAPH_DESCR
+      ),
+    copy = TRUE
+  ) %>%
+  relocate(BNF_CHAPTER:PARAGRAPH_DESCR, .before = CALC_PREC_DRUG_RECORD_ID)
+
+# Get a single gender and age for the period
+patient_db <- item_fact_db %>%
+  group_by(NHS_NO) %>%
+  summarise(
+    # Gender
+    MALE_COUNT = sum(
+      ifelse(PDS_GENDER == 1, 1, 0),
+      na.rm = TRUE
+    ),
+    FEMALE_COUNT = sum(
+      ifelse(PDS_GENDER == 2, 1, 0),
+      na.rm = TRUE
+    ),
+    # Take the max age
+    AGE = max(
+      CALC_AGE,
+      na.rm = TRUE
+    )
+  ) %>%
+  ungroup() %>%
+  mutate(
+    GENDER = case_when(
+      MALE_COUNT > 0 & FEMALE_COUNT == 0 ~ "Male",
+      MALE_COUNT == 0 & FEMALE_COUNT > 0 ~ "Female",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(-ends_with("_COUNT")) %>%
+  # Add an age band
+  mutate(
+    AGE_BAND = case_when(
+      AGE < 70 ~ "65-69",
+      AGE < 75 ~ "70-74",
+      AGE < 80 ~ "75-79",
+      AGE < 85 ~ "80-84",
+      AGE < 90 ~ "85-89",
+      TRUE ~ "90+"
+    )
+  )
+
+# Join fact data to patient level dimension
+item_fact_db <- item_fact_db %>%
+  left_join(
+    y = patient_db,
+    copy = TRUE
+  ) %>%
+  relocate(GENDER, .after = PDS_GENDER) %>%
+  relocate(AGE_BAND, AGE, .after = CALC_AGE) %>%
+  select(-c(PDS_GENDER, CALC_AGE))
 
 # Write the table back to the DB
 item_fact_db %>%
