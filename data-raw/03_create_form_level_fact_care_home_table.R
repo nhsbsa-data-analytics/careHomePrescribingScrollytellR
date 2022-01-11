@@ -38,54 +38,6 @@ pds_import_db <- con_dwcp %>%
 cip_db <- con_dwcp %>%
   tbl(from = in_schema("DIM", "CIP_PATIENT_DIM"))
 
-# Pull relevant data from FACT table for the period
-
-# Standard exclusions on the FACT table
-fact_db <- fact_db %>%
-  filter(
-    PAY_DA_END == "N", # excludes disallowed items
-    PAY_ND_END == "N", # excludes not dispensed items
-    PAY_RB_END == "N", # excludes referred back items
-    CD_REQ == "N", # excludes controlled drug requisitions 
-    OOHC_IND == 0L, # excludes out of hours dispensing
-    PRIVATE_IND == 0L, # excludes private dispensers
-    IGNORE_FLAG == "N" # excludes LDP dummy forms
-  )
-
-# Get the elderly patients in 2020/2021
-elderly_nhs_no_db <- fact_db %>%
-  filter(
-    CALC_AGE >= 65L,
-    YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
-  ) %>%
-  select(NHS_NO)
-
-# Filter the FACT table to these elderly patients but buffer the period so that 
-# we can search for addresses for paper forms from more months
-fact_db <- fact_db %>%
-  filter(YEAR_MONTH >= 201912L & YEAR_MONTH <= 202105L) %>%
-  semi_join(
-    y = elderly_nhs_no_db,
-    copy = TRUE
-  ) %>%
-  inner_join(
-    y = year_month_db,
-    copy = TRUE
-  ) %>%
-  group_by(
-    YEAR_MONTH_ID,
-    YEAR_MONTH,
-    PART_DATE = EPS_PART_DATE,
-    EPM_ID,
-    PF_ID,
-    PATIENT_IDENTIFIED,
-    NHS_NO,
-    CALC_AGE,
-    EPS_FLAG
-  ) %>%
-  summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
-  ungroup()
-
 # EPS payload message data
 
 # First we have to create a filtered version of EPS payload message data in DALP
@@ -134,14 +86,6 @@ eps_payload_messages_db %>%
 # SCD2_ETP_DY_PAYLOAD_MSG_DATA
 eps_payload_messages_db <- con_dalp %>% 
   tbl(from = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
-
-# Join back to an EPS subset of the FACT table
-eps_fact_db <- fact_db %>%
-  filter(EPS_FLAG == "Y") %>%
-  left_join(
-    y = eps_payload_messages_db,
-    copy = TRUE
-  )
 
 # PDS trace data
 
@@ -245,7 +189,78 @@ pds_import_db <- pds_import_db %>%
   inner_join(y = year_month_db) %>%
   relocate(YEAR_MONTH_ID, YEAR_MONTH)
 
-# Get EPS
+# Pull relevant data from FACT table for the period
+
+# Standard exclusions on the FACT table
+fact_db <- fact_db %>%
+  filter(
+    PAY_DA_END == "N", # excludes disallowed items
+    PAY_ND_END == "N", # excludes not dispensed items
+    PAY_RB_END == "N", # excludes referred back items
+    CD_REQ == "N", # excludes controlled drug requisitions 
+    OOHC_IND == 0L, # excludes out of hours dispensing
+    PRIVATE_IND == 0L, # excludes private dispensers
+    IGNORE_FLAG == "N" # excludes LDP dummy forms
+  )
+
+# Subset the columns
+fact_db <- fact_db %>%
+  select(
+    YEAR_MONTH,
+    PF_ID,
+    EPS_FLAG,
+    PART_DATE = EPS_PART_DATE,
+    EPM_ID,
+    NHS_NO,
+    CALC_AGE,
+    ITEM_COUNT
+  )
+
+# Get the elderly patients in 2020/2021
+elderly_nhs_no_db <- fact_db %>%
+  filter(
+    CALC_AGE >= 65L,
+    YEAR_MONTH >= 202004L,
+    YEAR_MONTH <= 202103L
+  ) %>%
+  select(NHS_NO)
+
+# Join the year month information
+fact_db <- fact_db %>%
+  inner_join(
+    y = year_month_db,
+    copy = TRUE
+  ) %>%
+  relocate(YEAR_MONTH_ID)
+
+# Subset the paper forms
+paper_fact_db <- fact_db %>%
+  filter(
+    EPS_FLAG == "N",
+    YEAR_MONTH >= 202004L,
+    YEAR_MONTH <= 202103L,
+    CALC_AGE >= 65L
+  )
+
+# Subset the EPS forms (buffer the period so that we can search for addresses 
+# for paper forms from more months of EPS forms) to elderly patients in 2020/21
+# and join on their addresses
+eps_fact_db <- fact_db %>%
+  filter(
+    EPS_FLAG == "Y",
+    YEAR_MONTH >= 202002L,
+    YEAR_MONTH <= 202105L
+  ) %>%
+  semi_join(
+    y = elderly_nhs_no_db,
+    copy = TRUE
+  ) %>%
+  left_join(
+    y = eps_payload_messages_db,
+    copy = TRUE
+  )
+
+# Get EPS addresses
 
 # Get a single postcode and address per EPS patient
 eps_single_address_db <- eps_fact_db %>%
@@ -260,21 +275,12 @@ eps_single_address_db <- eps_fact_db %>%
   summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
   ungroup(POSTCODE, SINGLE_LINE_ADDRESS) %>%
   slice_max(order_by = ITEM_COUNT, with_ties = FALSE) %>%
-  ungroup() %>% 
-  select(-ITEM_COUNT)
+  ungroup()
 
 # Get the PDS patients that we need to find an address for
 
-# Subset the fact table for Paper
-paper_fact_db <- fact_db %>%
-  filter(EPS_FLAG == "N")
-
-# Get the patients and months that we want an address for
+# Get the patients that we want an address for
 paper_patient_db <- paper_fact_db %>% 
-  filter(
-    CALC_AGE >= 65L,
-    YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
-  ) %>%
   distinct(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO)
 
 # Add the year month information
@@ -385,13 +391,6 @@ paper_patient_db <- paper_patient_db %>%
   ) %>%
   select(YEAR_MONTH, NHS_NO, POSTCODE, SINGLE_LINE_ADDRESS)
 
-# Join back to the paper subset of the FACT table
-paper_fact_db <- paper_fact_db %>%
-  left_join(
-    y = paper_patient_db,
-    copy = TRUE
-  )
-
 # Combine EPS and paper data with the FACT
 
 # Stack EPS and paper back together
@@ -403,9 +402,16 @@ fact_db <- union_all(
     filter(
       CALC_AGE >= 65L,
       YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
-    ), 
+    ) %>%
+    distinct(), 
   y = paper_fact_db %>%    
-    select(-c(YEAR_MONTH_ID, ITEM_COUNT))
+    select(-c(YEAR_MONTH_ID, ITEM_COUNT)) %>%
+    # Join the addresses
+    left_join(
+      y = paper_patient_db,
+      copy = TRUE
+    ) %>%
+    distinct()
 )
 
 # Tidy postcode and format single line addresses for tokenisation
