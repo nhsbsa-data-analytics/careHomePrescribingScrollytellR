@@ -70,6 +70,10 @@ match_db <- match_db %>%
   ) %>%
   ungroup()
 
+# Move SINGLE_LINE_ADDRESS_LOOKUP to after SINGLE_LINE_ADDRESS
+match_db <- match_db %>%
+  relocate(SINGLE_LINE_ADDRESS_LOOKUP, .after = SINGLE_LINE_ADDRESS)
+
 # Manually override the care home flag (and nursing / residential flags) for 
 # matched care home patient addresses that contain anything to strongly suggest 
 # the property is not a care home for the elderly
