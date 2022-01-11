@@ -26,7 +26,7 @@ year_month_db <- con %>%
 
 # Create a lazy table from the item level FACT table
 item_fact_db <- con %>%
-  tbl(from = in_schema("SB_AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
+  tbl(from = in_schema("AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
 
 # Create a lazy table from the item level FACT table
 form_fact_db <- con %>%
@@ -59,11 +59,13 @@ item_fact_db <- item_fact_db %>%
   ) %>%
   select(
     YEAR_MONTH,
+    PF_ID,
+    EPS_FLAG,
     PART_DATE = EPS_PART_DATE,
     EPM_ID,
-    PF_ID,
+    PATIENT_IDENTIFIED,
     NHS_NO,
-    EPS_FLAG,
+    CALC_AGE,
     CALC_PREC_DRUG_RECORD_ID,
     ITEM_COUNT,
     ITEM_PAY_DR_NIC,
