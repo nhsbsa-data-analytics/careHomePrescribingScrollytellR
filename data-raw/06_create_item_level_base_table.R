@@ -7,14 +7,14 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 # Check if the table exists
 exists <- DBI::dbExistsTable(
   conn = con, 
-  name = "INT615_ITEM_LEVEL_FACT_MATCHED_CARE_HOME"
+  name = "INT615_ITEM_LEVEL_BASE"
 )
 
 # Drop any existing table beforehand
 if (exists) {
   DBI::dbRemoveTable(
     conn = con, 
-    name = "INT615_ITEM_LEVEL_FACT_MATCHED_CARE_HOME"
+    name = "INT615_ITEM_LEVEL_BASE"
   )
 }
 
@@ -169,7 +169,7 @@ item_fact_db <- item_fact_db %>%
 # Write the table back to the DB
 item_fact_db %>%
   nhsbsaR::oracle_create_table(
-    table_name = "INT615_ITEM_LEVEL_FACT_MATCHED_CARE_HOME"
+    table_name = "INT615_ITEM_LEVEL_BASE"
   )
 
 # Disconnect from database
