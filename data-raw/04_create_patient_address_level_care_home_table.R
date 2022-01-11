@@ -39,15 +39,15 @@ patient_address_db <- fact_db %>%
       ifelse(PATIENT_IDENTIFIED == "Y", NHS_NO, NA_integer_)
     )
   ) %>%
-  ungroup() %>%
   # Add yearly attributes to the addresses
-  group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  ungroup(YEAR_MONTH) %>%
   summarise(
     MONTHS_5PLUS_PATIENTS = n_distinct(
       ifelse(PATIENT_COUNT >= 5L, YEAR_MONTH, NA_integer_)
     ),
     MAX_MONTHLY_PATIENTS = max(PATIENT_COUNT, na.rm = TRUE)
-  )
+  ) %>%
+  ungroup()
 
 # Match the patients address to the AddressBase Plus and CQC care home addresses
 match_db <- addressMatchR::calc_match_addresses(
@@ -143,7 +143,7 @@ patient_address_match_db <- patient_address_match_db %>%
 
 # Fill the care home flag and match type columns
 patient_address_match_db <- patient_address_match_db %>%
-  tidyr::replace_na(list(CH_FLAG = 0, MATCH_TYPE = "NO MATCH"))
+  tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
 
 # Write the table back to the DB
 patient_address_match_db %>%
