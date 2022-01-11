@@ -96,7 +96,10 @@ match_db <- match_db %>%
 
 # Join the matches back to the patient addresses
 patient_address_match_db <- patient_address_db %>%
-  left_join(y = match_db)
+  left_join(
+    y = match_db,
+    copy = TRUE
+  )
 
 # Manually override the care home flag for non care home patient addresses that 
 # contain anything to strongly suggest it is a care home for the elderly
