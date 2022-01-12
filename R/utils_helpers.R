@@ -44,8 +44,8 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
 #' Define the breakdowns
 #'
 #' Define the labels of the breakdowns (in order of hierarchy) with the columns
-#' that are used to aggregate (if there are two colums then the second is the
-#' code)
+#' that are used to aggregate (if there are two columns then the second is the
+#' code, apart from gender and age band combined)
 #'
 #' @export
 breakdowns <- list(
@@ -54,23 +54,32 @@ breakdowns <- list(
   "Geographical - STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
   "Geographical - Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE"),
   "Demographical - Gender" = "GENDER",
-  "Demographical - Age Band" = "AGE_BAND"
+  "Demographical - Age Band" = "AGE_BAND",
+  "Demographical - Gender and Age Band" = c("GENDER", "AGE_BAND")
 )
 
 
 #' Define the geographys
 #'
 #' Define the labels of the geographys (in order of hierarchy) with the columns
-#' that are used to aggregate (if there are two colums then the second is the
+#' that are used to aggregate (if there are two columns then the second is the
 #' code)
 #'
 #' @export
-geographys <- list(
-  "Overall" = "OVERALL",
-  "Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
-  "STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
-  "Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE")
-)
+geographys <- breakdowns %>% 
+  purrr::keep(
+    .x = stringr::str_detect(
+      string = names(.), 
+      pattern = "Overall|Geographical - "
+    )
+  ) %>% 
+  purrr::set_names(
+    x = stringr::str_replace(
+      string = names(.), 
+      pattern = "Overall|Geographical - ", 
+      replacement = ""
+    )
+  )
 
 #' Format data-raw table
 #'

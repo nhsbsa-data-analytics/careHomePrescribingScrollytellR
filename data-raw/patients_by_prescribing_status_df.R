@@ -4,7 +4,7 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Create a lazy table from the care home FACT table
+# Create a lazy table from the item level base table
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
@@ -16,7 +16,7 @@ cip_db <- con %>%
 care_home_patient_fact_db <- fact_db %>%
   semi_join(
     y = fact_db %>%
-      filter(CH_FLAG == 1L) %>%
+      filter(CH_FLAG == "Care home") %>%
       select(NHS_NO),
     copy = TRUE
   )

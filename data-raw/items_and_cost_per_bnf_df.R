@@ -5,20 +5,7 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Create a lazy table from the year month table
-year_month_db <- con %>%
-  tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM"))
-
-# Filter to 2020/2021 FY
-year_month_db <- year_month_db %>%
-  filter(FINANCIAL_YEAR == "2020/2021") %>%
-  select(YEAR_MONTH)
-
-# Create a lazy table from the drug DIM table
-drug_db <- con %>%
-  tbl(from = in_schema("DIM", "CDR_EP_DRUG_BNF_DIM"))
-
-# Combine the chapter / section / paragraph and description and filter to FY
+# Combine the chapter / section / paragraph and description
 drug_db <- drug_db %>%
   inner_join(year_month_db) %>%
   mutate(
@@ -28,20 +15,21 @@ drug_db <- drug_db %>%
   ) %>%
   select(YEAR_MONTH, RECORD_ID, BNF_CHAPTER, BNF_SECTION, BNF_PARAGRAPH)
 
-# Create a lazy table from the care home FACT table
+# Create a lazy table from the item level base table
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
-# Join the drug information to the FACT table
+# Combine the chapter / section / paragraph and description 
 fact_db <- fact_db %>%
-  inner_join(
-    y = drug_db,
-    by = c("YEAR_MONTH", "CALC_PREC_DRUG_RECORD_ID" = "RECORD_ID")
+  mutate(
+    BNF_CHAPTER = paste0("(", BNF_CHAPTER, ") ", CHAPTER_DESCR),
+    BNF_SECTION = paste0("(", BNF_SECTION, ") ", SECTION_DESCR),
+    BNF_PARAGRAPH = PARAGRAPH_DESCR
   )
 
 # Get the total items and cost per BNF chapter, section (level 2)
 items_and_cost_per_bnf_chapter_and_section_df <- fact_db %>%
-  filter(CH_FLAG == 1) %>%
+  filter(CH_FLAG == "Care home") %>%
   group_by(BNF_CHAPTER, BNF_SECTION) %>%
   summarise(
     Items = sum(ITEM_COUNT),
