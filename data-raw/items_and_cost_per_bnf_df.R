@@ -5,16 +5,6 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Combine the chapter / section / paragraph and description
-drug_db <- drug_db %>%
-  inner_join(year_month_db) %>%
-  mutate(
-    BNF_CHAPTER = paste0("(", BNF_CHAPTER, ") ", CHAPTER_DESCR),
-    BNF_SECTION = paste0("(", BNF_SECTION, ") ", SECTION_DESCR),
-    BNF_PARAGRAPH = PARAGRAPH_DESCR
-  ) %>%
-  select(YEAR_MONTH, RECORD_ID, BNF_CHAPTER, BNF_SECTION, BNF_PARAGRAPH)
-
 # Create a lazy table from the item level base table
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
