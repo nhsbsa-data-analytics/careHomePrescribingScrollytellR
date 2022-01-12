@@ -45,8 +45,9 @@ drug_db <- con %>%
 # Filter to elderly patients in 2020/2021 and required columns
 item_fact_db <- item_fact_db %>%
   filter(
-    # Elderly patients in the period
+    # Elderly patients identified patients in the period
     CALC_AGE >= 65L,
+    PATIENT_IDENTIFIED = "Y",
     YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L,
     # Standard exclusions
     PAY_DA_END == "N", # excludes disallowed items
