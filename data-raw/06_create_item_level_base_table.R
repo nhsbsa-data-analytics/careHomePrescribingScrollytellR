@@ -110,11 +110,16 @@ item_fact_db <- item_fact_db %>%
         BNF_SECTION,
         SECTION_DESCR,
         BNF_PARAGRAPH,
-        PARAGRAPH_DESCR
+        PARAGRAPH_DESCR,
+        BNF_CHEMICAL_SUBSTANCE,
+        CHEMICAL_SUBSTANCE_BNF_DESCR
       ),
     copy = TRUE
   ) %>%
-  relocate(BNF_CHAPTER:PARAGRAPH_DESCR, .before = CALC_PREC_DRUG_RECORD_ID)
+  relocate(
+    BNF_CHAPTER:CHEMICAL_SUBSTANCE_BNF_DESCR, 
+    .before = CALC_PREC_DRUG_RECORD_ID
+  )
 
 # Get a single gender and age for the period
 patient_db <- item_fact_db %>%
