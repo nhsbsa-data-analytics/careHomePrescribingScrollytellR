@@ -87,6 +87,11 @@ eps_payload_messages_db %>%
 eps_payload_messages_db <- con_dalp %>% 
   tbl(from = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
 
+# Tidy postcode and format single line addresses
+eps_payload_messages_db <- eps_payload_messages_db %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
+
 # PDS trace data
 
 # First we have to create a filtered version of PDS import data in DALP
@@ -181,6 +186,11 @@ DBI::dbDisconnect(con_dwcp)
 pds_import_db <- con_dalp %>% 
   tbl(from = "INT615_SCD2_EXT_PD_IMPORT_DATA")
 
+# Tidy postcode and format single line addresses
+pds_import_db <- pds_import_db %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
+
 # Join the year month details (shift by 2 months)
 pds_import_db <- pds_import_db %>%
   inner_join(y = year_month_db) %>%
@@ -211,9 +221,10 @@ fact_db <- fact_db %>%
     EPS_FLAG,
     PART_DATE = EPS_PART_DATE,
     EPM_ID,
+    PDS_GENDER,
+    CALC_AGE,
     PATIENT_IDENTIFIED,
     NHS_NO,
-    CALC_AGE,
     ITEM_COUNT
   )
 
@@ -414,11 +425,6 @@ fact_db <- union_all(
     ) %>%
     distinct()
 )
-
-# Tidy postcode and format single line addresses for tokenisation
-fact_db <- fact_db %>%
-  addressMatchR::tidy_postcode(col = POSTCODE) %>%
-  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
 
 # Write the table back to the DB
 fact_db %>%
