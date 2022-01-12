@@ -26,11 +26,11 @@ item_fact_db <- con %>%
 
 # Create a lazy table from the item level FACT table
 form_fact_db <- con %>%
-  tbl(from = "INT615_FORM_LEVEL_FACT_CARE_HOME")
+  tbl(from = "INT615_FORM_LEVEL_FACT")
 
 # Create a lazy table from the matched patient address care home table
 patient_address_match_db <- con %>%
-  tbl(from = "INT615_ADDRESS_MATCHED_CARE_HOME")
+  tbl(from = "INT615_ADDRESS_MATCHED")
 
 # Create a lazy table from the geography lookup table (Region, STP and LA)
 postcode_db <- con %>%

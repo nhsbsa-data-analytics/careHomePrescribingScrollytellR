@@ -6,10 +6,10 @@ library(dplyr)
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Check if the table exists
-exists <- DBI::dbExistsTable(conn = con, name = "INT615_CQC_CARE_HOME")
+exists <- DBI::dbExistsTable(conn = con, name = "INT615_CQC")
 
 # Drop any existing table beforehand
-if (exists) DBI::dbRemoveTable(conn = con, name = "INT615_CQC_CARE_HOME")
+if (exists) DBI::dbRemoveTable(conn = con, name = "INT615_CQC")
 
 # Pull CQC data
 
@@ -96,7 +96,7 @@ cqc_details_df <- cqc_details_df %>%
 
 # Upload to DB
 con %>%
-  DBI::dbWriteTable(name = "INT615_CQC_CARE_HOME", value = cqc_details_df)
+  DBI::dbWriteTable(name = "INT615_CQC", value = cqc_details_df)
 
 # Disconnect connection to database
 DBI::dbDisconnect(con)

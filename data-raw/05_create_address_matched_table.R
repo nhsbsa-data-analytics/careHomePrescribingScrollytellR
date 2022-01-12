@@ -7,23 +7,23 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 # Check if the table exists
 exists <- DBI::dbExistsTable(
   conn = con, 
-  name = "INT615_ADDRESS_MATCHED_CARE_HOME"
+  name = "INT615_ADDRESS_MATCHED"
 )
 
 # Drop any existing table beforehand
 if (exists) {
-  DBI::dbRemoveTable(conn = con, name = "INT615_ADDRESS_MATCHED_CARE_HOME")
+  DBI::dbRemoveTable(conn = con, name = "INT615_ADDRESS_MATCHED")
 }
 
 # Initial lazy tables from database
 
 # Create a lazy table from the item level FACT table
 fact_db <- con %>%
-  tbl(from = "INT615_FORM_LEVEL_FACT_CARE_HOME")
+  tbl(from = "INT615_FORM_LEVEL_FACT")
 
 # Create a lazy table from the AddressBase Plus and CQC care home table
 addressbase_plus_cqc_db <- con %>%
-  tbl(from = "INT615_ADDRESSBASE_PLUS_CQC_CARE_HOME")
+  tbl(from = "INT615_ADDRESSBASE_PLUS_CQC")
 
 # Match patient addresses to the AddressBase Plus and CQC care home addresses
 
@@ -155,7 +155,7 @@ patient_address_match_db <- patient_address_match_db %>%
 # Write the table back to the DB
 patient_address_match_db %>%
   nhsbsaR::oracle_create_table(
-    table_name = "INT615_ADDRESS_MATCHED_CARE_HOME"
+    table_name = "INT615_ADDRESS_MATCHED"
   )
 
 # Disconnect from database

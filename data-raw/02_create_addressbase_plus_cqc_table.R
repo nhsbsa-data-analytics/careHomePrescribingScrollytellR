@@ -7,19 +7,19 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 # Check if the table exists
 exists <- DBI::dbExistsTable(
   conn = con, 
-  name = "INT615_ADDRESSBASE_PLUS_CQC_CARE_HOME"
+  name = "INT615_ADDRESSBASE_PLUS_CQC"
 )
 
 # Drop any existing table beforehand
 if (exists) {
-  DBI::dbRemoveTable(conn = con, name = "INT615_ADDRESSBASE_PLUS_CQC_CARE_HOME")
+  DBI::dbRemoveTable(conn = con, name = "INT615_ADDRESSBASE_PLUS_CQC")
 }
 
 # Process CQC care home table
 
 # Create a lazy table from the CQC care home table
 cqc_db <- con %>% 
-  tbl(from = "INT615_CQC_CARE_HOME")
+  tbl(from = "INT615_CQC")
 
 # Convert registration and deregistration columns to dates and filter to 2020/21
 cqc_db <- cqc_db %>%
@@ -169,7 +169,7 @@ addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
 # Write the table back to the DB
 addressbase_plus_cqc_db %>%
   nhsbsaR::oracle_create_table(
-    table_name = "INT615_ADDRESSBASE_PLUS_CQC_CARE_HOME"
+    table_name = "INT615_ADDRESSBASE_PLUS_CQC"
   )
 
 # Disconnect from database

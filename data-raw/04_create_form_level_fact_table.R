@@ -7,12 +7,12 @@ con_dalp <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Check if the table exists
 exists <- con_dalp %>%
-  DBI::dbExistsTable(name = "INT615_FORM_LEVEL_FACT_CARE_HOME")
+  DBI::dbExistsTable(name = "INT615_FORM_LEVEL_FACT")
 
 # Drop any existing table beforehand
 if (exists) {
   con_dalp %>%
-    DBI::dbRemoveTable(name = "INT615_FORM_LEVEL_FACT_CARE_HOME")
+    DBI::dbRemoveTable(name = "INT615_FORM_LEVEL_FACT")
 }
 
 # Initial Lazy Tables from raw data
@@ -422,7 +422,7 @@ fact_db <- fact_db %>%
 
 # Write the table back to the DB
 fact_db %>%
-  nhsbsaR::oracle_create_table(table_name = "INT615_FORM_LEVEL_FACT_CARE_HOME")
+  nhsbsaR::oracle_create_table(table_name = "INT615_FORM_LEVEL_FACT")
 
 # Disconnect from database
 DBI::dbDisconnect(con_dalp)
