@@ -147,7 +147,7 @@ patient_address_match_db <- patient_address_match_db %>%
     MATCH_TYPE = ifelse(
       test = 
         CH_FLAG == 0L & 
-        CH_POSTCODE == 1L &
+        !is.na(CH_POSTCODE) &
         MAX_MONTHLY_PATIENTS >= 5L, #& MONTHS_5PLUS_PATIENTS >= 3
       yes = "PATIENT COUNT",
       no = MATCH_TYPE
