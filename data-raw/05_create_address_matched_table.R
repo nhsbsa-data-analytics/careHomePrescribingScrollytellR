@@ -35,17 +35,21 @@ patient_address_db <- fact_db %>%
   # Add monthly patient count
   group_by(YEAR_MONTH, POSTCODE, SINGLE_LINE_ADDRESS) %>%
   mutate(
-    PATIENT_COUNT = n_distinct(
+    TOTAL_MONTHLY_PATIENTS = n_distinct(
       ifelse(PATIENT_IDENTIFIED == "Y", NHS_NO, NA_integer_)
     )
   ) %>%
   # Add yearly attributes to the addresses
   ungroup(YEAR_MONTH) %>%
   summarise(
-    MONTHS_5PLUS_PATIENTS = n_distinct(
-      ifelse(PATIENT_COUNT >= 5L, YEAR_MONTH, NA_integer_)
+    TOTAL_FORMS = n(),
+    TOTAL_PATIENTS = n_distinct(
+      ifelse(PATIENT_IDENTIFIED == "Y", NHS_NO, NA_integer_)
     ),
-    MAX_MONTHLY_PATIENTS = max(PATIENT_COUNT, na.rm = TRUE)
+    MONTHS_5PLUS_PATIENTS = n_distinct(
+      ifelse(TOTAL_MONTHLY_PATIENTS >= 5L, YEAR_MONTH, NA_integer_)
+    ),
+    MAX_MONTHLY_PATIENTS = max(TOTAL_MONTHLY_PATIENTS, na.rm = TRUE)
   ) %>%
   ungroup()
 
