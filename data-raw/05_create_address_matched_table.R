@@ -109,6 +109,10 @@ patient_address_match_db <- patient_address_db %>%
     copy = TRUE
   )
 
+# Fill the missing care home flag and match type columns
+patient_address_match_db <- patient_address_match_db %>%
+  tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
+
 # Manually override the care home flag for non care home patient addresses that 
 # contain anything to strongly suggest it is a care home for the elderly
 patient_address_match_db <- patient_address_match_db %>%
@@ -151,10 +155,6 @@ patient_address_match_db <- patient_address_match_db %>%
     CH_FLAG = ifelse(MATCH_TYPE == "PATIENT COUNT", 1L, CH_FLAG)
   ) %>%
   select(-CH_POSTCODE)
-
-# Fill the care home flag and match type columns
-patient_address_match_db <- patient_address_match_db %>%
-  tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
 
 # Write the table back to the DB
 patient_address_match_db %>%
