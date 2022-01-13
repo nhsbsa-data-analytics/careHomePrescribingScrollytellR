@@ -48,7 +48,7 @@ exists_dalp_eps_payload <- con_dalp %>%
 
 # Drop any existing table beforehand
 if (exists_dalp_eps_payload) {
-  con_dwcp %>%
+  con_dalp %>%
     DBI::dbRemoveTable(name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
 }
 
@@ -76,6 +76,11 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
     SINGLE_LINE_ADDRESS
   )
 
+# Tidy postcode and format single line addresses
+eps_payload_messages_db <- eps_payload_messages_db %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
+
 # Write the table to DALP
 eps_payload_messages_db %>%
   nhsbsaR::oracle_create_table(
@@ -86,11 +91,6 @@ eps_payload_messages_db %>%
 # SCD2_ETP_DY_PAYLOAD_MSG_DATA
 eps_payload_messages_db <- con_dalp %>% 
   tbl(from = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
-
-# Tidy postcode and format single line addresses
-eps_payload_messages_db <- eps_payload_messages_db %>%
-  addressMatchR::tidy_postcode(col = POSTCODE) %>%
-  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
 
 # PDS trace data
 
