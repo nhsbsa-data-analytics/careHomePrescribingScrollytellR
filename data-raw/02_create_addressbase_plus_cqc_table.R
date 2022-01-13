@@ -106,7 +106,7 @@ care_home_postcodes_db <-
 
 # Filter AddressBase Plus to postcodes where there is a care home present
 addressbase_plus_db <- addressbase_plus_db %>%
-  inner_join(
+  semi_join(
     y = care_home_postcodes_db,
     copy = TRUE
   )
