@@ -44,31 +44,45 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
 #' Define the breakdowns
 #'
 #' Define the labels of the breakdowns (in order of hierarchy) with the columns
-#' that are used to aggregate (if there are two columns then the second is the
-#' code, apart from gender and age band combined)
+#' that are used to aggregate
 #'
 #' @export
 breakdowns <- list(
-  "Overall" = "OVERALL",
-  "Geographical - Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
-  "Geographical - STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
-  "Geographical - Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE"),
-  "Demographical - Gender" = "GENDER",
-  "Demographical - Age Band" = "AGE_BAND",
-  "Demographical - Gender and Age Band" = c("GENDER", "AGE_BAND")
+  "Overall" = c(SUB_BREAKDOWN_NAME = "OVERALL"),
+  "Geographical - Region" = c(
+    SUB_BREAKDOWN_CODE = "PCD_REGION_CODE",
+    SUB_BREAKDOWN_NAME = "PCD_REGION_NAME"
+  ),
+  "Geographical - STP" = c(
+    SUB_BREAKDOWN_CODE = "PCD_STP_CODE",
+    SUB_BREAKDOWN_NAME = "PCD_STP_NAME"
+  ),
+  "Geographical - Local Authority" = c(
+    SUB_BREAKDOWN_CODE = "PCD_LAD_CODE",
+    SUB_BREAKDOWN_NAME = "PCD_LAD_NAME"
+  ),
+  "Demographical - Gender" = c(SUB_BREAKDOWN_NAME = "GENDER"),
+  "Demographical - Age Band" =  c(SUB_BREAKDOWN_NAME = "AGE_BAND"),
+  "Additional - Gender and Age Band" = c(
+    GENDER = "GENDER", 
+    AGE_BAND = "AGE_BAND"
+  ),
+  "Additional - Care home type" = c(
+    NURSING_HOME_FLAG = "NURSING_HOME_FLAG", 
+    RESIDENTIAL_HOME_FLAG = "RESIDENTIAL_HOME_FLAG"
+  )
 )
 
 
 #' Define the geographys
 #'
-#' Define the labels of the geographys (in order of hierarchy) with the columns
-#' that are used to aggregate (if there are two columns then the second is the
-#' code)
+#' Extract them from the breakdowns.
 #'
 #' @export
 geographys <- breakdowns %>% 
   purrr::keep(
-    .x = stringr::str_detect(
+    .x = (.),
+    .p = stringr::str_detect(
       string = names(.), 
       pattern = "Overall|Geographical - "
     )
