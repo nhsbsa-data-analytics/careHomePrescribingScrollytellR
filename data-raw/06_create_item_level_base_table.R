@@ -84,7 +84,7 @@ item_fact_db <- item_fact_db %>%
   ) %>%
   left_join(
     y = patient_address_match_db %>% 
-      select(-c(MONTHS_5PLUS_PATIENTS, MAX_MONTHLY_PATIENTS)),
+      select(-(TOTAL_FORMS:MAX_MONTHLY_PATIENTS)),
     copy = TRUE
   ) %>%
   tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
