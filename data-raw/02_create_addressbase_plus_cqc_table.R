@@ -5,10 +5,7 @@ library(dbplyr)
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Check if the table exists
-exists <- DBI::dbExistsTable(
-  conn = con, 
-  name = "INT615_ADDRESSBASE_PLUS_CQC"
-)
+exists <- DBI::dbExistsTable(conn = con, name = "INT615_ADDRESSBASE_PLUS_CQC")
 
 # Drop any existing table beforehand
 if (exists) {
@@ -94,9 +91,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
   mutate(POSTCODE = POSTCODE_LOCATOR) %>%
   addressMatchR::tidy_postcode(col = POSTCODE)
 
-# Get postcodes where there is a care home present (including CQC data). We use 
-# POSTCODE_LOCATOR as it is equal to POSTCODE (whenever one exists) but more 
-# complete the postcodes from CQC
+# Get postcodes where there is a care home present (including CQC data)
 care_home_postcodes_db <- 
   union(
     x = addressbase_plus_db %>% 
@@ -108,7 +103,7 @@ care_home_postcodes_db <-
 
 # Filter AddressBase Plus to postcodes where there is a care home present
 addressbase_plus_db <- addressbase_plus_db %>%
-  inner_join(
+  semi_join(
     y = care_home_postcodes_db,
     copy = TRUE
   )
