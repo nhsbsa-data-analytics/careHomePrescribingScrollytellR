@@ -137,8 +137,8 @@ addressbase_plus_cqc_db <- addressbase_plus_db %>%
       group_by(UPRN) %>%
       summarise(
         LOCATION_ID = max(LOCATION_ID, na.rm = TRUE),
-        NURSING_HOME_FLAG = max(NURSING_HOME_FLAG), 
-        RESIDENTIAL_HOME_FLAG = max(RESIDENTIAL_HOME_FLAG)
+        NURSING_HOME_FLAG = max(NURSING_HOME_FLAG, na.rm = TRUE), 
+        RESIDENTIAL_HOME_FLAG = max(RESIDENTIAL_HOME_FLAG, na.rm = TRUE)
       ) %>% 
       ungroup(),
     copy = TRUE
