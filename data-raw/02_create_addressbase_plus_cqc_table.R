@@ -152,7 +152,8 @@ addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
     values_to = "SINGLE_LINE_ADDRESS"
   ) %>%
   filter(!is.na(SINGLE_LINE_ADDRESS)) %>%
-  select(-ADDRESS_TYPE)
+  select(-ADDRESS_TYPE) %>%
+  relocate(SINGLE_LINE_ADDRESS, .after = POSTCODE)
 
 # Stack the CQC data and make distinct (take max row)
 addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
