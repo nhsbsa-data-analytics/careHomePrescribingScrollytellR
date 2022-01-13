@@ -94,9 +94,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
   mutate(POSTCODE = POSTCODE_LOCATOR) %>%
   addressMatchR::tidy_postcode(col = POSTCODE)
 
-# Get postcodes where there is a care home present (including CQC data). We use 
-# POSTCODE_LOCATOR as it is equal to POSTCODE (whenever one exists) but more 
-# complete the postcodes from CQC
+# Get postcodes where there is a care home present (including CQC data)
 care_home_postcodes_db <- 
   union(
     x = addressbase_plus_db %>% 
