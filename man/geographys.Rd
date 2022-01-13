@@ -5,14 +5,14 @@
 \alias{geographys}
 \title{Define the geographys}
 \format{
-An object of class \code{list} of length 4.
+An object of class \code{character} of length 4.
 }
 \usage{
 geographys
 }
 \description{
 Define the labels of the geographys (in order of hierarchy) with the columns
-that are used to aggregate (if there are two colums then the second is the
+that are used to aggregate (if there are two columns then the second is the
 code)
 }
 \keyword{datasets}
