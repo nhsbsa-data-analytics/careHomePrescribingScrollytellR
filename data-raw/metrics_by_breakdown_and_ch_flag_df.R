@@ -25,20 +25,11 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
     group_by(
       YEAR_MONTH = as.character(YEAR_MONTH),
       BREAKDOWN = breakdown_name,
-      SUB_BREAKDOWN_CODE = NA,
-      SUB_BREAKDOWN_NAME = .data[[breakdown_cols[1]]],
+      across(all_of(unname(breakdown_cols))),
       CH_FLAG,
       NHS_NO
-    )
-
-  # If there are two columns then override the code as the second column
-  if (length(breakdown_cols) == 2) {
-    tmp_db <- tmp_db %>%
-      group_by(
-        SUB_BREAKDOWN_CODE = .data[[breakdown_cols[2]]],
-        .add = TRUE
-      )
-  }
+    ) %>%
+    rename(!!! breakdown_cols)
 
   # Sum the items and cost per patient month
   tmp_db <- tmp_db %>%
