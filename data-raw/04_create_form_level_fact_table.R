@@ -15,29 +15,6 @@ if (exists) {
     DBI::dbRemoveTable(name = "INT615_FORM_LEVEL_FACT")
 }
 
-# Initial Lazy Tables from raw data
-
-# Create a lazy table from the year month table
-year_month_db <- con_dalp %>%
-  tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM")) %>%
-  select(YEAR_MONTH_ID, YEAR_MONTH)
-
-# Create a lazy table from the item level FACT table
-fact_db <- con_dalp %>%
-  tbl(from = in_schema("AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
-
-# Create a lazy table from SCD2 payload message table
-eps_payload_messages_db <- con_dalp %>% 
-  tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")))
-
-# Create a lazy table from SCD2 PDS import data table in DWCP
-pds_import_db <- con_dwcp %>% 
-  tbl(from = in_schema("SCD2", "SCD2_EXT_PD_IMPORT_DATA"))
-
-# Create a lazy table from the CIP patient dim table in DWCP
-cip_db <- con_dwcp %>%
-  tbl(from = in_schema("DIM", "CIP_PATIENT_DIM"))
-
 # EPS payload message data
 
 # First we have to create a filtered version of EPS payload message data in DALP
@@ -51,6 +28,10 @@ if (exists_dalp_eps_payload) {
   con_dalp %>%
     DBI::dbRemoveTable(name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
 }
+
+# Create a lazy table from SCD2 payload message table
+eps_payload_messages_db <- con_dalp %>% 
+  tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")))
 
 # Create the single line address and subset columns
 eps_payload_messages_db <- eps_payload_messages_db %>%
@@ -81,16 +62,13 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
   addressMatchR::tidy_postcode(col = POSTCODE) %>%
   addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
 
-# Write the table to DALP
-eps_payload_messages_db %>%
-  nhsbsaR::oracle_create_table(
-    table_name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA"
+# Write the table back to DALP with indexes
+eps_payload_messages_db <- eps_payload_messages_db %>%
+  compute(
+    name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA",
+    indexes = list(c("PART_DATE", "EPM_ID"), c("POSTCODE")),
+    temporary = FALSE
   )
-
-# Create a lazy table in DALP from filtered version of 
-# SCD2_ETP_DY_PAYLOAD_MSG_DATA
-eps_payload_messages_db <- con_dalp %>% 
-  tbl(from = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
 
 # PDS trace data
 
@@ -105,6 +83,14 @@ if (exists_dalp_pds_import) {
   con_dwcp %>%
     DBI::dbRemoveTable(name = "INT615_SCD2_EXT_PD_IMPORT_DATA")
 }
+
+# Create a lazy table from SCD2 PDS import data table in DWCP
+pds_import_db <- con_dwcp %>% 
+  tbl(from = in_schema("SCD2", "SCD2_EXT_PD_IMPORT_DATA"))
+
+# Create a lazy table from the CIP patient dim table in DWCP
+cip_db <- con_dwcp %>%
+  tbl(from = in_schema("DIM", "CIP_PATIENT_DIM"))
 
 # Filter to successful traces in the period of interest
 pds_import_db <- pds_import_db %>% 
@@ -200,6 +186,15 @@ pds_import_db <- pds_import_db %>%
   relocate(YEAR_MONTH_ID, YEAR_MONTH)
 
 # Pull relevant data from FACT table for the period
+
+# Create a lazy table from the year month table
+year_month_db <- con_dalp %>%
+  tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM")) %>%
+  select(YEAR_MONTH_ID, YEAR_MONTH)
+
+# Create a lazy table from the item level FACT table
+fact_db <- con_dalp %>%
+  tbl(from = in_schema("AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
 
 # Standard exclusions on the FACT table
 fact_db <- fact_db %>%
