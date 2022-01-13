@@ -103,10 +103,7 @@ care_home_postcodes_db <-
 
 # Filter AddressBase Plus to postcodes where there is a care home present
 addressbase_plus_db <- addressbase_plus_db %>%
-  semi_join(
-    y = care_home_postcodes_db,
-    copy = TRUE
-  )
+  semi_join(y = care_home_postcodes_db)
 
 # Create a Wide table of 3 single line address types
 addressbase_plus_db <- addressbase_plus_db %>%
@@ -140,8 +137,7 @@ addressbase_plus_cqc_db <- addressbase_plus_db %>%
         NURSING_HOME_FLAG = max(NURSING_HOME_FLAG, na.rm = TRUE), 
         RESIDENTIAL_HOME_FLAG = max(RESIDENTIAL_HOME_FLAG, na.rm = TRUE)
       ) %>% 
-      ungroup(),
-    copy = TRUE
+      ungroup()
   )
 
 # Convert to a long table of distinct stacked single line addresses
@@ -162,10 +158,12 @@ addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
   slice_max(order_by = UPRN, with_ties = FALSE) %>%
   ungroup()
 
-# Write the table back to the DB
+# Write the table back to the DB with indexes
 addressbase_plus_cqc_db %>%
-  nhsbsaR::oracle_create_table(
-    table_name = "INT615_ADDRESSBASE_PLUS_CQC"
+  compute(
+    name = "INT615_ADDRESSBASE_PLUS_CQC",
+    indexes = list(c("UPRN", c("POSTCODE"))), # single line address too long
+    temporary = FALSE
   )
 
 # Disconnect from database
