@@ -5,10 +5,7 @@ library(dbplyr)
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Check if the table exists
-exists <- DBI::dbExistsTable(
-  conn = con, 
-  name = "INT615_ADDRESSBASE_PLUS_CQC"
-)
+exists <- DBI::dbExistsTable(conn = con, name = "INT615_ADDRESSBASE_PLUS_CQC")
 
 # Drop any existing table beforehand
 if (exists) {
