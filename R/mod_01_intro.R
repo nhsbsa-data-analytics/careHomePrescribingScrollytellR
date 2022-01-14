@@ -28,6 +28,12 @@ mod_01_intro_ui <- function(id) {
       " in England during 2020/21."
     ),
     p(
+      "This is based on experimental data linkage work. We welcome feedback, ",
+      "collaboration and refinement of the methodology to see if it can be used ",
+      "in NHSBSA information systems in the future and we can develop additional ",
+      "analyses."
+    ),
+    p(
       "We estimate that there was a monthly average of", tags$b("285 thousand"),
       " care home patients receiving prescriptions each month in 2020/21. ",
       "They received an estimated 35 million prescription items at a cost of ",
@@ -46,6 +52,13 @@ mod_01_intro_ui <- function(id) {
         tooltip = tooltip_text$older
       ),
       "during 2020/21."
+    ),
+    p("As might be expected, care home patients receive more prescribing than ",
+      "non-care home patients receiving prescriptions."
+      ),
+    p(
+      "Average monthly prescribing costs and volumes per care home patient vary ",
+      "by age, gender, care home type and geography."
     ),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
@@ -67,12 +80,9 @@ mod_01_intro_ui <- function(id) {
       "These estimates address a key gap in knowledge and give valuable ",
       "insights which could inform the use and management of medicines in ",
       "care homes to help improve health outcomes, the quality of care and ",
-      "ensure value."
-    ),
-    p(
-      "This is an experimental piece of work. We welcome feedback, ",
-      "collaboration and refinement of the methodology so that it can be used ",
-      "in NHSBSA information systems and we can develop additional analyses."
+      "ensure value. It should however be noted that the analysis period is",
+      "at the height of the COVID-19 pandemic and patterns may change in ",
+      "subsequent years."
     )
   )
 }

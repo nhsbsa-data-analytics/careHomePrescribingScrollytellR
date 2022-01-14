@@ -43,7 +43,8 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "The chart shows the prescribing status of each of these 460 thousand ",
-      "patients by month during 2020/21."
+      "patients by month during 2020/21. Around 3 in 10 (31%) received in prescriptions ",
+      "in a care home in all 12 months."
     ),
     fluidRow(
       align = "center",
@@ -67,9 +68,9 @@ mod_02_demographics_ui <- function(id) {
       "10 are aged 85+ years"
     ),
     p(
-      "Overall, we estimate a monthly average of ",
-      tags$b("285 thousand care home patients,"), " aged 65+ years receiving ",
-      "prescriptions, which accounts for around 4% of patients aged 65+ years ",
+      "Our estimated monthly average of ",
+      tags$b("285 thousand older care home patients,"), " receiving ",
+      "prescriptions, represents around 4% of patients age 65+ years ",
       "receiving prescription items each month."
     ),
     p(
@@ -78,6 +79,9 @@ mod_02_demographics_ui <- function(id) {
         text = "ONS Estimates of care home patients from April 2020.",
         url = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales"
       ),
+      "The profile is shown in the chart below at an overall level and can be ",
+      "explored by region, local authority and STP (Sustainability and ",
+      "Transformation Plan area)."
     ),
     br(),
     fluidRow(
