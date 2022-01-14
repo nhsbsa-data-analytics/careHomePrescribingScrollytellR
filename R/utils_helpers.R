@@ -159,7 +159,7 @@ fa_to_png_to_datauri <- function(name, ...) {
 #' Define the BNF levels
 #'
 #' Define the labels of the BNF (in order of hierarchy) with the columns
-#' that are used to aggregate 
+#' that are used to aggregate
 #'
 #' @export
 bnf <- list(
@@ -168,4 +168,3 @@ bnf <- list(
   "BNF Paragraph" = "BNF_PARAGRAPH",
   "BNF Chemical Substances" = "BNF_CHEM_SUB"
 )
-
