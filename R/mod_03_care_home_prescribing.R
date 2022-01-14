@@ -22,16 +22,21 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "prescription items at a cost of", tags$b("£320 million"), "during ",
       "2020/21."
     ),
+    p(
+      "This represnts 7% of the total primary care drug spend for older patients ",
+      "during 2020/21."
+    ),
     h6(
       "The estimated average monthly drug cost for older care home patients ",
-      "is around twice that for non-care home patients"
+      "is around twice that for older non-care home patients who received ",
+      "prescriptions."
     ),
     p(
-      "Overall, older care home patients receive around 1.4 times more ",
-      "prescription items and unique medicines per patient month than ",
-      "non-care home older patients. At around twice the drug cost. These ",
-      "prescribing metrics vary by age, gender and geography. The chart below ",
-      "allows you to explore them."
+      "We estimate that older care home patients receive around 1.4 times more ",
+      "prescription items and unique medicines per patient month than older ",
+      "non-care home patients who received prescriptions. At around twice the ",
+      "drug cost. These prescribing metrics vary by age, gender and geography. ",
+      "The chart below allows you to explore them."
     ),
     br(),
     fluidRow(
@@ -78,12 +83,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
     p(
       "The mean average has been used to calculate per patient month metrics. ",
       "It should be noted that the distributions are positively skewed due to ",
-      "extreme high values for some patients, and the median values X are ",
+      "extreme high values for some patients, and the median values are ",
       "lower than the mean."
     ),
     h6(
-      "The estimated average monthly drug cost is highest for care home ",
-      "patients aged 65 to 69 years"
+      "The estimated average monthly drug cost per patient is highest for care ",
+      "home patients aged 65 to 69 years."
     ),
     p(
       "Average drug costs and volumes per patient month are higher for care ",
@@ -104,10 +109,10 @@ mod_03_care_home_prescribing_ui <- function(id) {
     p(
       "The average number of prescription items, unique medicines and ",
       "percentage of patients on 10 or more medicines are broadly similar by ",
-      "age and gender, although there is a smaller proportion of care home ",
-      "patients aged 90+ years on 10 more drugs than other age groups. And ",
-      "this group is lowest on all four prescribing metrics, with females ",
-      "being lower than males."
+      "age and gender among care home patients, although there is a smaller ",
+      "proportion of care home patients aged 90+ years on 10 more drugs than ",
+      "other age groups. And this group is lowest on all four prescribing ",
+      "metrics, with females being lower than males."
     ),
     p("These patterns can be seen in the charts below."),
     fluidRow(
