@@ -48,14 +48,25 @@ mod_05_items_and_cost_per_bnf_ui <- function(id) {
       style = "background-color: #FFFFFF;",
       br(),
       br(),
+      col_6(
+        style = "margin-bottom: 0;",
+        div(
+          selectInput(
+            inputId = ns("bnf"),
+            label = "BNF",
+            choices = names(careHomePrescribingScrollytellR::bnf),
+            width = "80%"
+          )
+        )
+      ),
       highcharter::highchartOutput(
-        outputId = ns("items_and_cost_per_bnf_paragraph_chart"),
+        outputId = ns("items_and_cost_per_bnf_chart"),
         height = "600px",
         width = "800px"
       )
     ),
     mod_download_ui(
-      id = ns("download_items_and_cost_per_bnf_paragraph_chart")
+      id = ns("download_items_and_cost_per_bnf_chart")
     )
   )
 }
@@ -262,30 +273,33 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
 
 
     # Process for the dumbbell chart
-    items_and_cost_per_bnf_paragraph_df <- reactive({
+    items_and_cost_per_bnf_df <- reactive({
       req(input$metric)
+      req(input$bnf)
 
-      careHomePrescribingScrollytellR::items_and_cost_per_bnf_paragraph_df %>%
-        dplyr::filter(METRIC == input$metric)
+      careHomePrescribingScrollytellR::items_and_cost_per_bnf_df %>%
+        dplyr::filter(METRIC == input$metric & BREAKDOWN == input$bnf)
     })
+
 
     # Add a download button
     mod_download_server(
-      id = "download_items_and_cost_per_bnf_paragraph_chart",
-      filename = "items_and_cost_per_bnf_paragraph_df.csv",
-      export_data = items_and_cost_per_bnf_paragraph_df()
+      id = "download_items_and_cost_per_bnf_chart",
+      filename = "items_and_cost_per_bnf_df.csv",
+      export_data = items_and_cost_per_bnf_df()
     )
 
     # Need to work on it
-    output$items_and_cost_per_bnf_paragraph_chart <- highcharter::renderHighchart({
+    output$items_and_cost_per_bnf_chart <- highcharter::renderHighchart({
       req(input$metric)
+
 
       title <- ifelse(input$metric == "Drug Cost", "drug cost", "prescription items")
       axis_title <- ifelse(input$metric == "Drug Cost", "Drug cost as a % of total drug cost per patient group", "Number of items as a % of all items per patient group") # totally different title so keep it like this..
 
       highcharter::highchart() %>%
         highcharter::hc_add_series(
-          data = items_and_cost_per_bnf_paragraph_df(),
+          data = items_and_cost_per_bnf_df(),
           type = "dumbbell",
           highcharter::hcaes(
             low = SDC_PCT_NON_CH,
@@ -311,11 +325,11 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
           align = "left"
         ) %>%
         highcharter::hc_xAxis(
-          categories = unique(items_and_cost_per_bnf_paragraph_df()$BNF_PARAGRAPH),
+          categories = unique(items_and_cost_per_bnf_df()$BNF_NAME),
           style = list(
             fontSize = 15
           ),
-          title = list(text = "BNF Paragraph")
+          title = list(text = unique(items_and_cost_per_bnf_df()$BREAKDOWN))
         ) %>%
         highcharter::hc_yAxis(
           labels = list(
@@ -332,7 +346,7 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
             function() {
 
               outHTML =
-                '<b>' + this.point.BNF_PARAGRAPH + '</b> <br>' +
+                '<b>' + this.point.BNF_NAME + '</b> <br>' +
                 'Older care home patients: ' + '<b>' + this.point.high + '%' + '</b> <br>' +
                 'Older non-care home patients: ' + '<b>' + this.point.low + '%' + '</b>'
 

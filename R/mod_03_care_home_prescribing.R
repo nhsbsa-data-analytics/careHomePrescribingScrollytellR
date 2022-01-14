@@ -164,8 +164,16 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "older care home patients when prescribed comparable drugs/products."
       )
     ),
-    p(
-      "TODO: Maybe include a version of the below chart, less non-care homes. Or a mean version with error bar? Might be a better way?"
+    # p(
+    #   "TODO: Maybe include a version of the below chart, less non-care homes. Or a mean version with error bar? Might be a better way?"
+    # ),
+    fluidRow(
+      align = "center",
+      style = "background-color: #FFFFFF;",
+      highcharter::highchartOutput(
+        outputId = ns("boxplot_chart"),
+        height = "500px"
+      )
     ),
     br(),
     br(),
@@ -904,6 +912,24 @@ mod_03_care_home_prescribing_server <- function(id) {
         ) %>%
         highcharter::hc_credits(enabled = T)
     })
+    
+    output$boxplot_chart <- highcharter::renderHighchart({
+      highcharter::highchart() %>%
+        theme_nhsbsa() %>% 
+        highcharter::hc_xAxis(type = "category") %>%
+        highcharter::hc_add_series_list(careHomePrescribingScrollytellR::box_series) %>%
+        # highcharter::hc_chart(inverted = T) %>%
+        highcharter::hc_xAxis(title = list(text = "Age Band")) %>%
+        highcharter::hc_yAxis(min = 0,
+                              title = list(text = "Cost per Patient")) %>%
+        highcharter::hc_title(text = "<b>Distribution of Care Home Cost per Patient by Age Band</b>") %>%
+        highcharter::hc_plotOptions(
+          series = list(showInLegend = FALSE)
+        )
+      
+    })
+    
+    
   })
 }
 

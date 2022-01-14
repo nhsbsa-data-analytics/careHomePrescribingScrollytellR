@@ -106,6 +106,8 @@ items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df <-
     c("GENDER", "AGE_BAND", "CH_FLAG")
   )
 
+
+
 # Add to data-raw/
 usethis::use_data(
   items_and_cost_per_patient_by_gender_and_age_band_and_ch_flag_df,
