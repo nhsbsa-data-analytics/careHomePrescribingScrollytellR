@@ -53,9 +53,10 @@ mod_01_intro_ui <- function(id) {
       ),
       "during 2020/21."
     ),
-    p("As might be expected, care home patients receive more prescribing than ",
+    p(
+      "As might be expected, care home patients receive more prescribing than ",
       "non-care home patients receiving prescriptions."
-      ),
+    ),
     p(
       "Average monthly prescribing costs and volumes per care home patient vary ",
       "by age, gender, care home type and geography."
