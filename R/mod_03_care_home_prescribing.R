@@ -177,6 +177,23 @@ mod_03_care_home_prescribing_ui <- function(id) {
     br(),
     br(),
     h6("Geography"),
+    br(),
+    br(),
+    h6(
+        "The London region has the highest estimated average prescribing costs ",
+        "and volumes per patient month."
+      ),
+    p(
+      "The London region features the highest average rate per patient month on ",
+      "all four prescribing metrics and South West is lowest. There is considerable ",
+      "variation per patient month by STP and local authority across metrics, ",
+      "with high pockets in several London and some West Midland STP's and local ",
+      "authorities."
+    ),
+    p(
+      "Each of the metrics can be explored in the chart and table below by ",
+      "region, local authority and STP."
+    ),
     fluidRow(
       style = "background-color: #FFFFFF;",
       h6(
