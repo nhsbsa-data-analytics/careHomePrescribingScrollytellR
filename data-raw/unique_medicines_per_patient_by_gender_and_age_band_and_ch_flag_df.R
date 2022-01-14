@@ -168,7 +168,7 @@ cost_per_patient_boxplot_df <- fact_db %>%
 
 # Series data for highcharter
 box_series <- highcharter::data_to_boxplot(
-  data = box,
+  data = cost_per_patient_boxplot_df,
   group_var = AGE_BAND,
   variable = COST_PER_PATIENT,
   add_outliers = F
@@ -178,6 +178,11 @@ box_series <- highcharter::data_to_boxplot(
 # Add to data-raw/
 usethis::use_data(
   unique_medicines_per_patient_by_gender_and_age_band_and_ch_flag_df,
+  overwrite = TRUE
+)
+
+usethis::use_data(
+  box_series,
   overwrite = TRUE
 )
 
