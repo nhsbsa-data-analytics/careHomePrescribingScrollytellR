@@ -153,15 +153,30 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::bnf)) {
     tidyr::pivot_longer(
       cols = -c(CH_FLAG, BREAKDOWN, BNF_NAME),
       names_to = "METRIC",
-      values_to = "TOTAL"
+      values_to = "SUM"
     )
+
+  tmp_db_total <- tmp_db %>%
+    group_by(METRIC, CH_FLAG) %>%
+    summarise(TOTAL = sum(SUM)) %>%
+    ungroup()
+
+
+  tmp_db <- tmp_db %>%
+    inner_join(
+      y = tmp_db_total,
+      by = c("METRIC", "CH_FLAG")
+    )
+
 
   tmp_db_top20 <- tmp_db %>%
     filter(CH_FLAG == 1) %>%
     group_by(METRIC) %>%
-    slice_max(order_by = TOTAL, n = 20) %>%
+    slice_max(order_by = SUM, n = 20) %>%
     ungroup() %>%
     select(METRIC, BREAKDOWN, BNF_NAME)
+
+
 
   # inner join with tmp_db
   tmp_db <- tmp_db %>%
@@ -171,9 +186,9 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::bnf)) {
   # # Calculate the percentage of each group and drop the total column
   tmp_db <- tmp_db %>%
     group_by(METRIC, CH_FLAG) %>%
-    mutate(PCT = TOTAL / sum(TOTAL) * 100) %>%
+    mutate(PCT = SUM / TOTAL * 100) %>%
     ungroup() %>%
-    select(-TOTAL)
+    select(-c(SUM, TOTAL))
 
   # Pivot wider by care home flag
   tmp_db <- tmp_db %>%
@@ -182,8 +197,6 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::bnf)) {
       names_from = CH_FLAG,
       values_from = PCT
     )
-
-
 
   if (breakdown_name == "BNF Chapter") {
     items_and_cost_per_bnf_db <- tmp_db
