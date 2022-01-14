@@ -912,24 +912,23 @@ mod_03_care_home_prescribing_server <- function(id) {
         ) %>%
         highcharter::hc_credits(enabled = T)
     })
-    
+
     output$boxplot_chart <- highcharter::renderHighchart({
       highcharter::highchart() %>%
-        theme_nhsbsa() %>% 
+        theme_nhsbsa() %>%
         highcharter::hc_xAxis(type = "category") %>%
         highcharter::hc_add_series_list(careHomePrescribingScrollytellR::box_series) %>%
         # highcharter::hc_chart(inverted = T) %>%
         highcharter::hc_xAxis(title = list(text = "Age Band")) %>%
-        highcharter::hc_yAxis(min = 0,
-                              title = list(text = "Cost per Patient")) %>%
+        highcharter::hc_yAxis(
+          min = 0,
+          title = list(text = "Cost per Patient")
+        ) %>%
         highcharter::hc_title(text = "<b>Distribution of Care Home Cost per Patient by Age Band</b>") %>%
         highcharter::hc_plotOptions(
           series = list(showInLegend = FALSE)
         )
-      
     })
-    
-    
   })
 }
 
