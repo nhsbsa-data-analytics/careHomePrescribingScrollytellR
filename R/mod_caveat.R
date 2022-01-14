@@ -9,7 +9,39 @@
 #' @importFrom shiny NS tagList
 mod_caveat_ui <- function(id) {
   ns <- NS(id)
-  tagList()
+  tagList(
+    h4("Caveats"),
+    br(),
+    p("Here is a page containing caveats"),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  )
 }
 
 #' caveat Server Functions

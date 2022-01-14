@@ -74,6 +74,13 @@ app_ui <- function(request) {
           mod_accessibility_ui("accessibility_ui_1")
         )
       ),
+      tabPanel(
+        title = "Contact Us",
+        fluidPage(
+          br(),
+          mod_contact_us_ui("contact_us_ui_1")
+        )
+      ),
     ),
     br(),
     mod_08_footer_ui("08_footer_ui_1")

@@ -9,7 +9,39 @@
 #' @importFrom shiny NS tagList
 mod_accessibility_ui <- function(id) {
   ns <- NS(id)
-  tagList()
+  tagList(
+    h4("Accessibility"),
+    br(),
+    p("Here is a page containing all of our accessibility statement"),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  )
 }
 
 #' accessibility Server Functions

@@ -1,4 +1,4 @@
-#' methodology UI Function
+#' contact_us UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,18 +7,12 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_methodology_ui <- function(id) {
+mod_contact_us_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4("Methodology"),
+    h4("Contact us"),
     br(),
-    p(
-      enurl(
-        text = "Here",
-        url = "https://rpubs.com/adnan_shroufi/855546"
-      ),
-      " is a link to methodology described in full."
-    ),
+    p("contact us also add surey link?"),
     br(),
     br(),
     br(),
@@ -50,17 +44,17 @@ mod_methodology_ui <- function(id) {
   )
 }
 
-#' Methodology Server Functions
+#' contact_us Server Functions
 #'
 #' @noRd
-mod_methodology_server <- function(id) {
+mod_contact_us_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
   })
 }
 
 ## To be copied in the UI
-# mod_methodology_ui("methodology_ui_1")
+# mod_contact_us_ui("contact_us_ui_1")
 
 ## To be copied in the server
-# mod_methodology_server("methodology_ui_1")
+# mod_contact_us_server("contact_us_ui_1")
