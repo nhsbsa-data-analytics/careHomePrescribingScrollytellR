@@ -1,4 +1,4 @@
-#' 05_items_and_cost_per_bnf UI Function
+#' 04_commonly_prescribed_medicine UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,19 +7,67 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_05_items_and_cost_per_bnf_ui <- function(id) {
+mod_04_commonly_prescribed_medicine_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Commonly prescribed medicines"),
+    p("The top BNF chapters for older care home prescribing in 2020/21 are: "),
+    p("By number of prescription items: "),
+    tags$ul(
+      tags$li(
+        style = "font-size: 16pt;",
+        "04-Central Nervous System"
+      ),
+      tags$li(
+        style = "font-size: 16pt;",
+        "02-Cardiovascular System"
+      ),
+      tags$li(
+        style = "font-size: 16pt;",
+        "01-Gastro-intestinal System"
+      )
+    ),
+    p("And by drug cost:"),
+    tags$ul(
+      tags$li(
+        style = "font-size: 16pt;",
+        "04-Central Nervous System"
+      ),
+      tags$li(
+        style = "font-size: 16pt;",
+        "09-Nutrition and Blood"
+      ),
+      tags$li(
+        style = "font-size: 16pt;",
+        "02-Cardiovascular System"
+      )
+    ),
+    br(),
     p(
       "Around one in four items (24%) prescribed to care home patients are ",
-      "from the Central Nervous System",
+      "from the", tags$b("Central Nervous System "),
       tippy(
         text = "BNF",
         tooltip = tooltip_text$bnf_code
       ),
-      "chapter. This chapter also accounts for 24% of drug cost. Analgesics ",
-      "is the most common BNF section within the Central Nervous System."
+      "chapter. This chapter also accounts for 24% of drug cost.",
+      tags$b("Analgesics "),
+      "is the most common BNF section within the Central Nervous System ",
+      "for care home patients in terms items and drug cost."
+    ),
+    p(
+      "And ", tags$b("Paracetamol"), " (painkiller) is the most commonly prescribed ",
+      "drug at chemical substance level by number of prescription items, accounting ",
+      "for 5% of all prescription items to older care home patients. ",
+      "Whereas it is ", tags$b("Atorvastatin"), "(used to lower cholesterol) in ",
+      "older non care home patients."
+    ),
+    p(
+      tags$b("Enteral nutrition"), " products however account for the greatest ",
+      "percentage of drug cost at chemical substance level (13%) in older care home ",
+      "patients. Whereas it is ", tags$b("Apixiban"), "(blood thinner) in older ",
+      "non care home patients (7% of drug cost), the second most common medicine by ",
+      "cost for care home patients."
     ),
     br(),
     br(),
@@ -71,10 +119,10 @@ mod_05_items_and_cost_per_bnf_ui <- function(id) {
   )
 }
 
-#' 05_items_and_cost_per_bnf Server Functions
+#' 04_commonly_prescribed_medicine Server Functions
 #'
 #' @noRd
-mod_05_items_and_cost_per_bnf_server <- function(id) {
+mod_04_commonly_prescribed_medicine_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -361,7 +409,7 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
 }
 
 ## To be copied in the UI
-# mod_05_items_and_cost_per_bnf_ui("05_items_and_cost_per_bnf_ui_1")
+# mod_04_commonly_prescribed_medicine_ui("04_commonly_prescribed_medicine_ui_1")
 
 ## To be copied in the server
-# mod_05_items_and_cost_per_bnf_server("05_items_and_cost_per_bnf_ui_1")
+# mod_04_commonly_prescribed_medicine_server("04_commonly_prescribed_medicine_ui_1")
