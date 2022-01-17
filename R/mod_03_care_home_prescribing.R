@@ -23,7 +23,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "2020/21."
     ),
     p(
-      "This represnts 7% of the total primary care drug spend for older patients ",
+      "This represents 7% of the total primary care drug spend for older patients ",
       "during 2020/21."
     ),
     h6(
@@ -78,14 +78,17 @@ mod_03_care_home_prescribing_ui <- function(id) {
           h6("Non-care home")
         )
       ),
-      uiOutput(ns("summary_table"))
+      uiOutput(ns("summary_table")),
+      p(
+        style = "font-size: 14px; margin-left: 1%;",
+        "The mean average has been used to calculate per patient month metrics. ",
+        "It should be noted that the distributions are positively skewed due to ",
+        "extreme high values for some patients, and the median values are ",
+        "lower than the mean."
+      )
     ),
-    p(
-      "The mean average has been used to calculate per patient month metrics. ",
-      "It should be noted that the distributions are positively skewed due to ",
-      "extreme high values for some patients, and the median values are ",
-      "lower than the mean."
-    ),
+    br(),
+    br(),
     h6(
       "Age and gender"
     ),
@@ -179,20 +182,11 @@ mod_03_care_home_prescribing_ui <- function(id) {
     ),
     br(),
     br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
     h6("Geography"),
-    br(),
-    br(),
     h6(
-        "The London region has the highest estimated average prescribing costs ",
-        "and volumes per patient month."
-      ),
+      "The London region has the highest estimated average prescribing costs ",
+      "and volumes per patient month."
+    ),
     p(
       "The London region features the highest average rate per patient month on ",
       "all four prescribing metrics and South West is lowest. There is considerable ",
@@ -938,10 +932,10 @@ mod_03_care_home_prescribing_server <- function(id) {
         highcharter::hc_xAxis(type = "category") %>%
         highcharter::hc_add_series_list(careHomePrescribingScrollytellR::box_series) %>%
         # highcharter::hc_chart(inverted = T) %>%
-        highcharter::hc_xAxis(title = list(text = "Age Band")) %>%
+        highcharter::hc_xAxis(title = list(text = "Patient Age Band")) %>%
         highcharter::hc_yAxis(
           min = 0,
-          title = list(text = "Cost per Patient")
+          title = list(text = "Cost per patient")
         ) %>%
         highcharter::hc_title(text = "<b>Distribution of Care Home Cost per Patient by Age Band</b>") %>%
         highcharter::hc_plotOptions(

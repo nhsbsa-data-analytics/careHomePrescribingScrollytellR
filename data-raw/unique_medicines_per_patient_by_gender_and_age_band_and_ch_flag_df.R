@@ -155,7 +155,7 @@ cost_per_patient_boxplot_df <- fact_db %>%
   ungroup() %>%
   # Metric level
   group_by(NHS_NO, AGE_BAND) %>%
-  summarise(COST_PER_PATIENT = round(mean(COST_PER_PATIENT), 2)) %>%
+  summarise(COST_PER_PATIENT = round(mean(COST_PER_PATIENT), 1)) %>%
   ungroup() %>%
   # Collect and change factor-levels
   collect() %>%
@@ -172,7 +172,8 @@ box_series <- highcharter::data_to_boxplot(
   data = cost_per_patient_boxplot_df,
   group_var = AGE_BAND,
   variable = COST_PER_PATIENT,
-  add_outliers = F
+  add_outliers = FALSE,
+  name = "Cost per patient"
 )
 
 

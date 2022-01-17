@@ -38,13 +38,14 @@ app_ui <- function(request) {
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "05_items_and_cost_per_bnf",
-                mod_05_items_and_cost_per_bnf_ui("05_items_and_cost_per_bnf_ui_1")
+                id = "04_commonly_prescribed_medicine",
+                mod_04_commonly_prescribed_medicine_ui("04_commonly_prescribed_medicine_ui_1")
               ),
               br(),
-              mod_06_common_medicines_ui("06_common_medicines_ui_1"),
-              br(),
-            mod_07_final_thoughts_ui("07_final_thoughts_ui_1")
+              scrollytell::scrolly_section(
+                id = "07_final_thoughts",
+                mod_07_final_thoughts_ui("07_final_thoughts_ui_1")
+              )
             )
           )
         )

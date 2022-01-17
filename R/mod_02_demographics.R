@@ -69,7 +69,7 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "Our estimated monthly average of ",
-      tags$b("285 thousand older care home patients,"), " receiving ",
+      tags$b("285 thousand older care home patients"), " receiving ",
       "prescriptions, represents around 4% of patients age 65+ years ",
       "receiving prescription items each month."
     ),
