@@ -41,7 +41,10 @@ app_ui <- function(request) {
                 id = "05_items_and_cost_per_bnf",
                 mod_05_items_and_cost_per_bnf_ui("05_items_and_cost_per_bnf_ui_1")
               ),
-              br()
+              br(),
+              mod_06_common_medicines_ui("06_common_medicines_ui_1"),
+              br(),
+            mod_07_final_thoughts_ui("07_final_thoughts_ui_1")
             )
           )
         )
