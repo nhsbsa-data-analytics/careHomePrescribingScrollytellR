@@ -74,15 +74,20 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
 
 # First we have to create a filtered version of PDS import data in DALP
 
-# Check if the table exists DALP
+# Check if the table exists DWCP and DALP
 exists_dalp_pds_import <- con_dalp %>%
   DBI::dbExistsTable(name = "INT615_SCD2_EXT_PD_IMPORT_DATA")
 
 # Drop any existing table beforehand
 if (exists_dalp_pds_import) {
-  con_dwcp %>%
+  con_dalp %>%
     DBI::dbRemoveTable(name = "INT615_SCD2_EXT_PD_IMPORT_DATA")
 }
+
+# Create a lazy table from year month dim table in DWCP
+year_month_db <- con_dwcp %>% 
+  tbl(from = in_schema("DIM", "YEAR_MONTH_DIM")) %>%
+  select(YEAR_MONTH_ID, YEAR_MONTH)
 
 # Create a lazy table from SCD2 PDS import data table in DWCP
 pds_import_db <- con_dwcp %>% 
@@ -102,8 +107,6 @@ pds_import_db <- pds_import_db %>%
 # Extract the year month and single line address
 pds_import_db <- pds_import_db %>%
   mutate(
-    NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
-    YEAR_MONTH = substr(LOCAL_PID_S, 1, 6),
     SINGLE_LINE_ADDRESS = paste(
       ADDRESS_LINE1_R,
       ADDRESS_LINE2_R,
@@ -116,11 +119,10 @@ pds_import_db <- pds_import_db %>%
 # Select the columns of interest
 pds_import_db <- pds_import_db %>%
   select(
-    PART_MONTH, 
-    YEAR_MONTH, 
+    YEAR_MONTH = PART_MONTH, 
     SINGLE_LINE_ADDRESS, 
     POSTCODE = POSTCODE_R, 
-    NHS_NO_PDS,
+    NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
     RECORD_NO
   )
 
@@ -131,15 +133,30 @@ pds_import_db <- pds_import_db %>%
   ungroup() %>%
   select(-RECORD_NO)
 
+# Join the year month details (shift by 1 month from part month)
+pds_import_db <- pds_import_db %>%
+  inner_join(y = year_month_db) %>%
+  select(-YEAR_MONTH) %>%
+  mutate(YEAR_MONTH_ID = YEAR_MONTH_ID + 1L) %>% 
+  inner_join(y = year_month_db) %>%
+  relocate(YEAR_MONTH_ID, YEAR_MONTH)
+
 # Join the NHS_NO on so we can join to the FACT table
 pds_import_db <- pds_import_db %>%
-  inner_join(
-    y = cip_db %>% select(NHS_NO_PDS, NHS_NO = NHS_NO_CIP)
-  )
+  inner_join(y = cip_db %>% select(NHS_NO_PDS, NHS_NO = NHS_NO_CIP))
 
-# Write the table to DWCP
-pds_import_db %>%
-  nhsbsaR::oracle_create_table(table_name = "INT615_SCD2_EXT_PD_IMPORT_DATA")
+# Tidy postcode and format single line addresses
+pds_import_db <- pds_import_db %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
+
+# Write the table back to DWCP with indexes
+pds_import_db <- pds_import_db %>%
+  compute(
+    name = "INT615_SCD2_EXT_PD_IMPORT_DATA",
+    indexes = list(c("YEAR_MONTH_ID", "YEAR_MONTH", "NHS_NO"), c("POSTCODE")),
+    temporary = FALSE
+  )
 
 # Grant Access to DALP_USER
 con_dwcp %>%
@@ -157,9 +174,13 @@ pds_import_db <- con_dalp %>%
     )
   )
 
-# Write the table to DALP
-pds_import_db %>%
-  nhsbsaR::oracle_create_table(table_name = "INT615_SCD2_EXT_PD_IMPORT_DATA")
+# Write the table back to DALP with indexes
+pds_import_db <- pds_import_db %>%
+  compute(
+    name = "INT615_SCD2_EXT_PD_IMPORT_DATA",
+    indexes = list(c("YEAR_MONTH", "NHS_NO"), c("POSTCODE")),
+    temporary = FALSE
+  )
 
 # Drop the table from DWCP
 con_dwcp %>%
@@ -167,23 +188,6 @@ con_dwcp %>%
 
 # Disconnect from DWCP
 DBI::dbDisconnect(con_dwcp)
-
-# Create a lazy table in DALP from filtered version of SCD2_EXT_PD_IMPORT_DATA
-pds_import_db <- con_dalp %>% 
-  tbl(from = "INT615_SCD2_EXT_PD_IMPORT_DATA")
-
-# Tidy postcode and format single line addresses
-pds_import_db <- pds_import_db %>%
-  addressMatchR::tidy_postcode(col = POSTCODE) %>%
-  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
-
-# Join the year month details (shift by 2 months)
-pds_import_db <- pds_import_db %>%
-  inner_join(y = year_month_db) %>%
-  select(-YEAR_MONTH) %>%
-  mutate(YEAR_MONTH_ID = YEAR_MONTH_ID + 2L) %>% 
-  inner_join(y = year_month_db) %>%
-  relocate(YEAR_MONTH_ID, YEAR_MONTH)
 
 # Pull relevant data from FACT table for the period
 
@@ -234,10 +238,7 @@ elderly_nhs_no_db <- fact_db %>%
 
 # Join the year month information
 fact_db <- fact_db %>%
-  inner_join(
-    y = year_month_db,
-    copy = TRUE
-  ) %>%
+  inner_join(y = year_month_db) %>%
   relocate(YEAR_MONTH_ID)
 
 # Subset the paper forms
@@ -258,14 +259,8 @@ eps_fact_db <- fact_db %>%
     YEAR_MONTH >= 202002L,
     YEAR_MONTH <= 202105L
   ) %>%
-  semi_join(
-    y = elderly_nhs_no_db,
-    copy = TRUE
-  ) %>%
-  left_join(
-    y = eps_payload_messages_db,
-    copy = TRUE
-  )
+  semi_join(y = elderly_nhs_no_db) %>%
+  left_join(y = eps_payload_messages_db)
 
 # Get EPS addresses
 
@@ -311,8 +306,7 @@ left_join_address <- function(x, y, year_month_id_col, suffix){
         "SINGLE_LINE_ADDRESS_{{year_month_id_col}}_{{suffix}}" := 
           SINGLE_LINE_ADDRESS
       ),
-    by = c(rlang::as_name(rlang::enquo(year_month_id_col)), "NHS_NO"),
-    copy = TRUE
+    by = c(rlang::as_name(rlang::enquo(year_month_id_col)), "NHS_NO")
   )
   
 }
@@ -414,16 +408,17 @@ fact_db <- union_all(
   y = paper_fact_db %>%    
     select(-c(YEAR_MONTH_ID, ITEM_COUNT)) %>%
     # Join the addresses
-    left_join(
-      y = paper_patient_db,
-      copy = TRUE
-    ) %>%
+    left_join(y = paper_patient_db) %>%
     distinct()
 )
 
-# Write the table back to the DB
+# Write the table back to DALP with indexes
 fact_db %>%
-  nhsbsaR::oracle_create_table(table_name = "INT615_FORM_LEVEL_FACT")
+  compute(
+    name = "INT615_FORM_LEVEL_FACT",
+    indexes = list(c("YEAR_MONTH", "PF_ID"), c("POSTCODE")),
+    temporary = FALSE
+  )
 
 # Disconnect from database
 DBI::dbDisconnect(con_dalp)
