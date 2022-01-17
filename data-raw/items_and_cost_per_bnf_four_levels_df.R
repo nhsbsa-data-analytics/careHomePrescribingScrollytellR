@@ -220,7 +220,7 @@ items_and_cost_per_bnf_df <- items_and_cost_per_bnf_df %>%
   mutate(
     across(
       .cols = starts_with("PCT"),
-      .fns = ~ janitor::round_half_up(.x),
+      .fns = ~ janitor::round_half_up(.x,1),
       .names = "SDC_{col}"
     )
   ) %>%
