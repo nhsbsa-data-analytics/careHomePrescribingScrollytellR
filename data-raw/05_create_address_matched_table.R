@@ -104,10 +104,7 @@ match_db <- match_db %>%
 
 # Join the matches back to the patient addresses
 patient_address_match_db <- patient_address_db %>%
-  left_join(
-    y = match_db,
-    copy = TRUE
-  )
+  left_join(y = match_db)
 
 # Fill the missing care home flag and match type columns
 patient_address_match_db <- patient_address_match_db %>%
@@ -138,11 +135,7 @@ care_home_postcodes_db <- addressbase_plus_cqc_db %>%
 # Manually override the care home flag for non care home patient addresses that 
 # have 5 or more patients in a single month that are in a care home postcode
 patient_address_match_db <- patient_address_match_db %>%
-  left_join(
-    y = care_home_postcodes_db %>% 
-      mutate(CH_POSTCODE = 1L),
-    copy = TRUE
-  ) %>%
+  left_join(y = care_home_postcodes_db %>% mutate(CH_POSTCODE = 1L)) %>%
   mutate(
     MATCH_TYPE = ifelse(
       test = 
@@ -156,10 +149,12 @@ patient_address_match_db <- patient_address_match_db %>%
   ) %>%
   select(-CH_POSTCODE)
 
-# Write the table back to the DB
+# Write the table back to DALP with indexes
 patient_address_match_db %>%
-  nhsbsaR::oracle_create_table(
-    table_name = "INT615_ADDRESS_MATCHED"
+  compute(
+    name = "INT615_ADDRESS_MATCHED",
+    indexes = list(c("POSTCODE")),
+    temporary = FALSE
   )
 
 # Disconnect from database

@@ -79,23 +79,19 @@ item_fact_db <- item_fact_db %>%
 item_fact_db <- item_fact_db %>%
   inner_join(
     y = form_fact_db,
-    na_matches = "na", # Match NA to NA for PART_DATE and EPM_ID
-    copy = TRUE
+    na_matches = "na" # Match NA to NA in join
   ) %>%
   left_join(
     y = patient_address_match_db %>% 
       select(-(TOTAL_FORMS:MAX_MONTHLY_PATIENTS)),
-    copy = TRUE
+    na_matches = "na"
   ) %>%
   tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
 
 # Tidy care home flag and join the postcode info
 item_fact_db <- item_fact_db %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")) %>%
-  left_join(
-    y = postcode_db,
-    copy = TRUE
-  ) %>%
+  left_join(y = postcode_db,) %>%
   relocate(PCD_REGION_CODE:IMD_QUINTILE, .after = POSTCODE)
 
 # Add the drug information
@@ -114,8 +110,7 @@ item_fact_db <- item_fact_db %>%
         PARAGRAPH_DESCR,
         BNF_CHEMICAL_SUBSTANCE,
         CHEMICAL_SUBSTANCE_BNF_DESCR
-      ),
-    copy = TRUE
+      )
   ) %>%
   relocate(
     BNF_CHAPTER:CHEMICAL_SUBSTANCE_BNF_DESCR, 
@@ -164,18 +159,16 @@ patient_db <- item_fact_db %>%
 
 # Join fact data to patient level dimension
 item_fact_db <- item_fact_db %>%
-  left_join(
-    y = patient_db,
-    copy = TRUE
-  ) %>%
+  left_join(y = patient_db) %>%
   relocate(GENDER, .after = PDS_GENDER) %>%
   relocate(AGE_BAND, AGE, .after = CALC_AGE) %>%
   select(-c(PDS_GENDER, CALC_AGE))
 
-# Write the table back to the DB
+# Write the table back to DALP
 item_fact_db %>%
-  nhsbsaR::oracle_create_table(
-    table_name = "INT615_ITEM_LEVEL_BASE"
+  compute(
+    name = "INT615_ITEM_LEVEL_BASE",
+    temporary = FALSE
   )
 
 # Disconnect from database
