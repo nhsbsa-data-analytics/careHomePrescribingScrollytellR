@@ -33,6 +33,8 @@ mod_01_intro_ui <- function(id) {
       "in NHSBSA information systems in the future and we can develop additional ",
       "analyses."
     ),
+    br(),
+    br(),
     p(
       "We estimate that there was a monthly average of", tags$b("285 thousand"),
       " care home patients receiving prescriptions each month in 2020/21. ",

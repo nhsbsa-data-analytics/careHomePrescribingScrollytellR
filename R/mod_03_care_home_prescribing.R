@@ -128,8 +128,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
         inputId = ns("age_gender_by_metric"),
         label = NULL,
         choices = c(
-          "Average Drug Cost" = "SDC_COST_PER_PATIENT",
-          "Average Prescription Items" = "SDC_ITEMS_PER_PATIENT",
+          "Average drug cost" = "SDC_COST_PER_PATIENT",
+          "Average prescription items" = "SDC_ITEMS_PER_PATIENT",
           "Number of unique medicines" = "SDC_UNIQUE_MEDICINES_PER_PATIENT",
           "Patients on ten or more unique medicines" = "SDC_PCT_PATIENTS_TEN_OR_MORE"
         ),
@@ -220,7 +220,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
-            "Total drug cost" =
+            "Average drug cost" =
               "SDC_COST_PER_PATIENT",
             "Number of prescription items" =
               "SDC_ITEMS_PER_PATIENT",
@@ -718,7 +718,7 @@ mod_03_care_home_prescribing_server <- function(id) {
               "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
               switch(input$metric,
                 "SDC_COST_PER_PATIENT" =
-                  "Total drug cost:</b> £{point.value}",
+                  "Average drug cost:</b> £{point.value}",
                 "SDC_ITEMS_PER_PATIENT" =
                   "Number of prescription items:</b> {point.value}",
                 "SDC_UNIQUE_MEDICINES_PER_PATIENT" =
