@@ -120,8 +120,8 @@ pds_import_db <- pds_import_db %>%
 pds_import_db <- pds_import_db %>%
   select(
     YEAR_MONTH = PART_MONTH, 
-    SINGLE_LINE_ADDRESS, 
     POSTCODE = POSTCODE_R, 
+    SINGLE_LINE_ADDRESS,
     NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
     RECORD_NO
   )
@@ -139,11 +139,13 @@ pds_import_db <- pds_import_db %>%
   select(-YEAR_MONTH) %>%
   mutate(YEAR_MONTH_ID = YEAR_MONTH_ID + 1L) %>% 
   inner_join(y = year_month_db) %>%
-  relocate(YEAR_MONTH_ID, YEAR_MONTH)
+  select(-YEAR_MONTH) %>%
+  relocate(YEAR_MONTH_ID)
 
 # Join the NHS_NO on so we can join to the FACT table
 pds_import_db <- pds_import_db %>%
-  inner_join(y = cip_db %>% select(NHS_NO_PDS, NHS_NO = NHS_NO_CIP))
+  inner_join(y = cip_db %>% select(NHS_NO_PDS, NHS_NO = NHS_NO_CIP)) %>%
+  select(-NHS_NO_PDS)
 
 # Tidy postcode and format single line addresses
 pds_import_db <- pds_import_db %>%
@@ -154,7 +156,7 @@ pds_import_db <- pds_import_db %>%
 pds_import_db <- pds_import_db %>%
   compute(
     name = "INT615_SCD2_EXT_PD_IMPORT_DATA",
-    indexes = list(c("YEAR_MONTH_ID", "YEAR_MONTH", "NHS_NO"), c("POSTCODE")),
+    indexes = list(c("YEAR_MONTH_ID", "NHS_NO"), c("POSTCODE")),
     temporary = FALSE
   )
 
@@ -248,7 +250,8 @@ paper_fact_db <- fact_db %>%
     YEAR_MONTH >= 202004L,
     YEAR_MONTH <= 202103L,
     CALC_AGE >= 65L
-  )
+  ) %>%
+  select(-ITEM_COUNT)
 
 # Subset the EPS forms (buffer the period so that we can search for addresses 
 # for paper forms from more months of EPS forms) to elderly patients in 2020/21
@@ -268,7 +271,7 @@ eps_fact_db <- fact_db %>%
 eps_single_address_db <- eps_fact_db %>%
   filter(!is.na(POSTCODE)) %>%
   # Remove patients with multiple postcodes in the same month
-  group_by(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO) %>%
+  group_by(YEAR_MONTH_ID, NHS_NO) %>%
   mutate(POSTCODE_COUNT = n_distinct(POSTCODE)) %>%
   filter(POSTCODE_COUNT == 1) %>%
   select(-POSTCODE_COUNT) %>%
@@ -277,13 +280,14 @@ eps_single_address_db <- eps_fact_db %>%
   summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
   ungroup(POSTCODE, SINGLE_LINE_ADDRESS) %>%
   slice_max(order_by = ITEM_COUNT, with_ties = FALSE) %>%
-  ungroup()
+  ungroup() %>%
+  select(-ITEM_COUNT)
 
 # Get the PDS patients that we need to find an address for
 
 # Get the patients that we want an address for
 paper_patient_db <- paper_fact_db %>% 
-  distinct(YEAR_MONTH_ID, YEAR_MONTH, NHS_NO)
+  distinct(YEAR_MONTH_ID, NHS_NO)
 
 # Add the year month information
 paper_patient_db <- paper_patient_db %>%
@@ -390,7 +394,7 @@ paper_patient_db <- paper_patient_db %>%
       SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P2_PDS
     )
   ) %>%
-  select(YEAR_MONTH, NHS_NO, POSTCODE, SINGLE_LINE_ADDRESS)
+  select(YEAR_MONTH_ID, NHS_NO, POSTCODE, SINGLE_LINE_ADDRESS)
 
 # Combine EPS and paper data with the FACT
 
@@ -403,11 +407,13 @@ fact_db <- union_all(
       CALC_AGE >= 65L,
       YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
     ) %>%
-    distinct(across(-c(YEAR_MONTH_ID, ITEM_COUNT))), 
+    select(-c(YEAR_MONTH_ID, ITEM_COUNT)) %>%
+    distinct(), 
   y = paper_fact_db %>%    
-    distinct(across(-c(YEAR_MONTH_ID, ITEM_COUNT))) %>%
+    distinct() %>%
     # Join the addresses
-    left_join(y = paper_patient_db)
+    left_join(y = paper_patient_db) %>%
+    select(-YEAR_MONTH_ID)
 )
 
 # Write the table back to DALP with indexes
