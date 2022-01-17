@@ -78,14 +78,16 @@ mod_03_care_home_prescribing_ui <- function(id) {
           h6("Non-care home")
         )
       ),
-      uiOutput(ns("summary_table"))
+      uiOutput(ns("summary_table")),
+      br(),
+      p(
+        "The mean average has been used to calculate per patient month metrics. ",
+        "It should be noted that the distributions are positively skewed due to ",
+        "extreme high values for some patients, and the median values are ",
+        "lower than the mean."
+      )
     ),
-    p(
-      "The mean average has been used to calculate per patient month metrics. ",
-      "It should be noted that the distributions are positively skewed due to ",
-      "extreme high values for some patients, and the median values are ",
-      "lower than the mean."
-    ),
+    br(),
     h6(
       "Age and gender"
     ),
@@ -155,7 +157,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       tags$li(
         style = "font-size: 16pt;",
         "Younger age groups have a much wider spread of costs per month and ",
-        "include more outliers."
+        "include more outliers (as shown in the chart below)."
       ),
       tags$li(
         style = "font-size: 16pt;",
