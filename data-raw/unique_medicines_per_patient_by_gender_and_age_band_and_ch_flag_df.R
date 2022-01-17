@@ -143,9 +143,46 @@ unique_medicines_per_patient_by_gender_and_age_band_and_ch_flag_df <-
     c("GENDER", "AGE_BAND", "CH_FLAG")
   )
 
+
+# Boxplot data
+cost_per_patient_boxplot_df <- fact_db %>%
+  filter(CH_FLAG == "Care home") %>% 
+  # Year month level
+  group_by(NHS_NO, YEAR_MONTH, AGE_BAND) %>%
+  summarise(
+    COST_PER_PATIENT = sum(ITEM_PAY_DR_NIC * 0.01) / n_distinct(NHS_NO)
+  ) %>%
+  ungroup() %>%
+  # Metric level
+  group_by(NHS_NO, AGE_BAND) %>%
+  summarise(COST_PER_PATIENT = round(mean(COST_PER_PATIENT), 2)) %>%
+  ungroup() %>%
+  # Collect and change factor-levels
+  collect() %>%
+  mutate(AGE_BAND = factor(
+    AGE_BAND, levels = c("65-69","70-74","75-79","80-84","85-89", "90+"))
+  ) %>%
+  arrange(AGE_BAND)
+
+
+
+# Series data for highcharter
+box_series <- highcharter::data_to_boxplot(
+  data = cost_per_patient_boxplot_df,
+  group_var = AGE_BAND,
+  variable = COST_PER_PATIENT,
+  add_outliers = F
+)
+
+
 # Add to data-raw/
 usethis::use_data(
   unique_medicines_per_patient_by_gender_and_age_band_and_ch_flag_df,
+  overwrite = TRUE
+)
+
+usethis::use_data(
+  box_series,
   overwrite = TRUE
 )
 

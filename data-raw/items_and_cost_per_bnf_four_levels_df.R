@@ -24,9 +24,10 @@ drug_db <- drug_db %>%
   mutate(
     BNF_CHAPTER = paste0("(", BNF_CHAPTER, ") ", CHAPTER_DESCR),
     BNF_SECTION = paste0("(", BNF_SECTION, ") ", SECTION_DESCR),
-    BNF_PARAGRAPH = PARAGRAPH_DESCR
+    BNF_PARAGRAPH = PARAGRAPH_DESCR,
+    BNF_CHEM_SUB = CHEMICAL_SUBSTANCE_BNF_DESCR
   ) %>%
-  select(YEAR_MONTH, RECORD_ID, BNF_CHAPTER, BNF_SECTION, BNF_PARAGRAPH)
+  select(YEAR_MONTH, RECORD_ID, BNF_CHAPTER, BNF_SECTION, BNF_PARAGRAPH, BNF_CHEM_SUB)
 
 # Create a lazy table from the care home FACT table
 fact_db <- con %>%
@@ -129,54 +130,80 @@ items_and_cost_per_bnf_chapter_and_section_df <-
   )
 
 # Get the total items and cost per BNF paragraph to use for the dumbbell chart
-items_and_cost_per_bnf_paragraph_db <- fact_db %>%
-  group_by(CH_FLAG, BNF_PARAGRAPH) %>%
-  summarise(
-    Items = sum(ITEM_COUNT),
-    `Drug Cost` = sum(ITEM_PAY_DR_NIC * 0.01)
-  ) %>%
-  ungroup() %>%
-  tidyr::pivot_longer(
-    cols = -c(CH_FLAG, BNF_PARAGRAPH),
-    names_to = "METRIC",
-    values_to = "TOTAL"
-  )
+# TODO:I will come back this later to make much efficient
 
-# For each metric, get the top 20 paragraphs for care homes
-top_20_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
-  filter(CH_FLAG == 1) %>%
-  group_by(METRIC) %>%
-  slice_max(order_by = TOTAL, n = 20) %>%
-  ungroup() %>%
-  select(METRIC, BNF_PARAGRAPH)
 
-# Filter items and cost dataframe by these paragraphs
-items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
-  inner_join(y = top_20_paragraph_db)
+for (breakdown_name in names(careHomePrescribingScrollytellR::bnf)) {
 
-# Calculate the percentage of each group and drop the total column
-items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
-  group_by(METRIC, CH_FLAG) %>%
-  mutate(PCT = TOTAL / sum(TOTAL) * 100) %>%
-  ungroup() %>%
-  select(-TOTAL)
+  # Extract the breakdown cols (e.g. BNF_CHAPTER)
+  breakdown_cols <- careHomePrescribingScrollytellR::bnf[[breakdown_name]]
 
-# Pivot wider by care home flag
-items_and_cost_per_bnf_paragraph_db <- items_and_cost_per_bnf_paragraph_db %>%
-  mutate(CH_FLAG = ifelse(CH_FLAG == 0L, "PCT_NON_CH", "PCT_CH")) %>%
-  tidyr::pivot_wider(
-    names_from = CH_FLAG,
-    values_from = PCT
-  )
+  # Group the table by each breakdown and get items and drug cost
+  tmp_db <- fact_db %>%
+    group_by(
+      BREAKDOWN = breakdown_name,
+      BNF_NAME = !!dplyr::sym(breakdown_cols),
+      CH_FLAG
+    ) %>%
+    summarise(
+      Items = sum(ITEM_COUNT),
+      `Drug Cost` = sum(ITEM_PAY_DR_NIC * 0.01)
+    ) %>%
+    ungroup() %>%
+    tidyr::pivot_longer(
+      cols = -c(CH_FLAG, BREAKDOWN, BNF_NAME),
+      names_to = "METRIC",
+      values_to = "TOTAL"
+    )
+
+  tmp_db_top20 <- tmp_db %>%
+    filter(CH_FLAG == 1) %>%
+    group_by(METRIC) %>%
+    slice_max(order_by = TOTAL, n = 20) %>%
+    ungroup() %>%
+    select(METRIC, BREAKDOWN, BNF_NAME)
+
+  # inner join with tmp_db
+  tmp_db <- tmp_db %>%
+    inner_join(y = tmp_db_top20)
+
+
+  # # Calculate the percentage of each group and drop the total column
+  tmp_db <- tmp_db %>%
+    group_by(METRIC, CH_FLAG) %>%
+    mutate(PCT = TOTAL / sum(TOTAL) * 100) %>%
+    ungroup() %>%
+    select(-TOTAL)
+
+  # Pivot wider by care home flag
+  tmp_db <- tmp_db %>%
+    mutate(CH_FLAG = ifelse(CH_FLAG == 0L, "PCT_NON_CH", "PCT_CH")) %>%
+    tidyr::pivot_wider(
+      names_from = CH_FLAG,
+      values_from = PCT
+    )
+
+
+
+  if (breakdown_name == "BNF Chapter") {
+    items_and_cost_per_bnf_db <- tmp_db
+  } else {
+    items_and_cost_per_bnf_db <- union_all(
+      x = items_and_cost_per_bnf_db,
+      y = tmp_db
+    )
+  }
+}
+
 
 # Reorder the columns, sort and collect
-items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_db %>%
-  relocate(METRIC, BNF_PARAGRAPH, PCT_CH) %>%
+items_and_cost_per_bnf_df <- items_and_cost_per_bnf_db %>%
+  relocate(METRIC, BREAKDOWN, BNF_NAME, PCT_CH) %>%
   arrange(METRIC, desc(PCT_CH)) %>%
   collect()
 
 # Apply SDC to percentage columns and drop normal columns as they aren't needed
-items_and_cost_per_bnf_paragraph_df <- items_and_cost_per_bnf_paragraph_df %>%
+items_and_cost_per_bnf_df <- items_and_cost_per_bnf_df %>%
   mutate(
     across(
       .cols = starts_with("PCT"),
@@ -191,7 +218,7 @@ usethis::use_data(
   items_and_cost_per_bnf_chapter_and_section_df,
   overwrite = TRUE
 )
-usethis::use_data(items_and_cost_per_bnf_paragraph_df, overwrite = TRUE)
+usethis::use_data(items_and_cost_per_bnf_df, overwrite = TRUE)
 
 # Disconnect from database
 DBI::dbDisconnect(con)
