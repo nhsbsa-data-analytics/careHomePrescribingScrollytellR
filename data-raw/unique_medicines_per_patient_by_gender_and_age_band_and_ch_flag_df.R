@@ -146,7 +146,7 @@ unique_medicines_per_patient_by_gender_and_age_band_and_ch_flag_df <-
 
 # Boxplot data
 cost_per_patient_boxplot_df <- fact_db %>%
-  filter(CH_FLAG == "Care home") %>% 
+  filter(CH_FLAG == "Care home") %>%
   # Year month level
   group_by(NHS_NO, YEAR_MONTH, AGE_BAND) %>%
   summarise(
@@ -160,8 +160,9 @@ cost_per_patient_boxplot_df <- fact_db %>%
   # Collect and change factor-levels
   collect() %>%
   mutate(AGE_BAND = factor(
-    AGE_BAND, levels = c("65-69","70-74","75-79","80-84","85-89", "90+"))
-  ) %>%
+    AGE_BAND,
+    levels = c("65-69", "70-74", "75-79", "80-84", "85-89", "90+")
+  )) %>%
   arrange(AGE_BAND)
 
 

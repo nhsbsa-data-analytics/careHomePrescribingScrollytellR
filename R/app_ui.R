@@ -55,7 +55,35 @@ app_ui <- function(request) {
           br(),
           mod_definitions_ui("definitions_ui_1")
         )
-      )
+      ),
+      tabPanel(
+        title = "Caveats",
+        fluidPage(
+          br(),
+          mod_caveat_ui("caveat_ui_1")
+        )
+      ),
+      tabPanel(
+        title = "Methodology",
+        fluidPage(
+          br(),
+          mod_methodology_ui("methodology_ui_1")
+        )
+      ),
+      tabPanel(
+        title = "Accessibility",
+        fluidPage(
+          br(),
+          mod_accessibility_ui("accessibility_ui_1")
+        )
+      ),
+      tabPanel(
+        title = "Contact Us",
+        fluidPage(
+          br(),
+          mod_contact_us_ui("contact_us_ui_1")
+        )
+      ),
     ),
     br(),
     mod_08_footer_ui("08_footer_ui_1")

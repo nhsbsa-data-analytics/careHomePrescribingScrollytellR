@@ -15,8 +15,10 @@ app_server <- function(input, output, session) {
   mod_06_common_medicines_server("06_common_medicines_ui_1")
   mod_07_final_thoughts_server("07_final_thoughts_ui_1")
   mod_08_footer_server("08_footer_ui_1")
-  # mod_add_two_plots_server("add_two_plots_ui_1")
   mod_definitions_server("definitions_ui_1")
+  mod_caveat_server("caveat_ui_1")
+  mod_accessibility_server("accessibility_ui_1")
+  mod_contact_us_server("contact_us_ui_1")
 
   output$scrolly <- scrollytell::renderScrollytell({
     scrollytell::scrollytell()
