@@ -397,19 +397,17 @@ paper_patient_db <- paper_patient_db %>%
 # Stack EPS and paper back together
 fact_db <- union_all(
   x = eps_fact_db %>%
-    select(-c(YEAR_MONTH_ID, ITEM_COUNT)) %>%
     # Remember to filter unwanted periods from the EPS FACT table (as it 
     # includes the buffer used to find addresses for paper forms)
     filter(
       CALC_AGE >= 65L,
       YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
     ) %>%
-    distinct(), 
+    distinct(across(-c(YEAR_MONTH_ID, ITEM_COUNT))), 
   y = paper_fact_db %>%    
-    select(-c(YEAR_MONTH_ID, ITEM_COUNT)) %>%
+    distinct(across(-c(YEAR_MONTH_ID, ITEM_COUNT))) %>%
     # Join the addresses
-    left_join(y = paper_patient_db) %>%
-    distinct()
+    left_join(y = paper_patient_db)
 )
 
 # Write the table back to DALP with indexes
