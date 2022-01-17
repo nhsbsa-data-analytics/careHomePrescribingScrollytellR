@@ -36,16 +36,16 @@ mod_01_intro_ui <- function(id) {
     p(
       "We estimate that there was a monthly average of", tags$b("285 thousand"),
       " care home patients receiving prescriptions each month in 2020/21. ",
-      "They received an estimated 35 million prescription items at a cost of ",
+      "They received an estimated", tags$b("35 million"), "prescription items at a cost of ",
       tags$b("£320 million"), " during 2020/21."
     ),
     p(
-      "This accounts for around 4% of ",
+      "This accounts for around", tags$b("4%"), " of ",
       tippy(
         text = "older patients",
         tooltip = tooltip_text$older
       ),
-      "receiving prescription items each month and 7% of the total primary ",
+      "receiving prescription items each month and", tags$b("7%"), " of the total primary ",
       "care drug spend for ",
       tippy(
         text = "older patients",
@@ -63,13 +63,13 @@ mod_01_intro_ui <- function(id) {
     ),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
-      "matches primary care prescription address data to care home addresses ",
+      "includes linking primary care prescription address data to care home addresses ",
       "in ",
       enurl(
         text = "AddressBase Plus",
         url = "https://www.ordnancesurvey.co.uk/business-government/products/addressbase"
       ),
-      "to create a prescribing dataset. The matching method has been ",
+      "to create a prescribing dataset. The address matching method has been ",
       "available as an ",
       enurl(
         text = "R package",

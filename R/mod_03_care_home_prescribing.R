@@ -87,6 +87,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "lower than the mean."
     ),
     h6(
+      "Age and gender"
+    ),
+    h6(
       "The estimated average monthly drug cost per patient is highest for care ",
       "home patients aged 65 to 69 years."
     ),
@@ -139,6 +142,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
     mod_download_ui(
       id = ns("download_patient_by_gender_and_age_band_and_ch_flag_chart")
     ),
+    br(),
+    br(),
     p(
       "Exploratory analysis looked at possible reasons why the average drug ",
       "cost per patient month is higher for younger care home patients, but ",
@@ -164,9 +169,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "older care home patients when prescribed comparable drugs/products."
       )
     ),
-    p(
-      "TODO: Maybe include a version of the below chart, less non-care homes. Or a mean version with error bar? Might be a better way?"
-    ),
+    #p(
+    #  "TODO: Maybe include a version of the below chart, less non-care homes. Or a mean version with error bar? Might be a better way?"
+    #),
     br(),
     br(),
     br(),
