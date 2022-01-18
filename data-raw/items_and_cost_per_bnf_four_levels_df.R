@@ -40,98 +40,8 @@ fact_db <- fact_db %>%
     by = c("YEAR_MONTH", "CALC_PREC_DRUG_RECORD_ID" = "RECORD_ID")
   )
 
-# Get the total items and cost per BNF chapter, section (level 2)
-items_and_cost_per_bnf_chapter_and_section_df <- fact_db %>%
-  filter(CH_FLAG == 1) %>%
-  group_by(BNF_CHAPTER, BNF_SECTION) %>%
-  summarise(
-    Items = sum(ITEM_COUNT),
-    `Drug Cost` = sum(ITEM_PAY_DR_NIC * 0.01)
-  ) %>%
-  ungroup() %>%
-  tidyr::pivot_longer(
-    cols = -c(BNF_CHAPTER, BNF_SECTION),
-    names_to = "METRIC",
-    values_to = "TOTAL_LEVEL_2"
-  ) %>%
-  collect()
 
-# Group any BNF sections ranked 8th or less into a group called "Other"
-items_and_cost_per_bnf_chapter_and_section_df <-
-  items_and_cost_per_bnf_chapter_and_section_df %>%
-  group_by(METRIC, BNF_CHAPTER) %>%
-  mutate(
-    BNF_SECTION = forcats::fct_lump(BNF_SECTION, n = 7, w = TOTAL_LEVEL_2)
-  ) %>%
-  ungroup() %>%
-  group_by(METRIC, BNF_CHAPTER, BNF_SECTION) %>%
-  summarise(TOTAL_LEVEL_2 = sum(TOTAL_LEVEL_2)) %>%
-  ungroup() %>%
-  # Add %s
-  group_by(METRIC, BNF_CHAPTER) %>%
-  mutate(PCT_LEVEL_2 = TOTAL_LEVEL_2 / sum(TOTAL_LEVEL_2) * 100) %>%
-  ungroup()
-
-# Get the total items and cost per BNF chapter (level 1)
-items_and_cost_per_bnf_chapter_df <-
-  items_and_cost_per_bnf_chapter_and_section_df %>%
-  group_by(METRIC, BNF_CHAPTER) %>%
-  summarise(TOTAL_LEVEL_1 = sum(TOTAL_LEVEL_2)) %>%
-  ungroup()
-
-# Group any BNF chapters ranked 8th or less into a group called "Other"
-items_and_cost_per_bnf_chapter_df <- items_and_cost_per_bnf_chapter_df %>%
-  group_by(
-    METRIC,
-    BNF_CHAPTER = forcats::fct_lump(BNF_CHAPTER, n = 7, w = TOTAL_LEVEL_1)
-  ) %>%
-  summarise(TOTAL_LEVEL_1 = sum(TOTAL_LEVEL_1)) %>%
-  ungroup() %>%
-  # Add %s
-  group_by(METRIC) %>%
-  mutate(PCT_LEVEL_1 = TOTAL_LEVEL_1 / sum(TOTAL_LEVEL_1) * 100) %>%
-  ungroup()
-
-# Join the two datasets together
-items_and_cost_per_bnf_chapter_and_section_df <-
-  left_join(
-    x = items_and_cost_per_bnf_chapter_df,
-    y = items_and_cost_per_bnf_chapter_and_section_df
-  )
-
-# Apply SDC to total and percentage columns and drop them
-items_and_cost_per_bnf_chapter_and_section_df <-
-  items_and_cost_per_bnf_chapter_and_section_df %>%
-  mutate(
-    across(
-      .cols = starts_with("TOTAL"),
-      .fns = ~ round(.x, digits = -3),
-      .names = "SDC_{col}"
-    ),
-    across(
-      .cols = starts_with("PCT"),
-      .fns = ~ janitor::round_half_up(.x),
-      .names = "SDC_{col}"
-    )
-  ) %>%
-  select(-c(starts_with("TOTAL"), starts_with("PCT")))
-
-# Reorder cols
-items_and_cost_per_bnf_chapter_and_section_df <-
-  items_and_cost_per_bnf_chapter_and_section_df %>%
-  select(
-    METRIC,
-    BNF_CHAPTER,
-    SDC_TOTAL_LEVEL_1,
-    SDC_PCT_LEVEL_1,
-    BNF_SECTION,
-    SDC_TOTAL_LEVEL_2,
-    SDC_PCT_LEVEL_2
-  )
-
-# Get the total items and cost per BNF paragraph to use for the dumbbell chart
-# TODO:I will come back this later to make much efficient
-
+# Dumbbell chart process
 
 for (breakdown_name in names(careHomePrescribingScrollytellR::bnf)) {
 
@@ -146,8 +56,8 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::bnf)) {
       CH_FLAG
     ) %>%
     summarise(
-      Items = sum(ITEM_COUNT),
-      `Drug Cost` = sum(ITEM_PAY_DR_NIC * 0.01)
+      ITEMS = sum(ITEM_COUNT),
+      DRUGS = sum(ITEM_PAY_DR_NIC * 0.01)
     ) %>%
     ungroup() %>%
     tidyr::pivot_longer(
@@ -168,22 +78,40 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::bnf)) {
       by = c("METRIC", "CH_FLAG")
     )
 
-
-  tmp_db_top20 <- tmp_db %>%
-    filter(CH_FLAG == 1) %>%
-    group_by(METRIC) %>%
-    slice_max(order_by = SUM, n = 20) %>%
+  # Replace METRIC = PATIENTS TOTAL to total patients in 2020/21 by CH_FLAG
+  tmp_db_pat <- fact_db %>%
+    group_by(
+      BREAKDOWN = breakdown_name,
+      BNF_NAME = !!dplyr::sym(breakdown_cols),
+      CH_FLAG
+    ) %>%
+    summarise(PATIENTS = n_distinct(NHS_NO)) %>%
     ungroup() %>%
-    select(METRIC, BREAKDOWN, BNF_NAME)
+    tidyr::pivot_longer(
+      cols = -c(CH_FLAG, BREAKDOWN, BNF_NAME),
+      names_to = "METRIC",
+      values_to = "SUM"
+    )
+
+  tmp_db_total_pat <- fact_db %>%
+    group_by(CH_FLAG) %>%
+    summarise(TOTAL = n_distinct(NHS_NO))
+
+  tmp_db_patient <- tmp_db_pat %>%
+    inner_join(
+      y = tmp_db_total_pat,
+      by = c("CH_FLAG")
+    )
+
+  # join back to tmp_db
+
+  tmp_db <- union_all(
+    x = tmp_db,
+    y = tmp_db_patient
+  )
 
 
-
-  # inner join with tmp_db
-  tmp_db <- tmp_db %>%
-    inner_join(y = tmp_db_top20)
-
-
-  # # Calculate the percentage of each group and drop the total column
+  # Calculate the percentage of each group and drop the total column
   tmp_db <- tmp_db %>%
     group_by(METRIC, CH_FLAG) %>%
     mutate(PCT = SUM / TOTAL * 100) %>%
@@ -226,11 +154,7 @@ items_and_cost_per_bnf_df <- items_and_cost_per_bnf_df %>%
   ) %>%
   select(-starts_with("PCT"))
 
-# Add to data-raw/
-usethis::use_data(
-  items_and_cost_per_bnf_chapter_and_section_df,
-  overwrite = TRUE
-)
+
 usethis::use_data(items_and_cost_per_bnf_df, overwrite = TRUE)
 
 # Disconnect from database
