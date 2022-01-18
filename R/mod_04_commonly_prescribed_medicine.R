@@ -72,30 +72,37 @@ mod_04_commonly_prescribed_medicine_ui <- function(id) {
     br(),
     br(),
     h6("Medicines prescribed to older care home patients in England (2020/21)"),
+    # fluidRow(
+    #   align = "center",
+    #   style = "background-color: #FFFFFF;",
+    #   radioButtons(
+    #     inputId = ns("metric"),
+    #     label = "",
+    #     choices = c("Items", "Drug Cost"),
+    #     inline = TRUE,
+    #     width = "100%"
+    #   ),
+    #   highcharter::highchartOutput(
+    #     outputId = ns("items_and_cost_per_bnf_chapter_and_section_chart"),
+    #     height = "500px",
+    #     width = "800px"
+    #   )
+    # ),
+    # mod_download_ui(
+    #   id = ns("download_items_and_cost_per_bnf_chapter_and_section_chart")
+    # ),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      radioButtons(
-        inputId = ns("metric"),
-        label = "",
-        choices = c("Items", "Drug Cost"),
-        inline = TRUE,
-        width = "100%"
-      ),
-      highcharter::highchartOutput(
-        outputId = ns("items_and_cost_per_bnf_chapter_and_section_chart"),
-        height = "500px",
-        width = "800px"
-      )
-    ),
-    mod_download_ui(
-      id = ns("download_items_and_cost_per_bnf_chapter_and_section_chart")
-    ),
-    fluidRow(
-      align = "center",
-      style = "background-color: #FFFFFF;",
-      br(),
-      br(),
+      # radioButtons(
+      #   inputId = ns("metric"),
+      #   label = "",
+      #   choices = c("Items", "Drug Cost"),
+      #   inline = TRUE,
+      #   width = "100%"
+      # ),
+      # br(),
+      # br(),
       col_6(
         style = "margin-bottom: 0;",
         div(
@@ -103,6 +110,17 @@ mod_04_commonly_prescribed_medicine_ui <- function(id) {
             inputId = ns("bnf"),
             label = "BNF",
             choices = names(careHomePrescribingScrollytellR::bnf),
+            width = "80%"
+          )
+        )
+      ),
+      col_6(
+        style = "margin-bottom: 0;",
+        div(
+          selectInput(
+            inputId = ns("metric"),
+            label = "Metric",
+            choices = c("Items", "Drug Cost"),
             width = "80%"
           )
         )
