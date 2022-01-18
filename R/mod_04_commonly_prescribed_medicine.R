@@ -186,7 +186,7 @@ mod_04_commonly_prescribed_medicine_server <- function(id) {
       req(input$metric)
       req(input$bnf)
 
-      plot_df <- careHomePrescribingScrollytellR::items_and_cost_per_bnf_df %>%
+      careHomePrescribingScrollytellR::items_and_cost_per_bnf_df %>%
         dplyr::filter(METRIC == input$metric &
           BREAKDOWN == input$bnf)
     })
