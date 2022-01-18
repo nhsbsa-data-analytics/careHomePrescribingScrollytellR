@@ -40,7 +40,7 @@ mod_04_commonly_prescribed_medicine_ui <- function(id) {
               choices = c(
                 "Items" = "ITEMS",
                 "Average drug cost" = "DRUGS",
-                "Patient level" = "PATIENTS"
+                "Patient count" = "PATIENTS"
               ),
               width = "100%"
             )
@@ -204,8 +204,21 @@ mod_04_commonly_prescribed_medicine_server <- function(id) {
       req(input$bnf)
 
 
-      title <- ifelse(input$metric == "DRUGS", "drug cost", "prescription items")
-      axis_title <- ifelse(input$metric == "DRUGS", "Drug cost as a % of aveerage drug cost per patient group", "Number of items as a % of all items per patient group") # totally different title so keep it like this..
+      title <- switch(input$metric,
+        "DRUGS" = "drug cost",
+        "ITEMS" = "prescription items",
+        "PATIENTS" = "patients numbers"
+      )
+
+      axis_title <- switch(input$metric,
+        "DRUGS" = "Drug cost as a % of aveerage drug cost per patient group",
+        "ITEMS" = "Number of items as a % of all items per patient group",
+        "PATIENTS" = "Number of unique patients as a % of all patients per patient group"
+      )
+
+
+      # ifelse(input$metric == "DRUGS", "drug cost", "prescription items")
+      # axis_title <- ifelse(input$metric == "DRUGS", "Drug cost as a % of aveerage drug cost per patient group", "Number of items as a % of all items per patient group") # totally different title so keep it like this..
 
       highcharter::highchart() %>%
         highcharter::hc_add_series(
