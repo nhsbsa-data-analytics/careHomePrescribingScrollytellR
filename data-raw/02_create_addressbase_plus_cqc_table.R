@@ -93,7 +93,7 @@ addressbase_plus_db <- addressbase_plus_db %>%
 
 # Get postcodes where there is a care home present (including CQC data)
 care_home_postcodes_db <- 
-  union(
+  union_all(
     x = addressbase_plus_db %>% 
       filter(CH_FLAG == 1L) %>%
       select(POSTCODE),
