@@ -105,7 +105,7 @@ care_home_postcodes_db <-
 addressbase_plus_db <- addressbase_plus_db %>%
   semi_join(y = care_home_postcodes_db)
 
-# Create a Wide table of 3 single line address types
+# Create and tidy the DPA and GEO single line addresses
 addressbase_plus_db <- addressbase_plus_db %>%
   addressMatchR::calc_addressbase_plus_dpa_single_line_address() %>%
   addressMatchR::calc_addressbase_plus_geo_single_line_address() %>%
@@ -117,11 +117,28 @@ addressbase_plus_db <- addressbase_plus_db %>%
     DPA_SINGLE_LINE_ADDRESS,
     GEO_SINGLE_LINE_ADDRESS,
     CH_FLAG
-  ) %>% 
-  nhsbsaR::oracle_merge_strings(
-    first_col = "DPA_SINGLE_LINE_ADDRESS",
-    second_col = "GEO_SINGLE_LINE_ADDRESS",
-    merge_col = "CORE_SINGLE_LINE_ADDRESS"
+  )
+
+# When DPA != GEO then add a CORE single line address
+addressbase_plus_db <- 
+  union_all(
+    x = addressbase_plus_db %>%
+      filter(
+        is.na(DPA_SINGLE_LINE_ADDRESS) | 
+          is.na(GEO_SINGLE_LINE_ADDRESS) | 
+          DPA_SINGLE_LINE_ADDRESS == GEO_SINGLE_LINE_ADDRESS
+      ),
+    y = addressbase_plus_db %>%
+      filter(
+        !is.na(DPA_SINGLE_LINE_ADDRESS),
+        !is.na(GEO_SINGLE_LINE_ADDRESS),
+        DPA_SINGLE_LINE_ADDRESS != GEO_SINGLE_LINE_ADDRESS
+      ) %>%
+      oracle_merge_strings(
+        first_col = "DPA_SINGLE_LINE_ADDRESS",
+        second_col = "GEO_SINGLE_LINE_ADDRESS",
+        merge_col = "CORE_SINGLE_LINE_ADDRESS"
+      )
   )
 
 # Combine AddressBase Plus (care home postcodes) and CQC
