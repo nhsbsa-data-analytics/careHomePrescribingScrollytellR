@@ -34,7 +34,7 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
         AGE_BAND
       )
     ) %>%
-    rename(!!! breakdown_cols)
+    rename(!!! geography_cols)
 
   # Union monthly and overall
   tmp_db <-
