@@ -81,14 +81,13 @@ breakdowns <- list(
 #' @export
 geographys <- breakdowns %>% 
   purrr::keep(
-    .x = (.),
     .p = stringr::str_detect(
       string = names(.), 
       pattern = "Overall|Geographical - "
     )
   ) %>% 
   purrr::set_names(
-    x = stringr::str_replace(
+    nm = stringr::str_replace(
       string = names(.), 
       pattern = "Geographical - ", 
       replacement = ""
