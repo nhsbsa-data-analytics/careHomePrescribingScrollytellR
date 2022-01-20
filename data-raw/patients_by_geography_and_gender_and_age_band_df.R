@@ -7,7 +7,7 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Create a lazy table from the item level base table
 fact_db <- con %>%
-  tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
+  tbl(from = "INT615_ITEM_LEVEL_BASE")
 
 # Filter to care home only and add a dummy overall column
 fact_db <- fact_db %>%
@@ -25,8 +25,7 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
   tmp_db <- fact_db %>%
     group_by(
       GEOGRAPHY = geography_name,
-      SUB_GEOGRAPHY_CODE = NA,
-      SUB_GEOGRAPHY_NAME = .data[[geography_cols[1]]],
+      across(all_of(unname(geography_cols))),
       GENDER = ifelse(is.na(SUB_GEOGRAPHY_NAME), NA, GENDER),
       # NA if SUB_GEOGRAPHY_NAME is NA or if GENDER is NA
       AGE_BAND = ifelse(
@@ -34,16 +33,8 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
         yes = NA,
         AGE_BAND
       )
-    )
-
-  # If there are two columns then override the code as the second column
-  if (length(geography_cols) == 2) {
-    tmp_db <- tmp_db %>%
-      group_by(
-        SUB_GEOGRAPHY_CODE = .data[[geography_cols[2]]],
-        .add = TRUE
-      )
-  }
+    ) %>%
+    rename(!!! breakdown_cols)
 
   # Union monthly and overall
   tmp_db <-
