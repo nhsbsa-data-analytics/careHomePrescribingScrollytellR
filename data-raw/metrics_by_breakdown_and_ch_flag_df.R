@@ -7,7 +7,7 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Create a lazy table from the item level base table
 fact_db <- con %>%
-  tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
+  tbl(from = "INT615_ITEM_LEVEL_BASE")
 
 # Add a dummy overall column
 fact_db <- fact_db %>%
@@ -79,8 +79,11 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
     ) %>%
     ungroup() %>%
     mutate(
-      PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
-        TOTAL_PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS_UNIQUE_MEDICINES * 100
+      PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH = ifelse(
+        test = TOTAL_PATIENTS_UNIQUE_MEDICINES == 0,
+        yes = NA_real_,
+        no = TOTAL_PATIENTS_TEN_OR_MORE / TOTAL_PATIENTS_UNIQUE_MEDICINES * 100
+      )
     )
 
   # Either create the table or append to it
@@ -110,13 +113,25 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
     # Every year month
     YEAR_MONTH,
     # Only breakdowns that already exist
-    tidyr::nesting(BREAKDOWN, SUB_BREAKDOWN_CODE, SUB_BREAKDOWN_NAME),
+    tidyr::nesting(
+      BREAKDOWN, 
+      SUB_BREAKDOWN_CODE, 
+      SUB_BREAKDOWN_NAME,
+      GENDER,
+      AGE_BAND,
+      NURSING_HOME_FLAG,
+      RESIDENTIAL_HOME_FLAG
+    ),
     # Every CH flag
     CH_FLAG,
     fill = list(
       TOTAL_PATIENTS = 0L,
+      ITEMS_PER_PATIENT_MONTH = NA_real_,
+      COST_PER_PATIENT_MONTH = NA_real_,
       TOTAL_PATIENTS_UNIQUE_MEDICINES = 0L,
+      UNIQUE_MEDICINES_PER_PATIENT_MONTH = NA_real_,
       TOTAL_PATIENTS_TEN_OR_MORE = 0L,
+      PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH = NA_real_
       )
   )
 
@@ -124,6 +139,11 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
 metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
   mutate(
     SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
+    SDC_TOTAL_PATIENTS = ifelse(
+      test = SDC == 1, 
+      yes = NA_integer_, 
+      no = round(TOTAL_PATIENTS, -1)
+    ),
     SDC_ITEMS_PER_PATIENT_MONTH =
       ifelse(
         test = SDC == 1, 
@@ -137,6 +157,11 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
         no = janitor::round_half_up(COST_PER_PATIENT_MONTH)
       ),
     SDC = ifelse(TOTAL_PATIENTS_UNIQUE_MEDICINES %in% c(1, 2, 3, 4), 1, 0),
+    SDC_TOTAL_PATIENTS_UNIQUE_MEDICINES = ifelse(
+      test = SDC == 1, 
+      yes = NA_integer_, 
+      no = round(TOTAL_PATIENTS_UNIQUE_MEDICINES, -1)
+    ),
     SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH =
       ifelse(
         test = SDC == 1, 
@@ -144,6 +169,11 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
         no = janitor::round_half_up(UNIQUE_MEDICINES_PER_PATIENT_MONTH, 1)
       ),
     SDC = ifelse(TOTAL_PATIENTS_TEN_OR_MORE %in% c(1, 2, 3, 4), 1, 0),
+    SDC_TOTAL_PATIENTS_TEN_OR_MORE = ifelse(
+      test = SDC == 1, 
+      yes = NA_integer_, 
+      no = round(TOTAL_PATIENTS_TEN_OR_MORE, -1)
+    ),
     SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
       ifelse(
         test = SDC == 1, 
@@ -155,7 +185,15 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
 
 # Format for highcharter
 metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
-  careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
+  careHomePrescribingScrollytellR::format_data_raw(
+    c(
+      "CH_FLAG", 
+      "GENDER", 
+      "AGE_BAND", 
+      "NURSING_HOME_FLAG", 
+      "RESIDENTIAL_HOME_FLAG"
+    )
+  )
 
 # Add to data-raw/
 usethis::use_data(metrics_by_breakdown_and_ch_flag_df, overwrite = TRUE)
