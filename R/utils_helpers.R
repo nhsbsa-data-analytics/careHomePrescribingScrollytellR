@@ -90,7 +90,7 @@ geographys <- breakdowns %>%
   purrr::set_names(
     x = stringr::str_replace(
       string = names(.), 
-      pattern = "Overall|Geographical - ", 
+      pattern = "Geographical - ", 
       replacement = ""
     )
   )
