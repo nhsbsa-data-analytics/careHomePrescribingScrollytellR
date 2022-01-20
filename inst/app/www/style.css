@@ -56,7 +56,6 @@ em { font-size: 16pt; }
   font-size: 11pt;
 }
 
-
 /* Make hyperlinks blue and underlined */
 a { 
   color: var(--nhs-blue); 
