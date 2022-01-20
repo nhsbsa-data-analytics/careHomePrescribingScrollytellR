@@ -65,10 +65,9 @@ app_ui <- function(request) {
         )
       ),
       tabPanel(
-        title = "Methodology",
-        fluidPage(
-          br(),
-          mod_methodology_ui("methodology_ui_1")
+        enurl(
+          text = "Methodology",
+          url = "https://rpubs.com/adnan_shroufi/856841"
         )
       ),
       tabPanel(

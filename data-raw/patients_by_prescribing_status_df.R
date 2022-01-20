@@ -53,7 +53,7 @@ patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>%
       DECEASED == 1L ~ "Deceased",
       CH_FLAG == 1L ~ "Received care home prescribing",
       CH_FLAG == 0L ~ "Received non-care home prescribing",
-      is.na(CH_FLAG) ~ "Recieved no prescribing",
+      is.na(CH_FLAG) ~ "Received no prescribing",
       TRUE ~ "Error"
     )
   )
