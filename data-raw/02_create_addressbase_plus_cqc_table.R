@@ -59,7 +59,8 @@ cqc_uprn_postcode_address_db <- cqc_db %>%
   group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
   summarise(
     LOCATION_ID = max(LOCATION_ID, na.rm = TRUE),
-    UPRN = max(as.numeric(UPRN), na.rm = TRUE), # change to numeric
+    # Change UPRN to numeric and loose 2 doing max
+    UPRN = max(as.integer(UPRN), na.rm = TRUE),
     NURSING_HOME_FLAG = max(as.integer(NURSING_HOME), na.rm = TRUE),
     RESIDENTIAL_HOME_FLAG = max(as.integer(RESIDENTIAL_HOME), na.rm = TRUE)
   ) %>% 
@@ -134,7 +135,7 @@ addressbase_plus_db <-
         !is.na(GEO_SINGLE_LINE_ADDRESS),
         DPA_SINGLE_LINE_ADDRESS != GEO_SINGLE_LINE_ADDRESS
       ) %>%
-      oracle_merge_strings(
+      nhsbsaR::oracle_merge_strings(
         first_col = "DPA_SINGLE_LINE_ADDRESS",
         second_col = "GEO_SINGLE_LINE_ADDRESS",
         merge_col = "CORE_SINGLE_LINE_ADDRESS"
