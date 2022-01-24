@@ -51,7 +51,13 @@ mod_03_care_home_prescribing_ui <- function(id) {
         selectInput(
           inputId = ns("breakdown"),
           label = "Breakdown",
-          choices = names(careHomePrescribingScrollytellR::breakdowns),
+          choices = names(careHomePrescribingScrollytellR::breakdowns) %>% 
+            purrr::discard(
+              .p = stringr::str_detect(
+                string = ., 
+                pattern = "Additional - "
+              )
+            ),
           width = "100%"
         )
       ),
