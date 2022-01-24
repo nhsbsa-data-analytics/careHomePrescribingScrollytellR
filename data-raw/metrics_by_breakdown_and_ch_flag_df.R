@@ -139,7 +139,7 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
       ifelse(
         test = SDC == 1, 
         yes = NA_integer_, 
-        no = janitor::round_half_up(ITEMS_PER_PATIENT_MONTH)
+        no = janitor::round_half_up(ITEMS_PER_PATIENT_MONTH, 1)
       ),
     SDC_COST_PER_PATIENT_MONTH =
       ifelse(
@@ -169,7 +169,7 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
       ifelse(
         test = SDC == 1, 
         yes = NA_integer_, 
-        no = janitor::round_half_up(PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH)
+        no = janitor::round_half_up(PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH, 1)
       )
   ) %>%
   select(-SDC)

@@ -113,7 +113,7 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
   mutate(
     SDC_PCT = case_when(
       SDC == 1 ~ NA_real_,
-      TRUE ~ janitor::round_half_up(PCT, 2),
+      TRUE ~ janitor::round_half_up(PCT, 1),
     )
   ) %>%
   select(-SDC)

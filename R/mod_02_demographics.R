@@ -43,8 +43,8 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "The chart shows the prescribing status of each of these 460 thousand ",
-      "patients by month during 2020/21. Around 3 in 10 (31%) received in prescriptions ",
-      "in a care home in all 12 months."
+      "patients by month during 2020/21. Around 3 in 10 (31%) received in ",
+      "prescriptions in a care home in all 12 months."
     ),
     fluidRow(
       align = "center",
@@ -574,7 +574,7 @@ mod_02_demographics_server <- function(id, export_data) {
                   '<b>Gender: </b>' + this.series.name + '<br>' +
                   '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
                   '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0) + '<br>' +
-                  '<b>Percentage of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.SDC_PCT_PATIENTS), 1) + '%'
+                  '<b>Percentage of patients: </b>' + Math.abs(this.point.SDC_PCT_PATIENTS) + '%'
 
                 return outHTML
 
@@ -668,8 +668,8 @@ mod_02_demographics_server <- function(id, export_data) {
 
               outHTML =
                 '<b>Quintile: </b>' + parseInt(this.point.category) + '<br>' +
-                '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0) + '<br>' +
-                '<b>Percentage of patients: </b>' + Highcharts.numberFormat(this.point.SDC_PCT_PATIENTS, 1) + '%'
+                '<b>Number of patients: </b>' + Highcharts.numberFormat(this.point.y, 0) + '<br>' +
+                '<b>Percentage of patients: </b>' + this.point.SDC_PCT_PATIENTS + '%'
 
               return outHTML
 

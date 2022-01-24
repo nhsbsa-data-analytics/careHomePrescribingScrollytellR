@@ -31,7 +31,7 @@ patients_by_imd_df <- patients_by_imd_db %>%
     SDC_TOTAL_PATIENTS =
       ifelse(SDC == 1, NA_integer_, round(TOTAL_PATIENTS, -1)),
     SDC_PCT_PATIENTS =
-      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS))
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS, 1))
   ) %>%
   select(-c(SDC, TOTAL_PATIENTS, PCT_PATIENTS))
 
