@@ -98,7 +98,7 @@ cqc_details_df <- cqc_details_df %>%
 con %>%
   copy_to(
     df = cqc_details_df,
-    name = "INT615_CQC_",
+    name = "INT615_CQC",
     indexes = list(c("LOCATION_ID"), c("UPRN"), c("POSTAL_CODE")),
     temporary = FALSE
   )
