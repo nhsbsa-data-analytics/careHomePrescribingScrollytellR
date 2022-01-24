@@ -59,19 +59,19 @@ cqc_details_df <- cqc_details_df %>%
         .cols = starts_with("gac") & contains("name"), 
         .fns = ~ grepl(pattern = "Nursing home", x = .x)
       ),
-      yes = 1,
-      no = 0
+      yes = 1L,
+      no = 0L
     ),
     residential_home = ifelse(
       test = if_any(
         .cols = starts_with("gac") & contains("name"), 
         .fns = ~ grepl(pattern = "Residential home", x = .x)
       ),
-      yes = 1,
-      no = 0
+      yes = 1L,
+      no = 0L
     ),
     # Change type of numeric col
-    number_of_beds = as.numeric(number_of_beds)
+    number_of_beds = as.integer(number_of_beds)
   ) %>%
   # Select the required cols and uppercase
   select(
@@ -94,9 +94,14 @@ cqc_details_df <- cqc_details_df %>%
   ) %>%
   rename_with(toupper)
 
-# Upload to DB
+# Upload to DB with indexes
 con %>%
-  DBI::dbWriteTable(name = "INT615_CQC", value = cqc_details_df)
+  copy_to(
+    df = cqc_details_df,
+    name = "INT615_CQC_",
+    indexes = list(c("LOCATION_ID"), c("UPRN"), c("POSTAL_CODE")),
+    temporary = FALSE
+  )
 
 # Disconnect connection to database
 DBI::dbDisconnect(con)
