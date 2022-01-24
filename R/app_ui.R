@@ -38,8 +38,8 @@ app_ui <- function(request) {
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "04_commonly_prescribed_medicine",
-                mod_04_commonly_prescribed_medicine_ui("04_commonly_prescribed_medicine_ui_1")
+                id = "04_commonly_prescribed_medicines",
+                mod_04_commonly_prescribed_medicines_ui("04_commonly_prescribed_medicines_ui_1")
               ),
               br(),
               scrollytell::scrolly_section(

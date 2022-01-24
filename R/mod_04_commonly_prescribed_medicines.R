@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_04_commonly_prescribed_medicine_ui <- function(id) {
+mod_04_commonly_prescribed_medicines_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Commonly prescribed medicines"),
@@ -60,7 +60,7 @@ mod_04_commonly_prescribed_medicine_ui <- function(id) {
 #' 04_commonly_prescribed_medicine Server Functions
 #'
 #' @noRd
-mod_04_commonly_prescribed_medicine_server <- function(id) {
+mod_04_commonly_prescribed_medicines_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -318,7 +318,7 @@ mod_04_commonly_prescribed_medicine_server <- function(id) {
 }
 
 ## To be copied in the UI
-# mod_04_commonly_prescribed_medicine_ui("04_commonly_prescribed_medicine_ui_1")
+# mod_04_commonly_prescribed_medicines_ui("04_commonly_prescribed_medicines_ui_1")
 
 ## To be copied in the server
-# mod_04_commonly_prescribed_medicine_server("04_commonly_prescribed_medicine_ui_1")
+# mod_04_commonly_prescribed_medicines_server("04_commonly_prescribed_medicines_ui_1")
