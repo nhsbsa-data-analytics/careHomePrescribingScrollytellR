@@ -111,21 +111,27 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
   ) %>%
   ungroup() %>%
   mutate(
-    SDC_TOTAL = case_when(
-      SDC == 1 ~ NA_real_,
-      METRIC != "PATIENTS" & SDC == 1 ~ round(TOTAL, -100),
-      TRUE ~ round(TOTAL, -1)
-    ),
     SDC_PCT = case_when(
       SDC == 1 ~ NA_real_,
       TRUE ~ janitor::round_half_up(PCT, 2),
     )
   ) %>%
   select(-SDC)
+
+# Pivot wider by care home flag
+metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
+  mutate(CH_FLAG = ifelse(CH_FLAG == "Care home", "CH", "NON_CH")) %>%
+  tidyr::pivot_longer(cols = c(PCT,SDC_PCT)) %>%
+  tidyr::pivot_wider(
+    id_cols = BNF_LEVEL:METRIC,
+    names_from = c(name, CH_FLAG),
+    values_from = value,
+    values_fill = 0
+  )
   
 # Format for highcharter
 metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
-  careHomePrescribingScrollytellR::format_data_raw("CH_FLAG")
+  careHomePrescribingScrollytellR::format_data_raw()
 
 
 usethis::use_data(metrics_by_bnf_and_ch_flag_df, overwrite = TRUE)
