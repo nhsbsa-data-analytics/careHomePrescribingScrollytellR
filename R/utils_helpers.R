@@ -94,6 +94,21 @@ geographys <- breakdowns %>%
     )
   )
 
+
+#' Define the BNF levels
+#'
+#' Define the labels of the BNF (in order of hierarchy) with the columns
+#' that are used to aggregate
+#'
+#' @export
+bnfs <- list(
+  "Chapter" = "CHAPTER_DESCR",
+  "Section" = "SECTION_DESCR",
+  "Paragraph" = "PARAGRAPH_DESCR",
+  "Chemical Substance" = "CHEMICAL_SUBSTANCE_BNF_DESCR"
+)
+
+
 #' Format data-raw table
 #'
 #' Deal with factors and sort table.
@@ -110,7 +125,13 @@ format_data_raw <- function(df, vars) {
     dplyr::arrange(
       dplyr::across(
         dplyr::any_of(
-          c("YEAR_MONTH", "SUB_BREAKDOWN_NAME", "SUB_GEOGRAPHY_NAME", vars)
+          c(
+            "YEAR_MONTH", 
+            "SUB_BREAKDOWN_NAME", 
+            "SUB_GEOGRAPHY_NAME", 
+            "SUB_BNF_LEVEL_NAME", 
+            vars
+          )
         )
       )
     )
@@ -134,11 +155,19 @@ format_data_raw <- function(df, vars) {
       )
   }
 
-  # Geography is a hierachy
+  # Geography is a hierarchy
   if ("GEOGRAPHY" %in% names(df)) {
     df <- df %>%
       dplyr::mutate(
         GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, names(geographys))
+      )
+  }
+  
+  # BNF level is a hierarchy
+  if ("BNF_LEVEL" %in% names(df)) {
+    df <- df %>%
+      dplyr::mutate(
+        BNF_LEVEL = forcats::fct_relevel(BNF_LEVEL, names(bnfs))
       )
   }
 
@@ -153,6 +182,8 @@ format_data_raw <- function(df, vars) {
             "SUB_BREAKDOWN_NAME",
             "GEOGRAPHY",
             "SUB_GEOGRAPHY_NAME",
+            "BNF_LEVEL",
+            "SUB_BNF_LEVEL_NAME",
             vars
           )
         )

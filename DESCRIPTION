@@ -45,6 +45,7 @@ Imports:
   pkgload,
   purrr,
   readr,
+  rsvg,
   scrollytell,
   sf,
   shiny (>= 1.6.0),

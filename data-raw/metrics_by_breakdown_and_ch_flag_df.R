@@ -44,17 +44,10 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
         )
       )
     )
-  
-  # Replicate the data with an overall year month
-  tmp_db <- tmp_db %>%
-    union_all(
-      y = tmp_db %>%
-        mutate(YEAR_MONTH = "Overall")
-    )
 
   # Calculate the metrics per patient month
   tmp_db <- tmp_db %>%
-    ungroup(NHS_NO) %>%
+    ungroup(YEAR_MONTH, NHS_NO) %>%
     summarise(
       # Items and cost
       TOTAL_PATIENTS = n_distinct(NHS_NO), # For SDC
@@ -110,8 +103,6 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_db %>%
 # Get all the possible combinations
 metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
   tidyr::complete(
-    # Every year month
-    YEAR_MONTH,
     # Only breakdowns that already exist
     tidyr::nesting(
       BREAKDOWN, 

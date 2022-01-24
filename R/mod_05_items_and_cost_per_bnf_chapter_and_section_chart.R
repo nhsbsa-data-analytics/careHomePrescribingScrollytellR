@@ -68,18 +68,20 @@ mod_05_items_and_cost_per_bnf_server <- function(id) {
     ns <- session$ns
 
     # Limit based on metric
-    items_and_cost_per_bnf_chapter_and_section_df <- reactive({
+    metric_by_bnf_and_ch_flag_df <- reactive({
+      
       req(input$metric)
 
-      careHomePrescribingScrollytellR::items_and_cost_per_bnf_chapter_and_section_df %>%
+      careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_df %>%
         dplyr::filter(METRIC == input$metric)
+      
     })
 
     # Add a download button
     mod_download_server(
-      id = "download_items_and_cost_per_bnf_chapter_and_section_chart",
-      filename = "items_and_cost_per_bnf_chapter_and_section_df.csv",
-      export_data = items_and_cost_per_bnf_chapter_and_section_df()
+      id = "download_metric_by_bnf_and_ch_flag_chart",
+      filename = "metric_by_bnf_and_ch_flag_df.csv",
+      export_data = metric_by_bnf_and_ch_flag_df()
     )
 
     # Define the colours (tint for the second level based on the %)
