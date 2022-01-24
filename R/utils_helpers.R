@@ -207,17 +207,3 @@ fa_to_png_to_datauri <- function(name, ...) {
 
   knitr::image_uri(tmpfl)
 }
-
-
-#' Define the BNF levels
-#'
-#' Define the labels of the BNF (in order of hierarchy) with the columns
-#' that are used to aggregate
-#'
-#' @export
-bnf <- list(
-  "BNF Chapter" = "BNF_CHAPTER",
-  "BNF Section" = "BNF_SECTION",
-  "BNF Paragraph" = "BNF_PARAGRAPH",
-  "BNF Chemical Substances" = "BNF_CHEM_SUB"
-)

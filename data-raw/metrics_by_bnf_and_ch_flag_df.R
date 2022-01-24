@@ -129,10 +129,6 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
     values_fill = 0
   )
   
-# Format for highcharter
-metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
-  careHomePrescribingScrollytellR::format_data_raw()
-
 
 usethis::use_data(metrics_by_bnf_and_ch_flag_df, overwrite = TRUE)
 
