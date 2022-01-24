@@ -50,6 +50,7 @@ Imports:
   sf,
   shiny (>= 1.6.0),
   shinyWidgets,
+  stringr,
   tidyr,
   tinter,
   tippy
