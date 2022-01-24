@@ -19,7 +19,6 @@ mod_caveat_ui <- function(id) {
       "Each group of caveats are described within their corresponding tab below."
     ),
     tabsetPanel(
-      br(),
       type = "tabs",
       tabPanel(title = "Prescription", htmlOutput(ns("prescription"))),
       tabPanel(title = "Methodology", htmlOutput(ns("methodology"))),
@@ -38,6 +37,7 @@ mod_caveat_server <- function(id) {
     output$prescription <- renderUI({
       tags$ul(
         style = "font-size: 14pt;",
+        br(),
         tags$li(
           "This analysis was focused on older care home patients. ",
           "An older care home patient was categorised by someone aged 65 or above ",
@@ -202,6 +202,7 @@ mod_caveat_server <- function(id) {
     output$methodology <- renderUI({
       tags$ul(
         style = "font-size: 14pt;",
+        br(),
         tags$li(
           "Ordnance Survey AddressBase (AB) was the foundation of the ",
           "lookup address data, which was matched against patient address ",
@@ -305,6 +306,7 @@ mod_caveat_server <- function(id) {
     output$analysis <- renderUI({
       tags$ul(
         style = "font-size: 14pt;",
+        br(),
         tags$li(
           "On overarching point to note is that the final analysis was on a ",
           "prescription form-level. This meant we did not have data for months ",
