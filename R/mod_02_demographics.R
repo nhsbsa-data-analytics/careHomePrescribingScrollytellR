@@ -43,13 +43,14 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "The chart shows the prescribing status of each of these 460 thousand ",
-      "patients by month during 2020/21."
+      "patients by month during 2020/21. Around 3 in 10 (31%) received in prescriptions ",
+      "in a care home in all 12 months."
     ),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        "Monthly prescribing status of patients aged 65+ who recieved at ",
+        "Monthly prescribing status of patients aged 65+ who received at ",
         "least one prescription item in a care home during 2020/21"
       ),
       highcharter::highchartOutput(
@@ -67,9 +68,9 @@ mod_02_demographics_ui <- function(id) {
       "10 are aged 85+ years"
     ),
     p(
-      "Overall, we estimate a monthly average of ",
-      tags$b("285 thousand care home patients,"), " aged 65+ years receiving ",
-      "prescriptions, which accounts for around 4% of patients aged 65+ years ",
+      "Our estimated monthly average of ",
+      tags$b("285 thousand older care home patients"), " receiving ",
+      "prescriptions, represents around 4% of patients age 65+ years ",
       "receiving prescription items each month."
     ),
     p(
@@ -78,6 +79,9 @@ mod_02_demographics_ui <- function(id) {
         text = "ONS Estimates of care home patients from April 2020.",
         url = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales"
       ),
+      "The profile is shown in the chart below at an overall level and can be ",
+      "explored by region, local authority and STP (Sustainability and ",
+      "Transformation Plan area)."
     ),
     br(),
     fluidRow(
@@ -141,9 +145,9 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "Care home patient's prescriptions were allocated an ",
-      a("Index of Multiple Deprivation (IMD)",
-        href = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019",
-        target = "_blank"
+      enurl(
+        text = "Index of Multiple Deprivation (IMD)",
+        url = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019"
       ),
       " rank and associated quintile based on the area in which the care home ",
       "is located. On average, the proportion is very close to 20% in each ",

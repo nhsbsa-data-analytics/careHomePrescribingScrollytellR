@@ -38,10 +38,14 @@ app_ui <- function(request) {
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "05_items_and_cost_per_bnf",
-                mod_05_items_and_cost_per_bnf_ui("05_items_and_cost_per_bnf_ui_1")
+                id = "04_commonly_prescribed_medicine",
+                mod_04_commonly_prescribed_medicine_ui("04_commonly_prescribed_medicine_ui_1")
               ),
-              br()
+              br(),
+              scrollytell::scrolly_section(
+                id = "07_final_thoughts",
+                mod_07_final_thoughts_ui("07_final_thoughts_ui_1")
+              )
             )
           )
         )
@@ -52,7 +56,34 @@ app_ui <- function(request) {
           br(),
           mod_definitions_ui("definitions_ui_1")
         )
-      )
+      ),
+      tabPanel(
+        title = "Caveats",
+        fluidPage(
+          br(),
+          mod_caveat_ui("caveat_ui_1")
+        )
+      ),
+      tabPanel(
+        enurl(
+          text = "Methodology",
+          url = "https://rpubs.com/adnan_shroufi/856841"
+        )
+      ),
+      tabPanel(
+        title = "Accessibility",
+        fluidPage(
+          br(),
+          mod_accessibility_ui("accessibility_ui_1")
+        )
+      ),
+      tabPanel(
+        title = "Contact Us",
+        fluidPage(
+          br(),
+          mod_contact_us_ui("contact_us_ui_1")
+        )
+      ),
     ),
     br(),
     mod_08_footer_ui("08_footer_ui_1")

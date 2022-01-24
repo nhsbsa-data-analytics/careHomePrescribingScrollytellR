@@ -11,9 +11,13 @@ app_server <- function(input, output, session) {
   mod_01_intro_server("01_intro_ui_1")
   mod_02_demographics_server("02_demographics_ui_1")
   mod_03_care_home_prescribing_server("03_care_home_prescribing_ui_1")
-  mod_05_items_and_cost_per_bnf_server("05_items_and_cost_per_bnf_ui_1")
+  mod_04_commonly_prescribed_medicine_server("04_commonly_prescribed_medicine_ui_1")
+  mod_07_final_thoughts_server("07_final_thoughts_ui_1")
   mod_08_footer_server("08_footer_ui_1")
-  mod_definitions_server("definitions_ui_1")
+  # mod_definitions_server("definitions_ui_1")
+  mod_caveat_server("caveat_ui_1")
+  # mod_accessibility_server("accessibility_ui_1")
+  # mod_contact_us_server("contact_us_ui_1")
 
   output$scrolly <- scrollytell::renderScrollytell({
     scrollytell::scrollytell()
