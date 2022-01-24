@@ -121,7 +121,8 @@ mod_04_commonly_prescribed_medicine_server <- function(id) {
         input$metric,
         "COST" = "Drug cost as a % of average drug cost per patient group",
         "ITEMS" = "Number of items as a % of all items per patient group",
-        "PATIENTS" = "Number of unique patients as a % of all patients per patient group"
+        "PATIENTS" = 
+          "Number of unique patients as a % of all patients per patient group"
       )
       
       # Create the chart
