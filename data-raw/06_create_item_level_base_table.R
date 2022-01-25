@@ -92,7 +92,7 @@ item_fact_db <- item_fact_db %>%
 item_fact_db <- item_fact_db %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")) %>%
   left_join(y = postcode_db,) %>%
-  relocate(PCD_REGION_CODE:IMD_QUINTILE, .after = POSTCODE)
+  relocate(PCD_REGION_CODE:IMD_QUINTILE, POSTCODE:MATCH_TYPE, .after = EPM_ID)
 
 # Add the drug information
 item_fact_db <- item_fact_db %>%
@@ -102,20 +102,18 @@ item_fact_db <- item_fact_db %>%
       select(
         YEAR_MONTH,
         CALC_PREC_DRUG_RECORD_ID = RECORD_ID,
-        BNF_CHAPTER,
         CHAPTER_DESCR,
-        BNF_SECTION,
         SECTION_DESCR,
-        BNF_PARAGRAPH,
         PARAGRAPH_DESCR,
-        BNF_CHEMICAL_SUBSTANCE,
-        CHEMICAL_SUBSTANCE_BNF_DESCR
+        CHEMICAL_SUBSTANCE_BNF_DESCR,
+        BNF_CHEMICAL_SUBSTANCE
       )
   ) %>%
   relocate(
-    BNF_CHAPTER:CHEMICAL_SUBSTANCE_BNF_DESCR, 
+    CHAPTER_DESCR:BNF_CHEMICAL_SUBSTANCE, 
     .before = CALC_PREC_DRUG_RECORD_ID
-  )
+  ) %>%
+  select(-CALC_PREC_DRUG_RECORD_ID) 
 
 # Get a single gender and age for the period
 patient_db <- item_fact_db %>%
