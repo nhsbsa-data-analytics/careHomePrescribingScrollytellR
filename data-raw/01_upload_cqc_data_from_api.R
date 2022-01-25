@@ -45,7 +45,7 @@ for (batch in cqc_locations_dfs) {
 # Convert the batch results into a dataframe
 cqc_details_df <- purrr::map_df(
   .x = cqc_batch_details, 
-  .f = ~ dplyr::bind_rows(unlist(x = .x))
+  .f = ~ bind_rows(unlist(x = .x))
 )
 
 # For care homes project we are only interested in a subset of columns, so lets
