@@ -189,22 +189,27 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             text = "BNF",
             tooltip = tooltip_text$bnf_code
           ),
-          "chapter. This compares to 13% for older non care home patients where ",
+          "chapter. This compares to 13% for older non-care home patients where ",
           "the", tags$b("cardiovascular system"), " is the most common BNF chapter by ",
           "number of prescription items."
         )),
         input$bnf == "Chapter" & input$metric == "COST" ~
         paste(p(
-          "The ", tags$b("central nervous system "), "BNF chapter also accounts for ",
+          "The ", tags$b("central nervous system "),
+          tippy(
+            text = "BNF",
+            tooltip = tooltip_text$bnf_code
+          ),
+          " chapter also accounts for ",
           "24% of drug cost for older care home patients, compared to 12% for ",
-          "older non care home patients where again the ", tags$b("cardiovascular system "),
+          "older non-care home patients where again the ", tags$b("cardiovascular system "),
           "is the most common BNF chapter."
         )),
         input$bnf == "Chapter" & input$metric == "PATIENTS" ~
         paste(p(
           "Around 9 in 10 (91%) older care home patients received at last one ",
           "prescription item from the ", tags$b("central nervous system "),
-          "during 2020/21 compared to half of (49%) older non care home patients. ",
+          "during 2020/21 compared to half of (49%) older non-care home patients. ",
           "As with prescription items, the ", tags$b("cardiovascular system "),
           "is the most common BNF chapter in terms of number of older non-care",
           " home patients receiving at least one prescription item (78%)"
@@ -214,18 +219,23 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           tags$b("Analgesics "), "(painkillers) and ", tags$b("laxatives "),
           "are the most common BNF sections for older care home patients in ",
           "2020/21, accounting for 8% and 7% in terms of prescription items respectively. ",
-          "This compares to 5% and 2% for older non care home patients where ",
+          "This compares to 5% and 2% for older non-care home patients where ",
           tags$b("lipid-regulating drugs "), "(for raised cholesterol) is the most ",
           "common BNF section (9%)."
         )),
         input$bnf == "Section" & input$metric == "COST" ~
         paste(p(
           tags$b("Oral nutrition "), "(nutrition supplement) products however ",
-          "account for the greatest percentage of drug cost at BNF section level in ",
-          "older care home patients (14% compared to 2% in older non care home patients).",
+          "account for the greatest percentage of drug cost at ",
+          tippy(
+            text = "BNF",
+            tooltip = tooltip_text$bnf_code
+          ),
+          " section level in ",
+          "older care home patients (14% compared to 2% in older non-care home patients).",
           "Whereas it is ", tags$b("anticoagulants and protamine "),
           "(counteract the anticoagulant effect)",
-          " in older non care home patients (14% of drug cost) compared to 11% ",
+          " in older non-care home patients (14% of drug cost) compared to 11% ",
           "for older care home patients."
         )),
         input$bnf == "Section" & input$metric == "PATIENTS" ~
@@ -235,7 +245,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           "There were 76% and 61% of patients respectively receiving at least ",
           "one prescription item. As with prescription items, ",
           tags$b("lipid regulating drugs "), "is the most common BNF section ",
-          "in terms of the number of older non care home patients receivng at ",
+          "in terms of the number of older non-care home patients receivng at ",
           "least one prescription item (54%)."
         )),
         input$bnf == "Paragraph" & input$metric == "ITEMS" ~
@@ -243,7 +253,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           tags$b("Non-opioid analgesics and compound preparations "), "(to relieve pain) ",
           "and ", tags$b("proton pump inhibitors "), "(acid reflux) each account for ",
           "5% of prescription items for older care home patients in 2020/21. This ",
-          "compares to 3% for older non care home patients where around one in ",
+          "compares to 3% for older non-care home patients where around one in ",
           "ten prescription items (9%) are for ",
           tags$b("lipid-regulating drugs "), "(raised cholesterol)."
         )),
@@ -251,20 +261,30 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         paste(p(
           tags$b("Enteral nutrition "), "(enteral feeding) ",
           "products however account for the greatest percentage of drug cost ",
-          "at BNF paragraph level (13%) in older care home patients. ",
+          "at ",
+          tippy(
+            text = "BNF",
+            tooltip = tooltip_text$bnf_code
+          ),
+          " paragraph level (13%) in older care home patients. ",
           "Whereas it is ", tags$b("oral anticoagulants "), "(prevent blood clots) ",
-          "in older non care home patients (13% of drug cost), the second most ",
+          "in older non-care home patients (13% of drug cost), the second most ",
           "common medicine by drug cost for older care home patients."
         )),
         input$bnf == "Paragraph" & input$metric == "PATIENTS" ~
         paste(p(
           tags$b("Non-opiod analgesics and compound preparations "),
-          "(to relieve pain) is the most common BNF section, ",
+          "(to relieve pain) is the most common ",
+          tippy(
+            text = "BNF",
+            tooltip = tooltip_text$bnf_code
+          ),
+          " section, ",
           "with 68% of older care home patients ",
           "receiving at least one prescriptoin item. ",
           tags$b("Lipid regulating drugs "),
           "is the most common BNF section for ",
-          "non care home patients with 54% receiving at least one ",
+          "non-care home patients with 54% receiving at least one ",
           "prescription item, ",
           "compared to 31% of older care home patients."
         )),
@@ -278,7 +298,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           "accounting for 5% and ",
           "4% of all prescription items to older care home patients.",
           " Whereas it is ", tags$b("Atorvastatin "),
-          "(used to lower cholesterol) in older non care ",
+          "(used to lower cholesterol) in older non-care ",
           "home patients (6%)."
         )),
         input$bnf == "Chemical Substance" & input$metric == "COST" ~
@@ -288,7 +308,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           "of drug cost at chemical substance level (13%) ",
           "in older care home patients. Whereas ",
           "it is ", tags$b("Apixaban "),
-          "(blood thinner) in older non care home patients ",
+          "(blood thinner) in older non-care home patients ",
           "(7% of drug cost), ",
           "the second most common medicine by drug cost for care home patients."
         )),
@@ -297,10 +317,10 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           tags$b("Paracetamol "),
           "(painkiller) is the most commonly prescribed, with 64% of older care ",
           "home patients receiving at least once prescription item.",
-          " This compares to 16% of older non care home patients. ",
+          " This compares to 16% of older non-care home patients. ",
           "As with prescription items, ", tags$b("Atovastatin "),
           "(used to lower cholesterol) is the most common medicine, ",
-          "based on the number of older non care home patients receiving ",
+          "based on the number of older non-care home patients receiving ",
           "at least one prescription item."
         ))
       )
