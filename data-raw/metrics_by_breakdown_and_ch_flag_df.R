@@ -38,7 +38,8 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01),
       UNIQUE_MEDICINES = n_distinct(
         ifelse(
-          test = BNF_CHAPTER %in% c(01, 02, 03, 04, 06, 07, 08, 09, 10),
+          test = substr(BNF_CHEMICAL_SUBSTANCE, 1, 2) %in% 
+            c(01, 02, 03, 04, 06, 07, 08, 09, 10),
           yes = CHEMICAL_SUBSTANCE_BNF_DESCR,
           no = NA_character_
         )
