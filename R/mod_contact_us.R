@@ -11,8 +11,32 @@ mod_contact_us_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Contact us"),
+    p(
+      "If you have any feedback, questions or comments regarding this project please contact",
+      enurl(
+        text = "nhsbsa.dall@nhs.net",
+        url = "mailto:nhsbsa.dall@nhs.net"
+      )
+    ),
     br(),
-    p("contact us also add surey link?"),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
     br(),
     br(),
     br(),
