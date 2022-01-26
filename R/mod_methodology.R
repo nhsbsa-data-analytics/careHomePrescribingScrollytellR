@@ -10,52 +10,24 @@
 mod_methodology_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4("Methodology"),
-    br(),
-    p(
-      enurl(
-        text = "Here",
-        url = "https://rpubs.com/adnan_shroufi/855546"
-      ),
-      " is a link to methodology described in full."
-    ),
     br(),
     br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br()
+    uiOutput(outputId = ns("markdown"))
   )
 }
 
-#' Methodology Server Functions
+#' methodology Server Functions
 #'
 #' @noRd
 mod_methodology_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    output$markdown <- renderUI({
+      HTML(markdown::markdownToHTML(knitr::knit("./project_reports/workflow_and_methodology.Rmd",
+        quiet = TRUE
+      )))
+    })
   })
 }
 

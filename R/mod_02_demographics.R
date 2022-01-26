@@ -50,7 +50,7 @@ mod_02_demographics_ui <- function(id) {
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        "Monthly prescribing status of patients aged 65+ who recieved at ",
+        "Monthly prescribing status of patients aged 65+ who received at ",
         "least one prescription item in a care home during 2020/21"
       ),
       highcharter::highchartOutput(
@@ -158,9 +158,9 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "Care home patient's prescriptions were allocated an ",
-      a("Index of Multiple Deprivation (IMD)",
-        href = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019",
-        target = "_blank"
+      enurl(
+        text = "Index of Multiple Deprivation (IMD)",
+        url = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019"
       ),
       " rank and associated quintile based on the area in which the care home ",
       "is located. On average, the proportion is very close to 20% in each ",
