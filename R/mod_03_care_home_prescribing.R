@@ -137,8 +137,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
         inputId = ns("gender_and_age_band_and_ch_flag_metric"),
         label = NULL,
         choices = c(
-          "Average drug cost" = "SDC_COST_PER_PATIENT_MONTH",
-          "Average prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
+          "Drug cost" = "SDC_COST_PER_PATIENT_MONTH",
+          "Number of prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
           "Number of unique medicines" =
             "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH",
           "Patients on ten or more unique medicines" =
