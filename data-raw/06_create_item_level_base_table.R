@@ -88,7 +88,7 @@ item_fact_db <- item_fact_db %>%
   ) %>%
   tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
 
-# Tidy care home flag and join the postcode info (limit to postcodes in the 
+# Tidy care home flag and join the postcode info (limit to postcodes in the
 # lookup)
 item_fact_db <- item_fact_db %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non-care home")) %>%

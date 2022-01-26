@@ -234,12 +234,10 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Filter the data based on the geography
     patients_by_geography_and_gender_and_age_band_geography_df <- reactive({
-      
       req(input$geography)
 
       careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
         dplyr::filter(GEOGRAPHY == input$geography)
-      
     })
 
     # Update the list of choices for sub geography from the non NA rows in the
@@ -260,13 +258,11 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Filter the data based on the sub geography
     patients_by_geography_and_gender_and_age_band_sub_geography_df <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
 
       patients_by_geography_and_gender_and_age_band_geography_df() %>%
         dplyr::filter(SUB_GEOGRAPHY_NAME == input$sub_geography)
-      
     })
 
     # Pull the max value
@@ -282,7 +278,6 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Pull percentage of female patients
     percentage_female_patients <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
 
@@ -316,12 +311,10 @@ mod_02_demographics_server <- function(id, export_data) {
       # Pull percentage
       female_patients_df %>%
         dplyr::pull(SDC_PCT_FEMALE_PATIENTS)
-      
     })
 
     # Pull percentage of elderly female patients
     percentage_elderly_female_patients <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
 
@@ -363,12 +356,10 @@ mod_02_demographics_server <- function(id, export_data) {
       # Pull percentage
       elderly_female_patients_df %>%
         dplyr::pull(SDC_PCT_ELDERLY_FEMALE_PATIENTS)
-      
     })
 
     # Pull the number of NA gender patients
     patients_with_na_gender <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
 
@@ -383,12 +374,10 @@ mod_02_demographics_server <- function(id, export_data) {
           )
         ) %>%
         dplyr::pull(SDC_TOTAL_PATIENTS)
-      
     })
 
     # Swap NAs for "c" for data download
     patients_by_geography_and_gender_and_age_band_download_df <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
 
@@ -405,12 +394,10 @@ mod_02_demographics_server <- function(id, export_data) {
             no = as.character(SDC_PCT_PATIENTS)
           )
         )
-      
     })
 
     # Filter out unknown genders for the plot and format
     patients_by_geography_and_gender_and_age_band_plot_df <- reactive({
-      
       req(input$geography)
       req(input$sub_geography)
 
@@ -423,7 +410,6 @@ mod_02_demographics_server <- function(id, export_data) {
           SDC_PCT_PATIENTS =
             SDC_PCT_PATIENTS * ifelse(GENDER == "Male", 1, -1)
         )
-      
     })
 
     # Add a download button
@@ -436,7 +422,6 @@ mod_02_demographics_server <- function(id, export_data) {
     # Pyramid plot for age band and gender
     output$patients_by_geography_and_gender_and_age_band_chart <-
       highcharter::renderHighchart({
-        
         req(input$geography)
         req(input$sub_geography)
 
@@ -544,7 +529,7 @@ mod_02_demographics_server <- function(id, export_data) {
     # Patients by IMD chart
 
     # Swap NAs for "c" for data download
-    patients_by_imd_download_df <- 
+    patients_by_imd_download_df <-
       careHomePrescribingScrollytellR::patients_by_imd_df %>%
       dplyr::mutate(
         SDC_TOTAL_PATIENTS = ifelse(

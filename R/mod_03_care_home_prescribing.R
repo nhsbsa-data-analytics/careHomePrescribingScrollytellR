@@ -294,14 +294,12 @@ mod_03_care_home_prescribing_server <- function(id) {
 
     # Filter the data based on the breakdown
     summary_breakdown_df <- reactive({
-      
       req(input$breakdown)
 
       summary_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown)
-      
     })
-    
+
     # Update the list of choices for sub breakdown from the rows in breakdown
     # dataframe
     observeEvent(
@@ -319,21 +317,18 @@ mod_03_care_home_prescribing_server <- function(id) {
 
     # Filter the data based on the sub breakdown
     summary_table_df <- reactive({
-      
       req(input$breakdown)
       req(input$sub_breakdown)
 
       summary_breakdown_df() %>%
         dplyr::filter(SUB_BREAKDOWN_NAME == input$sub_breakdown)
-      
     })
 
     # Create the table
     output$summary_table <- renderUI({
-      
       req(input$breakdown)
       req(input$sub_breakdown)
-      
+
       # Create table
       tagList(
         fluidRow(
@@ -460,9 +455,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        
         if (input$breakdown == "Demographical - Gender") {
-          
           fluidRow(
             col_12(
               p(
@@ -471,7 +464,6 @@ mod_03_care_home_prescribing_server <- function(id) {
               )
             )
           )
-          
         }
       )
     })
@@ -564,7 +556,6 @@ mod_03_care_home_prescribing_server <- function(id) {
     # Create chart
     output$metrics_by_gender_and_age_band_and_ch_flag_chart <-
       highcharter::renderHighchart({
-        
         req(input$gender_and_age_band_and_ch_flag_metric)
 
         highcharter::highchart() %>%
@@ -664,10 +655,9 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           ) %>%
           highcharter::hc_caption(
-            text =  "This excludes << 1% of patients with an unknown gender.",
+            text = "This excludes << 1% of patients with an unknown gender.",
             align = "right"
           )
-        
       })
 
     # Boxplot
