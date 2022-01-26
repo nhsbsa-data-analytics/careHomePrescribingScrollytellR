@@ -28,13 +28,13 @@ item_fact_db <- con %>%
 form_fact_db <- con %>%
   tbl(from = "INT615_FORM_LEVEL_FACT")
 
-# Create a lazy table from the matched patient address care home table
-patient_address_match_db <- con %>%
-  tbl(from = "INT615_ADDRESS_MATCHED")
-
 # Create a lazy table from the geography lookup table (Region, STP and LA)
 postcode_db <- con %>%
   tbl(from = "INT615_POSTCODE_LOOKUP")
+
+# Create a lazy table from the matched patient address care home table
+patient_address_match_db <- con %>%
+  tbl(from = "INT615_ADDRESS_MATCHED")
 
 # Create a lazy table from the drug DIM table
 drug_db <- con %>%
@@ -88,10 +88,11 @@ item_fact_db <- item_fact_db %>%
   ) %>%
   tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
 
-# Tidy care home flag and join the postcode info
+# Tidy care home flag and join the postcode info (limit to postcodes in the
+# lookup)
 item_fact_db <- item_fact_db %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non-care home")) %>%
-  left_join(y = postcode_db, ) %>%
+  inner_join(y = postcode_db) %>%
   relocate(PCD_REGION_CODE:IMD_QUINTILE, POSTCODE:MATCH_TYPE, .after = EPM_ID)
 
 # Add the drug information

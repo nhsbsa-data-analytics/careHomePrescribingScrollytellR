@@ -116,7 +116,7 @@ mod_02_demographics_ui <- function(id) {
       ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
-        height = "400px",
+        height = "350px",
         width = "900px"
       )
     ),
@@ -164,7 +164,7 @@ mod_02_demographics_ui <- function(id) {
       ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_imd_chart"),
-        height = "300px",
+        height = "250px",
         width = "900px"
       )
     ),
@@ -238,28 +238,6 @@ mod_02_demographics_server <- function(id, export_data) {
 
       careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
         dplyr::filter(GEOGRAPHY == input$geography)
-    })
-
-    # Pull the number of NA sub geography patients
-    patients_in_na_sub_geography <- reactive({
-      req(input$geography)
-
-      patients_by_geography_and_gender_and_age_band_geography_df() %>%
-        dplyr::filter(
-          is.na(SUB_GEOGRAPHY_NAME),
-          # We forced these to have NA gender and age band in data-raw/
-          is.na(GENDER),
-          is.na(AGE_BAND)
-        ) %>%
-        # Format number
-        dplyr::mutate(
-          SDC_TOTAL_PATIENTS = ifelse(
-            test = is.na(SDC_TOTAL_PATIENTS),
-            yes = "c",
-            no = as.character(SDC_TOTAL_PATIENTS)
-          )
-        ) %>%
-        dplyr::pull(SDC_TOTAL_PATIENTS)
     })
 
     # Update the list of choices for sub geography from the non NA rows in the
@@ -469,19 +447,7 @@ mod_02_demographics_server <- function(id, export_data) {
           ) %>%
           theme_nhsbsa(palette = "gender") %>%
           highcharter::hc_caption(
-            text = paste0(
-              "This chart excludes ",
-              switch(input$sub_geography,
-                "Overall" = "",
-                paste(
-                  patients_in_na_sub_geography(), "patients with an unknown ",
-                  "sub geography.<br/>Of the patients in the sub geography it ",
-                  "also excludes "
-                )
-              ),
-              patients_with_na_gender(),
-              " patients with an unknown gender."
-            ),
+            text = "This excludes << 1% of patients with an unknown gender.",
             align = "right"
           ) %>%
           highcharter::hc_annotations(
@@ -562,25 +528,9 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Patients by IMD chart
 
-    # Pull the number of NA IMD patients
-    patients_in_na_imd <-
-      careHomePrescribingScrollytellR::patients_by_imd_df %>%
-      dplyr::filter(is.na(IMD_QUINTILE)) %>%
-      # Format number
-      dplyr::mutate(SDC_TOTAL_PATIENTS = ifelse(
-        test = is.na(SDC_TOTAL_PATIENTS),
-        yes = "c",
-        no = as.character(SDC_TOTAL_PATIENTS)
-      )) %>%
-      dplyr::pull(SDC_TOTAL_PATIENTS)
-
-    # Filter out unknown IMDs for the plot
-    patients_by_imd_plot_df <-
-      careHomePrescribingScrollytellR::patients_by_imd_df %>%
-      dplyr::filter(!is.na(IMD_QUINTILE))
-
     # Swap NAs for "c" for data download
-    patients_by_imd_download_df <- patients_by_imd_plot_df %>%
+    patients_by_imd_download_df <-
+      careHomePrescribingScrollytellR::patients_by_imd_df %>%
       dplyr::mutate(
         SDC_TOTAL_PATIENTS = ifelse(
           test = is.na(SDC_TOTAL_PATIENTS),
@@ -605,7 +555,7 @@ mod_02_demographics_server <- function(id, export_data) {
     output$patients_by_imd_chart <- highcharter::renderHighchart({
 
       # highcharter plot
-      patients_by_imd_plot_df %>%
+      careHomePrescribingScrollytellR::patients_by_imd_df %>%
         highcharter::hchart(
           type = "column",
           highcharter::hcaes(
@@ -615,14 +565,6 @@ mod_02_demographics_server <- function(id, export_data) {
           stacking = "normal"
         ) %>%
         theme_nhsbsa() %>%
-        highcharter::hc_caption(
-          text = paste(
-            "This chart excludes", patients_in_na_imd,
-            "patients with an unknown IMD quintile."
-          ),
-          margin = 5,
-          align = "right"
-        ) %>%
         highcharter::hc_legend(enabled = FALSE) %>%
         highcharter::hc_xAxis(
           categories = c(
