@@ -8,7 +8,7 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Create a lazy table from the item level base table
 fact_db <- con %>%
-  tbl(from = "INT615_ITEM_LEVEL_BASE")
+  tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
 # Loop over each bnf and aggregate
 for (bnf_name in names(careHomePrescribingScrollytellR::bnfs)) {

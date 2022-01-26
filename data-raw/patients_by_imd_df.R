@@ -6,7 +6,7 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Create a lazy table from the item level base table
 fact_db <- con %>%
-  tbl(from = "INT615_ITEM_LEVEL_BASE")
+  tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
 # Filter to care home only 
 fact_db <- fact_db %>%
