@@ -42,19 +42,9 @@ h4 { font-size: 22pt; }
 h5 { font-size: 20pt; }
 h6 { font-size: 18pt; }
 p  { font-size: 16pt; text-align: justify;}
-/*li { font-size: 16pt; }*/ /*tooltip requires and too many to change by span so remove for now*/
+li { font-size: 16pt; }
 a  { font-size: 16pt; }
 em { font-size: 16pt; }
-
-
-/*paragraph for the inside chart different font size */
-#small{
-  font-size: 10pt;
-}
-
-#medium{
-  font-size: 11pt;
-}
 
 
 /* Make hyperlinks blue and underlined */
@@ -154,3 +144,6 @@ should be no wider as per NHS guidelines) */
 .nav-pills > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
   background-color: var(--nhs-mid-grey);
 }
+
+
+
