@@ -6,7 +6,7 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Check if the table exists
 exists <- DBI::dbExistsTable(
-  conn = con, 
+  conn = con,
   name = "INT615_ADDRESS_MATCHED"
 )
 
@@ -63,13 +63,13 @@ match_db <- addressMatchR::calc_match_addresses(
   lookup_address_col = "SINGLE_LINE_ADDRESS"
 )
 
-# At this point it is possible that some of the Jaro-Winkler matches are tied, 
-# so we prioritise the best match by selecting a non care home property first 
+# At this point it is possible that some of the Jaro-Winkler matches are tied,
+# so we prioritise the best match by selecting a non care home property first
 # (to err on the side of caution) if one exists, otherwise pick any
 match_db <- match_db %>%
   group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
   slice_min(
-    order_by = CH_FLAG, 
+    order_by = CH_FLAG,
     with_ties = FALSE
   ) %>%
   ungroup()
@@ -78,26 +78,26 @@ match_db <- match_db %>%
 match_db <- match_db %>%
   relocate(SINGLE_LINE_ADDRESS_LOOKUP, .after = SINGLE_LINE_ADDRESS)
 
-# Manually override the care home flag (and nursing / residential flags) for 
-# matched care home patient addresses that contain anything to strongly suggest 
+# Manually override the care home flag (and nursing / residential flags) for
+# matched care home patient addresses that contain anything to strongly suggest
 # the property is not a care home for the elderly
 match_db <- match_db %>%
   mutate(
     CH_FLAG = ifelse(
-      test = 
-        CH_FLAG == 1L & 
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") > 0L,
+      test =
+        CH_FLAG == 1L &
+          REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") > 0L,
       yes = 0L,
       no = CH_FLAG
     ),
     NURSING_HOME_FLAG = ifelse(
-      test = CH_FLAG == 0L, 
-      yes = NA_integer_, 
+      test = CH_FLAG == 0L,
+      yes = NA_integer_,
       no = NURSING_HOME_FLAG
     ),
     RESIDENTIAL_HOME_FLAG = ifelse(
-      test = CH_FLAG == 0L, 
-      yes = NA_integer_, 
+      test = CH_FLAG == 0L,
+      yes = NA_integer_,
       no = RESIDENTIAL_HOME_FLAG
     )
   )
@@ -110,17 +110,17 @@ patient_address_match_db <- patient_address_db %>%
 patient_address_match_db <- patient_address_match_db %>%
   tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
 
-# Manually override the care home flag for non care home patient addresses that 
+# Manually override the care home flag for non care home patient addresses that
 # contain anything to strongly suggest it is a care home for the elderly
 patient_address_match_db <- patient_address_match_db %>%
   mutate(
     MATCH_TYPE = ifelse(
-      test = 
-        CH_FLAG == 0L & 
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CARE HOME|CARE-HOME|NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME") > 0L &
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0L &
-        # Slightly stricter here
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|MARINA|MONASTERY|RECOVERY") == 0L,
+      test =
+        CH_FLAG == 0L &
+          REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CARE HOME|CARE-HOME|NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME") > 0L &
+          REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0L &
+          # Slightly stricter here
+          REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|MARINA|MONASTERY|RECOVERY") == 0L,
       yes = "KEY WORD",
       no = MATCH_TYPE
     ),
@@ -132,19 +132,19 @@ care_home_postcodes_db <- addressbase_plus_cqc_db %>%
   filter(CH_FLAG == 1L) %>%
   distinct(POSTCODE)
 
-# Manually override the care home flag for non care home patient addresses that 
+# Manually override the care home flag for non care home patient addresses that
 # have 5 or more patients in a single month that are in a care home postcode
 patient_address_match_db <- patient_address_match_db %>%
   left_join(y = care_home_postcodes_db %>% mutate(CH_POSTCODE = 1L)) %>%
   mutate(
     MATCH_TYPE = ifelse(
-      test = 
-        CH_FLAG == 0L & 
-        !is.na(CH_POSTCODE) &
-        MAX_MONTHLY_PATIENTS >= 5L &#, & MONTHS_5PLUS_PATIENTS >= 3
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0L &
-        # Slightly stricter here
-        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|MARINA|MONASTERY|RECOVERY") == 0L,
+      test =
+        CH_FLAG == 0L &
+          !is.na(CH_POSTCODE) &
+          MAX_MONTHLY_PATIENTS >= 5L & # , & MONTHS_5PLUS_PATIENTS >= 3
+          REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0L &
+          # Slightly stricter here
+          REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|MARINA|MONASTERY|RECOVERY") == 0L,
       yes = "PATIENT COUNT",
       no = MATCH_TYPE
     ),

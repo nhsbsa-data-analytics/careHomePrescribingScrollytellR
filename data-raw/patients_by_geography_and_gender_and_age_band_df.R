@@ -22,8 +22,8 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
     careHomePrescribingScrollytellR::geographys[[geography_name]] %>%
     purrr::set_names(
       nm = stringr::str_replace(
-        string = names(.), 
-        pattern = "BREAKDOWN", 
+        string = names(.),
+        pattern = "BREAKDOWN",
         replacement = "GEOGRAPHY"
       )
     )
@@ -36,8 +36,8 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
       GENDER,
       AGE_BAND
     ) %>%
-    rename(!!! geography_cols) %>%
-    # If the SUB_GEOGRAPHY_NAME is NA then set gender to NA 
+    rename(!!!geography_cols) %>%
+    # If the SUB_GEOGRAPHY_NAME is NA then set gender to NA
     mutate(
       GENDER = ifelse(is.na(SUB_GEOGRAPHY_NAME), NA, GENDER),
       # NA if SUB_GEOGRAPHY_NAME is NA or if GENDER is NA
@@ -48,29 +48,26 @@ for (geography_name in names(careHomePrescribingScrollytellR::geographys)) {
       )
     ) %>%
     summarise(TOTAL_PATIENTS = n_distinct(NHS_NO))
-  
+
   # Calculate the percentage
   tmp_db <- tmp_db %>%
     ungroup(GENDER, AGE_BAND, TOTAL_PATIENTS) %>%
     mutate(PCT_PATIENTS = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100) %>%
     ungroup()
-  
+
   # Either create the table or append to it
   if (geography_name == "Overall") {
     # On the first iteration initialise the table
 
     patients_by_geography_and_gender_and_age_band_db <- tmp_db
-    
   } else {
     # Union results to initialised table
-    
+
     patients_by_geography_and_gender_and_age_band_db <- union_all(
       x = patients_by_geography_and_gender_and_age_band_db,
       y = tmp_db
     )
-    
   }
-  
 }
 
 # Collect
@@ -92,7 +89,7 @@ patients_by_geography_and_gender_and_age_band_df <-
     # band for NA genders)
     tidyr::nesting(AGE_BAND, GENDER),
     fill = list(
-      TOTAL_PATIENTS = 0L, 
+      TOTAL_PATIENTS = 0L,
       PCT_PATIENTS = 0
     )
   )

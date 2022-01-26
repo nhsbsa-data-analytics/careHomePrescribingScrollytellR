@@ -29,7 +29,7 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       CH_FLAG,
       NHS_NO
     ) %>%
-    rename(!!! breakdown_cols)
+    rename(!!!breakdown_cols)
 
   # Sum the items and cost per patient month
   tmp_db <- tmp_db %>%
@@ -38,7 +38,7 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01),
       UNIQUE_MEDICINES = n_distinct(
         ifelse(
-          test = substr(BNF_CHEMICAL_SUBSTANCE, 1, 2) %in% 
+          test = substr(BNF_CHEMICAL_SUBSTANCE, 1, 2) %in%
             c(01, 02, 03, 04, 06, 07, 08, 09, 10),
           yes = CHEMICAL_SUBSTANCE_BNF_DESCR,
           no = NA_character_
@@ -57,16 +57,16 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
       # Unique medicines
       TOTAL_PATIENTS_UNIQUE_MEDICINES = n_distinct(
         ifelse(
-          test = UNIQUE_MEDICINES > 1, 
-          yes = NHS_NO, 
+          test = UNIQUE_MEDICINES > 1,
+          yes = NHS_NO,
           NA
         )
       ),
       UNIQUE_MEDICINES_PER_PATIENT_MONTH = mean(UNIQUE_MEDICINES),
       TOTAL_PATIENTS_TEN_OR_MORE = n_distinct(
         ifelse(
-          test = UNIQUE_MEDICINES >= 10, 
-          yes = NHS_NO, 
+          test = UNIQUE_MEDICINES >= 10,
+          yes = NHS_NO,
           NA
         )
       )
@@ -83,17 +83,15 @@ for (breakdown_name in names(careHomePrescribingScrollytellR::breakdowns)) {
   # Either create the table or append to it
   if (breakdown_name == "Overall") {
     # On the first iteration initialise the table
-    
+
     metrics_by_breakdown_and_ch_flag_db <- tmp_db
-    
   } else {
     # Union results to initialised table
-    
+
     metrics_by_breakdown_and_ch_flag_db <- union_all(
       x = metrics_by_breakdown_and_ch_flag_db,
       y = tmp_db
     )
-    
   }
 }
 
@@ -106,8 +104,8 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
   tidyr::complete(
     # Only breakdowns that already exist
     tidyr::nesting(
-      BREAKDOWN, 
-      SUB_BREAKDOWN_CODE, 
+      BREAKDOWN,
+      SUB_BREAKDOWN_CODE,
       SUB_BREAKDOWN_NAME,
       GENDER,
       AGE_BAND,
@@ -124,7 +122,7 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
       UNIQUE_MEDICINES_PER_PATIENT_MONTH = NA_real_,
       TOTAL_PATIENTS_TEN_OR_MORE = 0L,
       PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH = NA_real_
-      )
+    )
   )
 
 # Apply SDC to the metrics based on the total patients
@@ -132,44 +130,44 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
   mutate(
     SDC = ifelse(TOTAL_PATIENTS %in% c(1, 2, 3, 4), 1, 0),
     SDC_TOTAL_PATIENTS = ifelse(
-      test = SDC == 1, 
-      yes = NA_integer_, 
+      test = SDC == 1,
+      yes = NA_integer_,
       no = round(TOTAL_PATIENTS, -1)
     ),
     SDC_ITEMS_PER_PATIENT_MONTH =
       ifelse(
-        test = SDC == 1, 
-        yes = NA_integer_, 
+        test = SDC == 1,
+        yes = NA_integer_,
         no = janitor::round_half_up(ITEMS_PER_PATIENT_MONTH, 1)
       ),
     SDC_COST_PER_PATIENT_MONTH =
       ifelse(
-        test = SDC == 1L, 
-        yes = NA_integer_, 
+        test = SDC == 1L,
+        yes = NA_integer_,
         no = janitor::round_half_up(COST_PER_PATIENT_MONTH)
       ),
     SDC = ifelse(TOTAL_PATIENTS_UNIQUE_MEDICINES %in% c(1, 2, 3, 4), 1, 0),
     SDC_TOTAL_PATIENTS_UNIQUE_MEDICINES = ifelse(
-      test = SDC == 1, 
-      yes = NA_integer_, 
+      test = SDC == 1,
+      yes = NA_integer_,
       no = round(TOTAL_PATIENTS_UNIQUE_MEDICINES, -1)
     ),
     SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH =
       ifelse(
-        test = SDC == 1, 
-        yes = NA_integer_, 
+        test = SDC == 1,
+        yes = NA_integer_,
         no = janitor::round_half_up(UNIQUE_MEDICINES_PER_PATIENT_MONTH, 1)
       ),
     SDC = ifelse(TOTAL_PATIENTS_TEN_OR_MORE %in% c(1, 2, 3, 4), 1, 0),
     SDC_TOTAL_PATIENTS_TEN_OR_MORE = ifelse(
-      test = SDC == 1, 
-      yes = NA_integer_, 
+      test = SDC == 1,
+      yes = NA_integer_,
       no = round(TOTAL_PATIENTS_TEN_OR_MORE, -1)
     ),
     SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
       ifelse(
-        test = SDC == 1, 
-        yes = NA_integer_, 
+        test = SDC == 1,
+        yes = NA_integer_,
         no = janitor::round_half_up(PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH, 1)
       )
   ) %>%
@@ -179,10 +177,10 @@ metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
 metrics_by_breakdown_and_ch_flag_df <- metrics_by_breakdown_and_ch_flag_df %>%
   careHomePrescribingScrollytellR::format_data_raw(
     c(
-      "CH_FLAG", 
-      "GENDER", 
-      "AGE_BAND", 
-      "NURSING_HOME_FLAG", 
+      "CH_FLAG",
+      "GENDER",
+      "AGE_BAND",
+      "NURSING_HOME_FLAG",
       "RESIDENTIAL_HOME_FLAG"
     )
   )

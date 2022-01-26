@@ -15,7 +15,7 @@ if (exists) {
 # Process CQC care home table
 
 # Create a lazy table from the CQC care home table
-cqc_db <- con %>% 
+cqc_db <- con %>%
   tbl(from = "INT615_CQC")
 
 # Convert registration and deregistration columns to dates and filter to 2020/21
@@ -24,18 +24,18 @@ cqc_db <- cqc_db %>%
     REGISTRATION_DATE = ifelse(
       test = is.na(REGISTRATION_DATE),
       yes = NA,
-      no = TO_DATE(REGISTRATION_DATE ,"YYYY-MM-DD")
+      no = TO_DATE(REGISTRATION_DATE, "YYYY-MM-DD")
     ),
     DEREGISTRATION_DATE = ifelse(
       test = is.na(DEREGISTRATION_DATE),
       yes = NA,
-      no = TO_DATE(DEREGISTRATION_DATE ,"YYYY-MM-DD")
+      no = TO_DATE(DEREGISTRATION_DATE, "YYYY-MM-DD")
     )
-  ) %>% 
+  ) %>%
   filter(
-    REGISTRATION_DATE <= TO_DATE("2021-03-31","YYYY-MM-DD"),
-    is.na(DEREGISTRATION_DATE) | 
-      DEREGISTRATION_DATE >= TO_DATE("2020-04-01","YYYY-MM-DD")
+    REGISTRATION_DATE <= TO_DATE("2021-03-31", "YYYY-MM-DD"),
+    is.na(DEREGISTRATION_DATE) |
+      DEREGISTRATION_DATE >= TO_DATE("2020-04-01", "YYYY-MM-DD")
   )
 
 # Create a tidy single line address and postcode
@@ -53,7 +53,7 @@ cqc_db <- cqc_db %>%
   addressMatchR::tidy_postcode(col = POSTAL_CODE) %>%
   rename(POSTCODE = POSTAL_CODE)
 
-# Convert to a distinct postcode and single line address table by taking the 
+# Convert to a distinct postcode and single line address table by taking the
 # max of the attribute columns
 cqc_uprn_postcode_address_db <- cqc_db %>%
   group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
@@ -63,14 +63,14 @@ cqc_uprn_postcode_address_db <- cqc_db %>%
     UPRN = max(as.integer(UPRN), na.rm = TRUE),
     NURSING_HOME_FLAG = max(as.integer(NURSING_HOME), na.rm = TRUE),
     RESIDENTIAL_HOME_FLAG = max(as.integer(RESIDENTIAL_HOME), na.rm = TRUE)
-  ) %>% 
+  ) %>%
   ungroup() %>%
   relocate(UPRN, LOCATION_ID)
 
 # Process AddressBase Plus care home table
 
 # Create a lazy table from the AddressBase Plus table
-addressbase_plus_db <- con %>% 
+addressbase_plus_db <- con %>%
   tbl(from = in_schema("DALL_REF", "ADDRESSBASE_PLUS"))
 
 # Filter AddressBase Plus to English properties in at the end of 2021 FY and
@@ -87,15 +87,15 @@ addressbase_plus_db <- addressbase_plus_db %>%
     RELEASE_DATE == TO_DATE("2021-03-15", "YYYY-MM-DD")
   ) %>%
   mutate(CH_FLAG = ifelse(CLASS == "RI01", 1L, 0L)) %>%
-  # Take POSTCODE_LOCATOR as the postcode as it is equal to POSTCODE (whenever 
+  # Take POSTCODE_LOCATOR as the postcode as it is equal to POSTCODE (whenever
   # one exists) but more complete and tidy it
   mutate(POSTCODE = POSTCODE_LOCATOR) %>%
   addressMatchR::tidy_postcode(col = POSTCODE)
 
 # Get postcodes where there is a care home present (including CQC data)
-care_home_postcodes_db <- 
+care_home_postcodes_db <-
   union_all(
-    x = addressbase_plus_db %>% 
+    x = addressbase_plus_db %>%
       filter(CH_FLAG == 1L) %>%
       select(POSTCODE),
     y = cqc_uprn_postcode_address_db %>%
@@ -110,8 +110,8 @@ addressbase_plus_db <- addressbase_plus_db %>%
 addressbase_plus_db <- addressbase_plus_db %>%
   addressMatchR::calc_addressbase_plus_dpa_single_line_address() %>%
   addressMatchR::calc_addressbase_plus_geo_single_line_address() %>%
-  addressMatchR::tidy_single_line_address(col = DPA_SINGLE_LINE_ADDRESS) %>% 
-  addressMatchR::tidy_single_line_address(col = GEO_SINGLE_LINE_ADDRESS) %>% 
+  addressMatchR::tidy_single_line_address(col = DPA_SINGLE_LINE_ADDRESS) %>%
+  addressMatchR::tidy_single_line_address(col = GEO_SINGLE_LINE_ADDRESS) %>%
   select(
     UPRN,
     POSTCODE,
@@ -121,12 +121,12 @@ addressbase_plus_db <- addressbase_plus_db %>%
   )
 
 # When DPA != GEO then add a CORE single line address
-addressbase_plus_db <- 
+addressbase_plus_db <-
   union_all(
     x = addressbase_plus_db %>%
       filter(
-        is.na(DPA_SINGLE_LINE_ADDRESS) | 
-          is.na(GEO_SINGLE_LINE_ADDRESS) | 
+        is.na(DPA_SINGLE_LINE_ADDRESS) |
+          is.na(GEO_SINGLE_LINE_ADDRESS) |
           DPA_SINGLE_LINE_ADDRESS == GEO_SINGLE_LINE_ADDRESS
       ),
     y = addressbase_plus_db %>%
@@ -144,7 +144,7 @@ addressbase_plus_db <-
 
 # Combine AddressBase Plus (care home postcodes) and CQC
 
-# Join the CQC attributes to existing UPRNs (take the max flags where there are 
+# Join the CQC attributes to existing UPRNs (take the max flags where there are
 # duplicate UPRN)
 addressbase_plus_cqc_db <- addressbase_plus_db %>%
   left_join(
@@ -152,9 +152,9 @@ addressbase_plus_cqc_db <- addressbase_plus_db %>%
       group_by(UPRN) %>%
       summarise(
         LOCATION_ID = max(LOCATION_ID, na.rm = TRUE),
-        NURSING_HOME_FLAG = max(NURSING_HOME_FLAG, na.rm = TRUE), 
+        NURSING_HOME_FLAG = max(NURSING_HOME_FLAG, na.rm = TRUE),
         RESIDENTIAL_HOME_FLAG = max(RESIDENTIAL_HOME_FLAG, na.rm = TRUE)
-      ) %>% 
+      ) %>%
       ungroup()
   )
 
@@ -172,7 +172,7 @@ addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
 # Stack the CQC data and make distinct (take max row)
 addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
   union_all(y = cqc_uprn_postcode_address_db %>% mutate(CH_FLAG = 1L)) %>%
-  group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>% 
+  group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
   slice_max(order_by = UPRN, with_ties = FALSE) %>%
   ungroup()
 

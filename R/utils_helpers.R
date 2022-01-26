@@ -62,13 +62,13 @@ breakdowns <- list(
     SUB_BREAKDOWN_NAME = "PCD_LAD_NAME"
   ),
   "Demographical - Gender" = c(SUB_BREAKDOWN_NAME = "GENDER"),
-  "Demographical - Age Band" =  c(SUB_BREAKDOWN_NAME = "AGE_BAND"),
+  "Demographical - Age Band" = c(SUB_BREAKDOWN_NAME = "AGE_BAND"),
   "Additional - Gender and Age Band" = c(
-    GENDER = "GENDER", 
+    GENDER = "GENDER",
     AGE_BAND = "AGE_BAND"
   ),
   "Additional - Care home type" = c(
-    NURSING_HOME_FLAG = "NURSING_HOME_FLAG", 
+    NURSING_HOME_FLAG = "NURSING_HOME_FLAG",
     RESIDENTIAL_HOME_FLAG = "RESIDENTIAL_HOME_FLAG"
   )
 )
@@ -79,17 +79,17 @@ breakdowns <- list(
 #' Extract them from the breakdowns.
 #'
 #' @export
-geographys <- breakdowns %>% 
+geographys <- breakdowns %>%
   purrr::keep(
     .p = stringr::str_detect(
-      string = names(.), 
+      string = names(.),
       pattern = "Overall|Geographical - "
     )
-  ) %>% 
+  ) %>%
   purrr::set_names(
     nm = stringr::str_replace(
-      string = names(.), 
-      pattern = "Geographical - ", 
+      string = names(.),
+      pattern = "Geographical - ",
       replacement = ""
     )
   )
@@ -126,10 +126,10 @@ format_data_raw <- function(df, vars) {
       dplyr::across(
         dplyr::any_of(
           c(
-            "YEAR_MONTH", 
-            "SUB_BREAKDOWN_NAME", 
-            "SUB_GEOGRAPHY_NAME", 
-            "SUB_BNF_LEVEL_NAME", 
+            "YEAR_MONTH",
+            "SUB_BREAKDOWN_NAME",
+            "SUB_GEOGRAPHY_NAME",
+            "SUB_BNF_LEVEL_NAME",
             vars
           )
         )
@@ -162,7 +162,7 @@ format_data_raw <- function(df, vars) {
         GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, names(geographys))
       )
   }
-  
+
   # BNF level is a hierarchy
   if ("BNF_LEVEL" %in% names(df)) {
     df <- df %>%

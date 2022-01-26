@@ -30,12 +30,12 @@ if (exists_dalp_eps_payload) {
 }
 
 # Create a lazy table from SCD2 payload message table
-eps_payload_messages_db <- con_dalp %>% 
+eps_payload_messages_db <- con_dalp %>%
   tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")))
 
 # Create the single line address and subset columns
 eps_payload_messages_db <- eps_payload_messages_db %>%
-  # Bring back ETP data from the month previous until 2 months after (and buffer 
+  # Bring back ETP data from the month previous until 2 months after (and buffer
   # the end of part date by 10 days
   filter(
     PART_DATE >= 20200201L,
@@ -51,9 +51,9 @@ eps_payload_messages_db <- eps_payload_messages_db %>%
     )
   ) %>%
   select(
-    PART_DATE, 
-    EPM_ID, 
-    POSTCODE = PAT_ADDRESS_POSTCODE, 
+    PART_DATE,
+    EPM_ID,
+    POSTCODE = PAT_ADDRESS_POSTCODE,
     SINGLE_LINE_ADDRESS
   )
 
@@ -85,12 +85,12 @@ if (exists_dalp_pds_import) {
 }
 
 # Create a lazy table from year month dim table in DWCP
-year_month_db <- con_dwcp %>% 
+year_month_db <- con_dwcp %>%
   tbl(from = in_schema("DIM", "YEAR_MONTH_DIM")) %>%
   select(YEAR_MONTH_ID, YEAR_MONTH)
 
 # Create a lazy table from SCD2 PDS import data table in DWCP
-pds_import_db <- con_dwcp %>% 
+pds_import_db <- con_dwcp %>%
   tbl(from = in_schema("SCD2", "SCD2_EXT_PD_IMPORT_DATA"))
 
 # Create a lazy table from the CIP patient dim table in DWCP
@@ -98,7 +98,7 @@ cip_db <- con_dwcp %>%
   tbl(from = in_schema("DIM", "CIP_PATIENT_DIM"))
 
 # Filter to successful traces in the period of interest
-pds_import_db <- pds_import_db %>% 
+pds_import_db <- pds_import_db %>%
   filter(
     RECORD_TYPE_R %in% c("20", "30", "33", "40"),
     PART_MONTH >= 201912L & PART_MONTH <= 202104L
@@ -111,16 +111,16 @@ pds_import_db <- pds_import_db %>%
       ADDRESS_LINE1_R,
       ADDRESS_LINE2_R,
       ADDRESS_LINE3_R,
-      ADDRESS_LINE4_R, 
+      ADDRESS_LINE4_R,
       ADDRESS_LINE5_R
     )
-  ) 
+  )
 
 # Select the columns of interest
 pds_import_db <- pds_import_db %>%
   select(
-    YEAR_MONTH = PART_MONTH, 
-    POSTCODE = POSTCODE_R, 
+    YEAR_MONTH = PART_MONTH,
+    POSTCODE = POSTCODE_R,
     SINGLE_LINE_ADDRESS,
     NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
     RECORD_NO
@@ -137,7 +137,7 @@ pds_import_db <- pds_import_db %>%
 pds_import_db <- pds_import_db %>%
   inner_join(y = year_month_db) %>%
   select(-YEAR_MONTH) %>%
-  mutate(YEAR_MONTH_ID = YEAR_MONTH_ID + 1L) %>% 
+  mutate(YEAR_MONTH_ID = YEAR_MONTH_ID + 1L) %>%
   inner_join(y = year_month_db) %>%
   select(-YEAR_MONTH) %>%
   relocate(YEAR_MONTH_ID)
@@ -168,10 +168,10 @@ con_dwcp %>%
 
 # Create a lazy table in DALP from filtered version of SCD2_EXT_PD_IMPORT_DATA
 # in DWCP
-pds_import_db <- con_dalp %>% 
+pds_import_db <- con_dalp %>%
   tbl(
     from = in_schema(
-      schema = sql(Sys.getenv("DB_DWCP_USERNAME")), 
+      schema = sql(Sys.getenv("DB_DWCP_USERNAME")),
       table = sql("INT615_SCD2_EXT_PD_IMPORT_DATA@dwcpb")
     )
   )
@@ -208,7 +208,7 @@ fact_db <- fact_db %>%
     PAY_DA_END == "N", # excludes disallowed items
     PAY_ND_END == "N", # excludes not dispensed items
     PAY_RB_END == "N", # excludes referred back items
-    CD_REQ == "N", # excludes controlled drug requisitions 
+    CD_REQ == "N", # excludes controlled drug requisitions
     OOHC_IND == 0L, # excludes out of hours dispensing
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
@@ -253,7 +253,7 @@ paper_fact_db <- fact_db %>%
   ) %>%
   select(-ITEM_COUNT)
 
-# Subset the EPS forms (buffer the period so that we can search for addresses 
+# Subset the EPS forms (buffer the period so that we can search for addresses
 # for paper forms from more months of EPS forms) to elderly patients in 2020/21
 # and join on their addresses
 eps_fact_db <- fact_db %>%
@@ -275,7 +275,7 @@ eps_single_address_db <- eps_fact_db %>%
   mutate(POSTCODE_COUNT = n_distinct(POSTCODE)) %>%
   filter(POSTCODE_COUNT == 1) %>%
   select(-POSTCODE_COUNT) %>%
-  # And keep their address with the biggest item count in each postcode 
+  # And keep their address with the biggest item count in each postcode
   group_by(POSTCODE, SINGLE_LINE_ADDRESS, .add = TRUE) %>%
   summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
   ungroup(POSTCODE, SINGLE_LINE_ADDRESS) %>%
@@ -286,7 +286,7 @@ eps_single_address_db <- eps_fact_db %>%
 # Get the PDS patients that we need to find an address for
 
 # Get the patients that we want an address for
-paper_patient_db <- paper_fact_db %>% 
+paper_patient_db <- paper_fact_db %>%
   distinct(YEAR_MONTH_ID, NHS_NO)
 
 # Add the year month information
@@ -299,20 +299,18 @@ paper_patient_db <- paper_patient_db %>%
   )
 
 # Define a function that will make the joining process easier
-left_join_address <- function(x, y, year_month_id_col, suffix){
-  
+left_join_address <- function(x, y, year_month_id_col, suffix) {
   left_join(
     x = x,
     y = y %>%
       rename(
         "{{year_month_id_col}}" := YEAR_MONTH_ID,
         "POSTCODE_{{year_month_id_col}}_{{suffix}}" := POSTCODE,
-        "SINGLE_LINE_ADDRESS_{{year_month_id_col}}_{{suffix}}" := 
+        "SINGLE_LINE_ADDRESS_{{year_month_id_col}}_{{suffix}}" :=
           SINGLE_LINE_ADDRESS
       ),
     by = c(rlang::as_name(rlang::enquo(year_month_id_col)), "NHS_NO")
   )
-  
 }
 
 # Join the ETP / PDS postcode and addresses for each year month ID and coalesce
@@ -401,15 +399,15 @@ paper_patient_db <- paper_patient_db %>%
 # Stack EPS and paper back together
 fact_db <- union_all(
   x = eps_fact_db %>%
-    # Remember to filter unwanted periods from the EPS FACT table (as it 
+    # Remember to filter unwanted periods from the EPS FACT table (as it
     # includes the buffer used to find addresses for paper forms)
     filter(
       CALC_AGE >= 65L,
       YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
     ) %>%
     select(-c(YEAR_MONTH_ID, ITEM_COUNT)) %>%
-    distinct(), 
-  y = paper_fact_db %>%    
+    distinct(),
+  y = paper_fact_db %>%
     distinct() %>%
     # Join the addresses
     left_join(y = paper_patient_db) %>%

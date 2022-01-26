@@ -63,13 +63,12 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
 mod_04_commonly_prescribed_medicines_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Filter data to BNF level and metric and take the top 20
     metrics_by_bnf_and_ch_flag_df <- reactive({
-      
       req(input$bnf)
       req(input$metric)
-      
+
       careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_df %>%
         dplyr::filter(
           BNF_LEVEL == input$bnf,
@@ -78,15 +77,13 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         dplyr::arrange(desc(PCT_CH)) %>%
         head(20) %>%
         dplyr::select(-c(PCT_CH, PCT_NON_CH))
-      
     })
 
     # Swap NAs for "c" for data download
     metrics_by_bnf_and_ch_flag_download_df <- reactive({
-      
       req(input$bnf)
       req(input$metric)
-      
+
       metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::mutate(
           SDC_PCT_CH = ifelse(
@@ -100,7 +97,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             no = as.character(SDC_PCT_NON_CH)
           )
         )
-      
     })
 
     # Add a download button
@@ -112,19 +108,17 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
 
     # Need to work on it
     output$metrics_by_bnf_and_ch_flag_chart <- highcharter::renderHighchart({
-      
       req(input$bnf)
       req(input$metric)
-      
+
       # Define the axis title
-      axis_title <- switch(
-        input$metric,
+      axis_title <- switch(input$metric,
         "COST" = "Drug cost as a % of average drug cost per patient group",
         "ITEMS" = "Number of items as a % of all items per patient group",
-        "PATIENTS" = 
+        "PATIENTS" =
           "Number of unique patients as a % of all patients per patient group"
       )
-      
+
       # Create the chart
       highcharter::highchart() %>%
         highcharter::hc_add_series(
@@ -182,7 +176,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
     })
 
     output$text <- shiny::renderUI({
-      
       req(input$bnf)
       req(input$metric)
 
@@ -314,7 +307,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
 
       shiny::HTML(paste(text))
     })
-    
   })
 }
 

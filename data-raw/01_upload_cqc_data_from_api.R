@@ -23,28 +23,27 @@ cqcr::cqc_partner_code() # NHSBSA
 cqc_locations_df <- cqcr::cqc_locations_search(care_home = TRUE)
 
 # Now we need to get the details for these care homes. So we batch up our ~ 30k
-# care homes into bundles of 10 and ensure we wait just over a second before 
+# care homes into bundles of 10 and ensure we wait just over a second before
 # starting the next batch
 cqc_locations_dfs <- split(cqc_locations_df, seq(nrow(cqc_locations_df)) %/% 10)
 cqc_batch_details <- list()
 for (batch in cqc_locations_dfs) {
-  
+
   # Record the start time
   start <- Sys.time()
-  
+
   # Get the batch results and append them to the existing ones
   cqc_batch_details <- c(cqc_batch_details, cqcr::cqc_location_details(batch))
-  
+
   # Pause for the remainder of just over a second
   Sys.sleep(max(0, 1.1 - as.numeric(Sys.time() - start)))
-  
 }
 
 # Process CQC data and write to DB
 
 # Convert the batch results into a dataframe
 cqc_details_df <- purrr::map_df(
-  .x = cqc_batch_details, 
+  .x = cqc_batch_details,
   .f = ~ bind_rows(unlist(x = .x))
 )
 
@@ -56,7 +55,7 @@ cqc_details_df <- cqc_details_df %>%
     # Add the nursing home / residential home flag
     nursing_home = ifelse(
       test = if_any(
-        .cols = starts_with("gac") & contains("name"), 
+        .cols = starts_with("gac") & contains("name"),
         .fns = ~ grepl(pattern = "Nursing home", x = .x)
       ),
       yes = 1L,
@@ -64,7 +63,7 @@ cqc_details_df <- cqc_details_df %>%
     ),
     residential_home = ifelse(
       test = if_any(
-        .cols = starts_with("gac") & contains("name"), 
+        .cols = starts_with("gac") & contains("name"),
         .fns = ~ grepl(pattern = "Residential home", x = .x)
       ),
       yes = 1L,

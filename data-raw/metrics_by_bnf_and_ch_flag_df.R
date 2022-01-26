@@ -12,10 +12,10 @@ fact_db <- con %>%
 
 # Loop over each bnf and aggregate
 for (bnf_name in names(careHomePrescribingScrollytellR::bnfs)) {
-  
+
   # Extract the bnf col
   bnf_col <- careHomePrescribingScrollytellR::bnfs[[bnf_name]]
-  
+
   # Group the table
   tmp_db <- fact_db %>%
     group_by(
@@ -23,7 +23,7 @@ for (bnf_name in names(careHomePrescribingScrollytellR::bnfs)) {
       SUB_BNF_LEVEL_NAME = .data[[bnf_col]],
       CH_FLAG,
     )
-  
+
   # Sum the items and cost and unique patients
   tmp_db <- tmp_db %>%
     summarise(
@@ -32,25 +32,22 @@ for (bnf_name in names(careHomePrescribingScrollytellR::bnfs)) {
       TOTAL_PATIENTS = n_distinct(NHS_NO)
     ) %>%
     ungroup()
-  
+
   # Either create the table or append to it
   if (bnf_name == "Chapter") {
     # On the first iteration initialise the table
-    
+
     metrics_by_bnf_and_ch_flag_db <- tmp_db
-    
   } else {
     # Union results to initialised table
-    
+
     metrics_by_bnf_and_ch_flag_db <- union_all(
       x = metrics_by_bnf_and_ch_flag_db,
       y = tmp_db
     )
-    
   }
-  
 }
-  
+
 # Pivot the data longer
 metrics_by_bnf_and_ch_flag_db <- metrics_by_bnf_and_ch_flag_db %>%
   tidyr::pivot_longer(
@@ -95,7 +92,7 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
     # Only BNF names that already exist
     tidyr::nesting(BNF_LEVEL, SUB_BNF_LEVEL_NAME),
     # Every metric and CH flag
-    METRIC, 
+    METRIC,
     CH_FLAG,
     fill = list(
       TOTAL = 0L,
@@ -121,14 +118,14 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
 # Pivot wider by care home flag
 metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == "Care home", "CH", "NON_CH")) %>%
-  tidyr::pivot_longer(cols = c(PCT,SDC_PCT)) %>%
+  tidyr::pivot_longer(cols = c(PCT, SDC_PCT)) %>%
   tidyr::pivot_wider(
     id_cols = BNF_LEVEL:METRIC,
     names_from = c(name, CH_FLAG),
     values_from = value,
     values_fill = 0
   )
-  
+
 # Add to data-raw/
 usethis::use_data(metrics_by_bnf_and_ch_flag_df, overwrite = TRUE)
 

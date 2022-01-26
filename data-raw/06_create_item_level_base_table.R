@@ -6,14 +6,14 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
 # Check if the table exists
 exists <- DBI::dbExistsTable(
-  conn = con, 
+  conn = con,
   name = "INT615_ITEM_LEVEL_BASE"
 )
 
 # Drop any existing table beforehand
 if (exists) {
   DBI::dbRemoveTable(
-    conn = con, 
+    conn = con,
     name = "INT615_ITEM_LEVEL_BASE"
   )
 }
@@ -53,7 +53,7 @@ item_fact_db <- item_fact_db %>%
     PAY_DA_END == "N", # excludes disallowed items
     PAY_ND_END == "N", # excludes not dispensed items
     PAY_RB_END == "N", # excludes referred back items
-    CD_REQ == "N", # excludes controlled drug requisitions 
+    CD_REQ == "N", # excludes controlled drug requisitions
     OOHC_IND == 0L, # excludes out of hours dispensing
     PRIVATE_IND == 0L, # excludes private dispensers
     IGNORE_FLAG == "N" # excludes LDP dummy forms
@@ -74,7 +74,7 @@ item_fact_db <- item_fact_db %>%
     ITEM_CALC_PAY_QTY
   )
 
-# Now we join the columns of interest back to the fact table and fill the 
+# Now we join the columns of interest back to the fact table and fill the
 # care home flag and match type columns
 item_fact_db <- item_fact_db %>%
   inner_join(
@@ -82,7 +82,7 @@ item_fact_db <- item_fact_db %>%
     na_matches = "na" # Match NA to NA in join
   ) %>%
   left_join(
-    y = patient_address_match_db %>% 
+    y = patient_address_match_db %>%
       select(-(TOTAL_FORMS:MAX_MONTHLY_PATIENTS)),
     na_matches = "na"
   ) %>%
@@ -91,7 +91,7 @@ item_fact_db <- item_fact_db %>%
 # Tidy care home flag and join the postcode info
 item_fact_db <- item_fact_db %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")) %>%
-  left_join(y = postcode_db,) %>%
+  left_join(y = postcode_db, ) %>%
   relocate(PCD_REGION_CODE:IMD_QUINTILE, POSTCODE:MATCH_TYPE, .after = EPM_ID)
 
 # Add the drug information
@@ -110,10 +110,10 @@ item_fact_db <- item_fact_db %>%
       )
   ) %>%
   relocate(
-    CHAPTER_DESCR:BNF_CHEMICAL_SUBSTANCE, 
+    CHAPTER_DESCR:BNF_CHEMICAL_SUBSTANCE,
     .before = CALC_PREC_DRUG_RECORD_ID
   ) %>%
-  select(-CALC_PREC_DRUG_RECORD_ID) 
+  select(-CALC_PREC_DRUG_RECORD_ID)
 
 # Get a single gender and age for the period
 patient_db <- item_fact_db %>%
