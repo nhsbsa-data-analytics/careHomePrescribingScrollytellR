@@ -148,7 +148,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       ),
       highcharter::highchartOutput(
         outputId = ns("metrics_by_gender_and_age_band_and_ch_flag_chart"),
-        height = "400px"
+        height = "350px"
       )
     ),
     mod_download_ui(
@@ -294,57 +294,14 @@ mod_03_care_home_prescribing_server <- function(id) {
 
     # Filter the data based on the breakdown
     summary_breakdown_df <- reactive({
+      
       req(input$breakdown)
 
       summary_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown)
+      
     })
-
-    # Pull the text for the number of NA sub breakdown patients
-    patients_in_na_sub_breakdown_text <- reactive({
-      req(input$breakdown)
-
-      # Filter to NA sub breakdown
-      na_sub_breakdown_df <- summary_breakdown_df() %>%
-        dplyr::filter(is.na(SUB_BREAKDOWN_NAME))
-
-      # Format the number
-      na_sub_breakdown_df <- na_sub_breakdown_df %>%
-        dplyr::mutate(
-          SDC_TOTAL_PATIENTS = ifelse(
-            test = is.na(SDC_TOTAL_PATIENTS),
-            yes = "c",
-            no = as.character(SDC_TOTAL_PATIENTS)
-          )
-        )
-
-      # Extract the values
-      patients_in_na_sub_breakdown <- na_sub_breakdown_df %>%
-        dplyr::pull(SDC_TOTAL_PATIENTS, CH_FLAG)
-
-      if (length(patients_in_na_sub_breakdown) == 2) {
-        # If both care home and non-care home exist
-
-        paste(
-          "This excludes", patients_in_na_sub_breakdown[1], "care home and",
-          patients_in_na_sub_breakdown[2], "non-care home patients with an ",
-          "unknown sub breakdown."
-        )
-      } else if (length(patients_in_na_sub_breakdown) == 1) {
-        # If only one exists
-
-        paste(
-          "This excludes", patients_in_na_sub_breakdown,
-          tolower(names(patients_in_na_sub_breakdown)), "patients with an ",
-          "unknown sub breakdown."
-        )
-      } else {
-        # Nothing
-
-        ""
-      }
-    })
-
+    
     # Update the list of choices for sub breakdown from the rows in breakdown
     # dataframe
     observeEvent(
@@ -362,16 +319,22 @@ mod_03_care_home_prescribing_server <- function(id) {
 
     # Filter the data based on the sub breakdown
     summary_table_df <- reactive({
+      
+      req(input$breakdown)
       req(input$sub_breakdown)
 
       summary_breakdown_df() %>%
         dplyr::filter(SUB_BREAKDOWN_NAME == input$sub_breakdown)
+      
     })
 
     # Create the table
     output$summary_table <- renderUI({
+      
+      req(input$breakdown)
       req(input$sub_breakdown)
-
+      
+      # Create table
       tagList(
         fluidRow(
           col_6(
@@ -497,14 +460,19 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        fluidRow(
-          col_12(
-            p(
-              style = "font-size: 12px; text-align: right; padding-right: 15px;",
-              patients_in_na_sub_breakdown_text()
+        
+        if (input$breakdown == "Demographical - Gender") {
+          
+          fluidRow(
+            col_12(
+              p(
+                style = "font-size: 12px; text-align: right; padding-right: 15px;",
+                "This excludes << 1% of patients with an unknown gender."
+              )
             )
           )
-        )
+          
+        }
       )
     })
 
@@ -596,6 +564,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     # Create chart
     output$metrics_by_gender_and_age_band_and_ch_flag_chart <-
       highcharter::renderHighchart({
+        
         req(input$gender_and_age_band_and_ch_flag_metric)
 
         highcharter::highchart() %>%
@@ -695,11 +664,10 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           ) %>%
           highcharter::hc_caption(
-            text = paste(
-              "This chart excludes", gender_and_age_band_and_ch_flag_na_gender(),
-              "patients with an unknown gender."
-            )
+            text =  "This excludes << 1% of patients with an unknown gender.",
+            align = "right"
           )
+        
       })
 
     # Boxplot
