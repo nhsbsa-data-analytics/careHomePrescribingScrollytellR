@@ -64,7 +64,7 @@ match_db <- addressMatchR::calc_match_addresses(
 )
 
 # At this point it is possible that some of the Jaro-Winkler matches are tied,
-# so we prioritise the best match by selecting a non care home property first
+# so we prioritise the best match by selecting a non-care home property first
 # (to err on the side of caution) if one exists, otherwise pick any
 match_db <- match_db %>%
   group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
@@ -110,7 +110,7 @@ patient_address_match_db <- patient_address_db %>%
 patient_address_match_db <- patient_address_match_db %>%
   tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
 
-# Manually override the care home flag for non care home patient addresses that
+# Manually override the care home flag for non-care home patient addresses that
 # contain anything to strongly suggest it is a care home for the elderly
 patient_address_match_db <- patient_address_match_db %>%
   mutate(
@@ -132,7 +132,7 @@ care_home_postcodes_db <- addressbase_plus_cqc_db %>%
   filter(CH_FLAG == 1L) %>%
   distinct(POSTCODE)
 
-# Manually override the care home flag for non care home patient addresses that
+# Manually override the care home flag for non-care home patient addresses that
 # have 5 or more patients in a single month that are in a care home postcode
 patient_address_match_db <- patient_address_match_db %>%
   left_join(y = care_home_postcodes_db %>% mutate(CH_POSTCODE = 1L)) %>%

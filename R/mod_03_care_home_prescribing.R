@@ -323,11 +323,11 @@ mod_03_care_home_prescribing_server <- function(id) {
         dplyr::pull(SDC_TOTAL_PATIENTS, CH_FLAG)
 
       if (length(patients_in_na_sub_breakdown) == 2) {
-        # If both care home and non care home exist
+        # If both care home and non-care home exist
 
         paste(
           "This excludes", patients_in_na_sub_breakdown[1], "care home and",
-          patients_in_na_sub_breakdown[2], "non care home patients with an ",
+          patients_in_na_sub_breakdown[2], "non-care home patients with an ",
           "unknown sub breakdown."
         )
       } else if (length(patients_in_na_sub_breakdown) == 1) {
@@ -639,7 +639,7 @@ mod_03_care_home_prescribing_server <- function(id) {
               x = AGE_BAND,
               y = .data[[input$gender_and_age_band_and_ch_flag_metric]]
             ),
-            name = "Non care home - Female",
+            name = "Non-care home - Female",
             color = "#768692",
             marker = list(
               symbol = stringr::str_glue("url({data_uri})", data_uri = female_non_ch),
@@ -655,7 +655,7 @@ mod_03_care_home_prescribing_server <- function(id) {
               x = AGE_BAND,
               y = .data[[input$gender_and_age_band_and_ch_flag_metric]]
             ),
-            name = "Non care home - Male",
+            name = "Non-care home - Male",
             color = "#768692",
             marker = list(
               symbol = stringr::str_glue("url({data_uri})", data_uri = male_non_ch),

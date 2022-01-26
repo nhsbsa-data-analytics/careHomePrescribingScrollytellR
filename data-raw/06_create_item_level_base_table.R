@@ -90,7 +90,7 @@ item_fact_db <- item_fact_db %>%
 
 # Tidy care home flag and join the postcode info
 item_fact_db <- item_fact_db %>%
-  mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")) %>%
+  mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non-care home")) %>%
   left_join(y = postcode_db, ) %>%
   relocate(PCD_REGION_CODE:IMD_QUINTILE, POSTCODE:MATCH_TYPE, .after = EPM_ID)
 
