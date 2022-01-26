@@ -20,9 +20,11 @@ mod_caveat_ui <- function(id) {
     ),
     tabsetPanel(
       type = "tabs",
-      tabPanel(title = "Prescriptions data",
-               tags$style("li a { font-weight: bold; font-size: 20px}"),
-               htmlOutput(ns("prescription"))),
+      tabPanel(
+        title = "Prescriptions data",
+        tags$style("li a { font-weight: bold; font-size: 20px}"),
+        htmlOutput(ns("prescription"))
+      ),
       tabPanel(title = "Patient data", htmlOutput(ns("patient"))),
       tabPanel(title = "Lookup address", htmlOutput(ns("address"))),
       tabPanel(title = "Address matching", htmlOutput(ns("matching"))),
@@ -48,19 +50,21 @@ mod_caveat_server <- function(id) {
           "operational purpose of reimbursing and remunerating dispensing ",
           "contractors for the costs of supplying drugs and devices, ",
           "along with essential and advanced services, to NHS patients. ",
-          "This excludes:" ,
+          "This excludes:",
         ),
         tags$li(
           style = "margin-left: 35px; list-style-type: circle ;",
-          "prescriptions that were issued but not presented for dispensing."),
+          "prescriptions that were issued but not presented for dispensing."
+        ),
         tags$li(
           style = "margin-left: 35px; list-style-type: circle ;",
           "prescriptions that were not submitted to the NHSBSA for processing ",
           "and reimbursement prescriptions issued and dispensed in prisons, ",
           "hospitals and private prescriptions"
         ),
-        tags$li(style = "margin-left: 35px; list-style-type: circle ;",
-                "prescription batches submitted late."
+        tags$li(
+          style = "margin-left: 35px; list-style-type: circle ;",
+          "prescription batches submitted late."
         ),
         tags$li(
           "Prescription data relates to prescription batches submitted to the ",
@@ -261,15 +265,15 @@ mod_caveat_server <- function(id) {
         )
       )
     })
-    
-    
+
+
     output$matching <- renderUI({
       tags$ul(
         style = "font-size: 14pt;",
         br(),
         tags$li(
           "Many of the functions within the ",
-          tags$i("nhsbsaR") , " and", tags$i("addressMatchR") , 
+          tags$i("nhsbsaR"), " and", tags$i("addressMatchR"),
           " package are scripted to work specifically with an Oracle dataset. ",
           "Users using a different database architecture may have to edit ",
           "the source code behind these functions, for them to work correctly."
@@ -277,7 +281,7 @@ mod_caveat_server <- function(id) {
         tags$li(
           "A Single Line Address (SLA) data field was required for the ",
           "first two matching stages, similar to that found in AB Core. ",
-          "The ", tags$i("oracle_merge_strings ") , 
+          "The ", tags$i("oracle_merge_strings "),
           "function from the nhsbsaR package aimed to generate a ",
           "Single Line Address (SLA), by combining address components. ",
           "This generated SLA is similar, although not identical, ",
@@ -327,8 +331,8 @@ mod_caveat_server <- function(id) {
         )
       )
     })
-    
-    
+
+
     output$metric <- renderUI({
       tags$ul(
         style = "font-size: 14pt;",
@@ -412,7 +416,6 @@ mod_caveat_server <- function(id) {
         )
       )
     })
-    
   })
 }
 
