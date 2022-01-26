@@ -37,8 +37,8 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
               inputId = ns("metric"),
               label = "Metric",
               choices = c(
-                "Items" = "ITEMS",
                 "Average drug cost" = "COST",
+                "Average prescription items" = "ITEMS",
                 "Patient count" = "PATIENTS"
               ),
               width = "100%"
