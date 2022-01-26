@@ -11,8 +11,6 @@ An object of class \code{list} of length 4.
 geographys
 }
 \description{
-Define the labels of the geographys (in order of hierarchy) with the columns
-that are used to aggregate (if there are two colums then the second is the
-code)
+Extract them from the breakdowns.
 }
 \keyword{datasets}

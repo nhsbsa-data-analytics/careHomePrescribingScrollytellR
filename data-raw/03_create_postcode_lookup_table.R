@@ -87,9 +87,13 @@ postcode_db <- postcode_db %>%
     IMD_QUINTILE
   )
 
-# Write the table back to the DB
+# Write the table back to the DB with indexes
 postcode_db %>%
-  nhsbsaR::oracle_create_table(table_name = "INT615_POSTCODE_LOOKUP")
+  compute(
+    name = "INT615_POSTCODE_LOOKUP",
+    indexes = list(c("POSTCODE")),
+    temporary = FALSE
+  )
 
 # Disconnect from database
 DBI::dbDisconnect(con)

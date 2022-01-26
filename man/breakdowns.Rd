@@ -5,14 +5,13 @@
 \alias{breakdowns}
 \title{Define the breakdowns}
 \format{
-An object of class \code{list} of length 6.
+An object of class \code{list} of length 8.
 }
 \usage{
 breakdowns
 }
 \description{
 Define the labels of the breakdowns (in order of hierarchy) with the columns
-that are used to aggregate (if there are two colums then the second is the
-code)
+that are used to aggregate
 }
 \keyword{datasets}

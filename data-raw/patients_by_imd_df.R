@@ -4,26 +4,16 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Create a lazy table from the geography lookup table (Region, STP and LA)
-postcode_db <- con %>%
-  tbl(from = "INT615_POSTCODE_LOOKUP")
-
-# Create a lazy table from the care home FACT table
+# Create a lazy table from the item level base table
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
-# Join postcode_db and fact_db on postcode
+# Filter to care home only 
 fact_db <- fact_db %>%
-  left_join(
-    y = postcode_db,
-    by = c("PCD_NO_SPACES" = "POSTCODE")
-  )
+  filter(CH_FLAG == "Care home")
 
 # Count care home patients in each quintile
 patients_by_imd_db <- fact_db %>%
-  group_by(IMD_QUINTILE) %>%
-  filter(CH_FLAG == 1) %>%
-  ungroup() %>%
   group_by(IMD_QUINTILE) %>%
   summarise(TOTAL_PATIENTS = n_distinct(NHS_NO)) %>%
   ungroup()
@@ -41,7 +31,7 @@ patients_by_imd_df <- patients_by_imd_db %>%
     SDC_TOTAL_PATIENTS =
       ifelse(SDC == 1, NA_integer_, round(TOTAL_PATIENTS, -1)),
     SDC_PCT_PATIENTS =
-      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS))
+      ifelse(SDC == 1, NA_integer_, janitor::round_half_up(PCT_PATIENTS, 1))
   ) %>%
   select(-c(SDC, TOTAL_PATIENTS, PCT_PATIENTS))
 

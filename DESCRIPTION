@@ -45,20 +45,21 @@ Imports:
   pkgload,
   purrr,
   readr,
+  rsvg,
   scrollytell,
   sf,
   shiny (>= 1.6.0),
   shinyWidgets,
+  stringr,
   tidyr,
   tinter,
-  tippy,
-  rsvg 
+  tippy
 Remotes:
   evanodell/cqcr,
   nhsbsa-data-analytics/addressMatchR,
   nhsbsa-data-analytics/nhsbsaR,
   statistiekcbs/scrollytell,
-  tidyverse/dbplyr
+  admivsn/dbplyr@fix-oracle-temporary-table
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2

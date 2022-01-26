@@ -44,33 +44,70 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
 #' Define the breakdowns
 #'
 #' Define the labels of the breakdowns (in order of hierarchy) with the columns
-#' that are used to aggregate (if there are two colums then the second is the
-#' code)
+#' that are used to aggregate
 #'
 #' @export
 breakdowns <- list(
-  "Overall" = "OVERALL",
-  "Geographical - Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
-  "Geographical - STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
-  "Geographical - Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE"),
-  "Demographical - Gender" = "GENDER",
-  "Demographical - Age Band" = "AGE_BAND"
+  "Overall" = c(SUB_BREAKDOWN_NAME = "OVERALL"),
+  "Geographical - Region" = c(
+    SUB_BREAKDOWN_CODE = "PCD_REGION_CODE",
+    SUB_BREAKDOWN_NAME = "PCD_REGION_NAME"
+  ),
+  "Geographical - STP" = c(
+    SUB_BREAKDOWN_CODE = "PCD_STP_CODE",
+    SUB_BREAKDOWN_NAME = "PCD_STP_NAME"
+  ),
+  "Geographical - Local Authority" = c(
+    SUB_BREAKDOWN_CODE = "PCD_LAD_CODE",
+    SUB_BREAKDOWN_NAME = "PCD_LAD_NAME"
+  ),
+  "Demographical - Gender" = c(SUB_BREAKDOWN_NAME = "GENDER"),
+  "Demographical - Age Band" =  c(SUB_BREAKDOWN_NAME = "AGE_BAND"),
+  "Additional - Gender and Age Band" = c(
+    GENDER = "GENDER", 
+    AGE_BAND = "AGE_BAND"
+  ),
+  "Additional - Care home type" = c(
+    NURSING_HOME_FLAG = "NURSING_HOME_FLAG", 
+    RESIDENTIAL_HOME_FLAG = "RESIDENTIAL_HOME_FLAG"
+  )
 )
 
 
 #' Define the geographys
 #'
-#' Define the labels of the geographys (in order of hierarchy) with the columns
-#' that are used to aggregate (if there are two colums then the second is the
-#' code)
+#' Extract them from the breakdowns.
 #'
 #' @export
-geographys <- list(
-  "Overall" = "OVERALL",
-  "Region" = c("PCD_REGION_NAME", "PCD_REGION_CODE"),
-  "STP" = c("PCD_STP_NAME", "PCD_STP_CODE"),
-  "Local Authority" = c("PCD_LAD_NAME", "PCD_LAD_CODE")
+geographys <- breakdowns %>% 
+  purrr::keep(
+    .p = stringr::str_detect(
+      string = names(.), 
+      pattern = "Overall|Geographical - "
+    )
+  ) %>% 
+  purrr::set_names(
+    nm = stringr::str_replace(
+      string = names(.), 
+      pattern = "Geographical - ", 
+      replacement = ""
+    )
+  )
+
+
+#' Define the BNF levels
+#'
+#' Define the labels of the BNF (in order of hierarchy) with the columns
+#' that are used to aggregate
+#'
+#' @export
+bnfs <- list(
+  "Chapter" = "CHAPTER_DESCR",
+  "Section" = "SECTION_DESCR",
+  "Paragraph" = "PARAGRAPH_DESCR",
+  "Chemical Substance" = "CHEMICAL_SUBSTANCE_BNF_DESCR"
 )
+
 
 #' Format data-raw table
 #'
@@ -88,7 +125,13 @@ format_data_raw <- function(df, vars) {
     dplyr::arrange(
       dplyr::across(
         dplyr::any_of(
-          c("YEAR_MONTH", "SUB_BREAKDOWN_NAME", "SUB_GEOGRAPHY_NAME", vars)
+          c(
+            "YEAR_MONTH", 
+            "SUB_BREAKDOWN_NAME", 
+            "SUB_GEOGRAPHY_NAME", 
+            "SUB_BNF_LEVEL_NAME", 
+            vars
+          )
         )
       )
     )
@@ -112,11 +155,19 @@ format_data_raw <- function(df, vars) {
       )
   }
 
-  # Geography is a hierachy
+  # Geography is a hierarchy
   if ("GEOGRAPHY" %in% names(df)) {
     df <- df %>%
       dplyr::mutate(
         GEOGRAPHY = forcats::fct_relevel(GEOGRAPHY, names(geographys))
+      )
+  }
+  
+  # BNF level is a hierarchy
+  if ("BNF_LEVEL" %in% names(df)) {
+    df <- df %>%
+      dplyr::mutate(
+        BNF_LEVEL = forcats::fct_relevel(BNF_LEVEL, names(bnfs))
       )
   }
 
@@ -131,6 +182,8 @@ format_data_raw <- function(df, vars) {
             "SUB_BREAKDOWN_NAME",
             "GEOGRAPHY",
             "SUB_GEOGRAPHY_NAME",
+            "BNF_LEVEL",
+            "SUB_BNF_LEVEL_NAME",
             vars
           )
         )
@@ -154,17 +207,3 @@ fa_to_png_to_datauri <- function(name, ...) {
 
   knitr::image_uri(tmpfl)
 }
-
-
-#' Define the BNF levels
-#'
-#' Define the labels of the BNF (in order of hierarchy) with the columns
-#' that are used to aggregate
-#'
-#' @export
-bnf <- list(
-  "BNF Chapter" = "BNF_CHAPTER",
-  "BNF Section" = "BNF_SECTION",
-  "BNF Paragraph" = "BNF_PARAGRAPH",
-  "BNF Chemical Substances" = "BNF_CHEM_SUB"
-)

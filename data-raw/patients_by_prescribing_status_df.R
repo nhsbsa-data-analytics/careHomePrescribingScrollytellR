@@ -4,7 +4,7 @@ library(dbplyr)
 # Set up connection to DALP
 con <- nhsbsaR::con_nhsbsa(database = "DALP")
 
-# Create a lazy table from the care home FACT table
+# Create a lazy table from the item level base table
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
@@ -16,15 +16,14 @@ cip_db <- con %>%
 care_home_patient_fact_db <- fact_db %>%
   semi_join(
     y = fact_db %>%
-      filter(CH_FLAG == 1L) %>%
-      select(NHS_NO),
-    copy = TRUE
+      filter(CH_FLAG == "Care home") %>%
+      select(NHS_NO)
   )
 
 # Get the max care home flag for each patient in each month
 patients_by_prescribing_status_db <- care_home_patient_fact_db %>%
   group_by(YEAR_MONTH, NHS_NO) %>%
-  summarise(CH_FLAG = max(CH_FLAG)) %>%
+  summarise(CH_FLAG = max(ifelse(CH_FLAG == "Care home", 1L, 0L))) %>%
   ungroup()
 
 # Get a row for each patient in each month
