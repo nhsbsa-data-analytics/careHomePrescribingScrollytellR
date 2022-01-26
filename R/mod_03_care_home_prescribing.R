@@ -216,7 +216,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       style = "background-color: #FFFFFF;",
       h6(
         style = "text-align: center;",
-        "Estimated average prescribing metrics per patient month for ollder ",
+        "Estimated average prescribing metrics per patient month for older ",
         "care home patients in England by geography (2020/21)"
       ),
       col_6(
