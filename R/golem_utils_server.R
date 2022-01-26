@@ -79,7 +79,7 @@ tooltip_text <- list(
   ten_or_more_unique_medicines = "Calculated as the average <strong>percentage of patients prescribed ten or more unique medicines</strong> per month.<br><br>A unique medicine is defined as a medicine prescribed with the same chemical substance descriptor in BNF* Sections 1 to 4 and 6 to 10 whether it be different formulations (presentations) or different strengths. Medicines with the same chemical substance descriptor would be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and 5mg tablets.",
   bnf_code = "This is a fifteen character code, based on the <a href = 'https://www.bnf.org/products/bnf-online/' target = '_blank'>
               <span style = 'font-size: 14px'> British National Formulary (BNF)</span></a> classifications.
-              The code breakdown as follows: <br><br> <ul> <li>Char 1 - 2 - BNF Chapter</li> <li>Char 3 - 4 - BNF Section </li>
-              <li>Char 5 - 6 - BNF Paragraph</li> <li> Char 7 - BNF Sub-paragraph </li> <li>Char 8 - 9 - Chemical substance</li>
-              <li>Char 10 - 11 - Drug or Product</li> <li>Char 12 - 13 - Strength/Formulation</li> <li>Char 14 - 15 - Equivalent drug</li></ul>"
+              The code breakdown as follows: <br><br> <ul> <ol>Char 1 - 2 - BNF Chapter</ol> <ol>Char 3 - 4 - BNF Section </ol>
+              <ol>Char 5 - 6 - BNF Paragraph</ol> <ol> Char 7 - BNF Sub-paragraph </ol> <ol>Char 8 - 9 - Chemical substance</ol>
+              <ol>Char 10 - 11 - Drug or Product</ol> <ol>Char 12 - 13 - Strength/Formulation</ol> <ol>Char 14 - 15 - Equivalent drug</ol></ul>"
 )

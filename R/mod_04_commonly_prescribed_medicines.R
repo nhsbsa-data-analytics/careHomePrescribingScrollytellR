@@ -195,7 +195,12 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         )),
         input$bnf == "Chapter" & input$metric == "COST" ~
         paste(p(
-          "The ", tags$b("central nervous system "), "BNF chapter also accounts for ",
+          "The ", tags$b("central nervous system "),
+          tippy(
+            text = "BNF",
+            tooltip = tooltip_text$bnf_code
+          ),
+          " chapter also accounts for ",
           "24% of drug cost for older care home patients, compared to 12% for ",
           "older non-care home patients where again the ", tags$b("cardiovascular system "),
           "is the most common BNF chapter."
@@ -221,7 +226,12 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         input$bnf == "Section" & input$metric == "COST" ~
         paste(p(
           tags$b("Oral nutrition "), "(nutrition supplement) products however ",
-          "account for the greatest percentage of drug cost at BNF section level in ",
+          "account for the greatest percentage of drug cost at ",
+          tippy(
+            text = "BNF",
+            tooltip = tooltip_text$bnf_code
+          ),
+          " section level in ",
           "older care home patients (14% compared to 2% in older non-care home patients).",
           "Whereas it is ", tags$b("anticoagulants and protamine "),
           "(counteract the anticoagulant effect)",
@@ -251,7 +261,12 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         paste(p(
           tags$b("Enteral nutrition "), "(enteral feeding) ",
           "products however account for the greatest percentage of drug cost ",
-          "at BNF paragraph level (13%) in older care home patients. ",
+          "at ",
+          tippy(
+            text = "BNF",
+            tooltip = tooltip_text$bnf_code
+          ),
+          " paragraph level (13%) in older care home patients. ",
           "Whereas it is ", tags$b("oral anticoagulants "), "(prevent blood clots) ",
           "in older non-care home patients (13% of drug cost), the second most ",
           "common medicine by drug cost for older care home patients."
@@ -259,7 +274,12 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         input$bnf == "Paragraph" & input$metric == "PATIENTS" ~
         paste(p(
           tags$b("Non-opiod analgesics and compound preparations "),
-          "(to relieve pain) is the most common BNF section, ",
+          "(to relieve pain) is the most common ",
+          tippy(
+            text = "BNF",
+            tooltip = tooltip_text$bnf_code
+          ),
+          " section, ",
           "with 68% of older care home patients ",
           "receiving at least one prescriptoin item. ",
           tags$b("Lipid regulating drugs "),

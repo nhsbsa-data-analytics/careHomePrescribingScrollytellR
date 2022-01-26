@@ -273,15 +273,15 @@ mod_caveat_server <- function(id) {
         br(),
         tags$li(
           "Many of the functions within the ",
-          tags$i("nhsbsaR"), " and", tags$i("addressMatchR"),
+          tags$code("{nhsbsaR}"), " and", tags$code("{addressMatchR}"),
           " package are scripted to work specifically with an Oracle dataset. ",
           "Users using a different database architecture may have to edit ",
           "the source code behind these functions, for them to work correctly."
         ),
         tags$li(
           "A Single Line Address (SLA) data field was required for the ",
-          "first two matching stages, similar to that found in AB Core. ",
-          "The ", tags$i("oracle_merge_strings "),
+          "first two matching stages, siilar to that found in AB Core. ",
+          "The ", tags$code("oracle_merge_strings"),
           "function from the nhsbsaR package aimed to generate a ",
           "Single Line Address (SLA), by combining address components. ",
           "This generated SLA is similar, although not identical, ",
