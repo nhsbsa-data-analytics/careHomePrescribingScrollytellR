@@ -413,6 +413,14 @@ mod_caveat_server <- function(id) {
           "metrics. It should be noted that the distributions are positively ",
           "skewed due to extreme high values for some patients, and the ",
           "median values are lower than the mean."
+        ),
+        tags$li(
+          "In line with the NHSBSA’s Statistical Disclosure Control Policy, ",
+          "patient counts less than five, or item and cost information where ",
+          "a patient count of less than five can be inferred, has been redacted ",
+          "with “c”. Patient counts have also been omitted from geographical ",
+          "breakdowns below national level due to the level of redaction ",
+          "that would be applied."
         )
       )
     })
