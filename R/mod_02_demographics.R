@@ -133,11 +133,12 @@ mod_02_demographics_ui <- function(id) {
       "in ", tags$b("residential homes"), " (41%) and ",
       tags$b("nursing homes"), " (45%) on average each month.", "A small ",
       "percentage (3%) appear in both settings and there are 11% who we were ",
-      "unable to match against a residential or nursing home in the ",
+      "unable to link to the ",
       enurl(
-        text = "CQC dataset.",
+        text = "CQC dataset",
         url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"
-      )
+      ),
+      " in order to attribute a residential or nursing home flag."
     ),
     h6(
       "There is little variation in numbers of older care home patients by ",
