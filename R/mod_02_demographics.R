@@ -219,7 +219,11 @@ mod_02_demographics_server <- function(id, export_data) {
           ) %>%
           theme_nhsbsa() %>%
           highcharter::hc_xAxis(title = list(text = "Year Month")) %>%
-          highcharter::hc_yAxis(title = list(text = "Total patients"))
+          highcharter::hc_yAxis(title = list(text = "Number of patients")) %>%
+          highcharter::hc_tooltip(
+            shared = TRUE,
+            headerFormat = "<b> {point.value} </b>"
+          )
       })
 
     # Patients by geography and gender and age band chart
@@ -480,7 +484,7 @@ mod_02_demographics_server <- function(id, export_data) {
             )
           ) %>%
           highcharter::hc_xAxis(
-            title = list(text = "Age Band"),
+            title = list(text = "Age band"),
             categories =
               patients_by_geography_and_gender_and_age_band_plot_df()$AGE_BAND %>%
                 unique() %>%
@@ -488,9 +492,7 @@ mod_02_demographics_server <- function(id, export_data) {
             reversed = FALSE
           ) %>%
           highcharter::hc_yAxis(
-            title = list(
-              text = "Estimated number of care home patients"
-            ),
+            title = list(text = "Number of patients"),
             min = -max_value(),
             max = max_value(),
             labels = list(
@@ -516,7 +518,7 @@ mod_02_demographics_server <- function(id, export_data) {
 
                 outHTML =
                   '<b>Gender: </b>' + this.series.name + '<br>' +
-                  '<b>Age band (5 years): </b>' + this.point.category + '<br/>' +
+                  '<b>Age band: </b>' + this.point.category + '<br/>' +
                   '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0) + '<br>' +
                   '<b>Percentage of patients: </b>' + Math.abs(this.point.SDC_PCT_PATIENTS) + '%'
 
@@ -576,7 +578,7 @@ mod_02_demographics_server <- function(id, export_data) {
         ) %>%
         highcharter::hc_yAxis(
           title = list(
-            text = "Number of care home patients"
+            text = "Number of patients"
           )
         ) %>%
         highcharter::hc_tooltip(
