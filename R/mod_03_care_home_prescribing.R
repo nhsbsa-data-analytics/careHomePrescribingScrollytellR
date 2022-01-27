@@ -496,7 +496,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         ) %>%
         dplyr::select(
           GENDER,
-          AGE_BAND, 
+          AGE_BAND,
           CH_FLAG,
           .data[[input$gender_and_age_band_and_ch_flag_metric]]
         )
@@ -699,7 +699,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           GEOGRAPHY,
           SUB_GEOGRAPHY_NAME,
           SUB_GEOGRAPHY_CODE,
-          TOTAL_PATIENTS, 
+          TOTAL_PATIENTS,
           .data[[input$metric]]
         )
     })
@@ -738,9 +738,9 @@ mod_03_care_home_prescribing_server <- function(id) {
           )
       },
       options = list(
-        dom = "t", 
-        scrollCollapse = TRUE, 
-        paging = FALSE, 
+        dom = "t",
+        scrollCollapse = TRUE,
+        paging = FALSE,
         scrollY = "500px"
       ),
       filter = "none"
