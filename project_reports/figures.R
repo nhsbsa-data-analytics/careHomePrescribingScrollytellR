@@ -9,8 +9,6 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
-# 01_intro
-
 # 286k monthly average
 careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
   ungroup() %>%
@@ -31,3 +29,13 @@ fact_db %>%
     PCT_COST = TOTAL_COST / sum(TOTAL_COST),
     PCT_PATIENTS = TOTAL_PATIENTS / sum(TOTAL_PATIENTS)
   )
+
+# How many months did a patient receive a prescription in a care home
+fact_db %>%
+  filter(CH_FLAG == "Care home") %>%
+  group_by(NHS_NO) %>%
+  summarise(TOTAL_MONTHS = n_distinct(YEAR_MONTH)) %>%
+  ungroup() %>%
+  count(TOTAL_MONTHS) %>%
+  mutate(PCT = n / sum(n))
+  
