@@ -1,4 +1,4 @@
-#' 08_footer UI Function
+#' 06_footer UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_08_footer_ui <- function(id) {
+mod_06_footer_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
@@ -47,17 +47,17 @@ mod_08_footer_ui <- function(id) {
   )
 }
 
-#' 08_footer Server Functions
+#' 06_footer Server Functions
 #'
 #' @noRd
-mod_08_footer_server <- function(id) {
+mod_06_footer_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
   })
 }
 
 ## To be copied in the UI
-# mod_08_footer_ui("08_footer_ui_1")
+# mod_06_footer_ui("06_footer_ui_1")
 
 ## To be copied in the server
-# mod_08_footer_server("08_footer_ui_1")
+# mod_06_footer_server("06_footer_ui_1")
