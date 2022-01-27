@@ -186,8 +186,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        "Distribution of average drug cost per patient month for older care ",
-        "home patients in England (2020/21)"
+        "Distribution of the estimated average drug cost per patient month",
+        "for older care home patients in England (2020/21)"
       ),
       highcharter::highchartOutput(
         outputId = ns("cost_per_patient_by_age_band_chart"),
