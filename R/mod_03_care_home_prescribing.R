@@ -84,14 +84,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
           h6("Non-care home")
         )
       ),
-      uiOutput(ns("summary_table")),
-      p(
-        style = "font-size: 14px; margin-left: 1%; margin-right: 1%;",
-        "The mean average has been used to calculate per patient month ",
-        "metrics. It should be noted that the distributions are positively ",
-        "skewed due to extreme high values for some patients, and the median ",
-        "values are lower than the mean."
-      )
+      uiOutput(ns("summary_table"))
     ),
     br(),
     br(),
@@ -454,16 +447,21 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        if (input$breakdown == "Demographical - Gender") {
-          fluidRow(
-            col_12(
-              p(
-                style = "font-size: 12px; text-align: right; padding-right: 15px;",
-                "This excludes << 1% of patients with an unknown gender."
-              )
-            )
+        fluidRow(
+          col_12(
+            class = "highcharts-caption",
+            style = "margin-left: 1%; margin-right: 1%;",
+            switch(input$breakdown,
+              "Demographical - Gender" = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
+              "Where the number of patients is less than 5 the data has been redacted."
+            ),
+            "The mean average has been used to calculate per patient month ",
+            "metrics. It should be noted that the distributions are ",
+            "positively skewed due to extreme high values for some patients, ",
+            "and median values are lower than the mean.",
+            br()
           )
-        }
+        )
       )
     })
 
@@ -810,6 +808,9 @@ mod_03_care_home_prescribing_server <- function(id) {
           )
         ) %>%
         theme_nhsbsa() %>%
+        highcharter::hc_caption(
+          text = "Where the number of patients is less than 5 the data has been redacted."
+        ) %>%
         highcharter::hc_mapNavigation(
           enabled = TRUE,
           enableMouseWheelZoom = TRUE,

@@ -95,7 +95,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
           inputId = ns("sort"),
           label = "Sort by",
           choices = c(
-            "Care home" = "PCT_CH", 
+            "Care home" = "PCT_CH",
             "Non-care home" = "PCT_NON_CH"
           ),
           width = "100%"
@@ -140,7 +140,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
       req(input$bnf)
       req(input$metric)
       req(input$sort)
-      
+
       metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::mutate(
           SDC_PCT_CH = ifelse(
@@ -167,7 +167,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
     output$metrics_by_bnf_and_ch_flag_chart <- highcharter::renderHighchart({
       req(input$bnf)
       req(input$metric)
-      
+
       highcharter::highchart() %>%
         highcharter::hc_add_series(
           data = metrics_by_bnf_and_ch_flag_df(),
@@ -196,8 +196,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         highcharter::hc_scrollbar(enabled = TRUE) %>%
         theme_nhsbsa() %>%
         highcharter::hc_caption(
-          text = "Figures are calculated as a percentage of the care home or non-care home group.",
-          align = "right"
+          text = "Figures are calculated as a percentage of the care home or non-care home group and where the number of patients is less than 5 the data has been redacted."
         ) %>%
         highcharter::hc_xAxis(
           categories = unique(metrics_by_bnf_and_ch_flag_df()$SUB_BNF_LEVEL_NAME),
@@ -215,9 +214,9 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           ),
           title = list(
             text = switch(input$metric,
-               "COST" = "Drug cost (%)",
-               "ITEMS" = "Number of prescription items (%)",
-               "PATIENTS" = "Number of patients (%)"
+              "COST" = "Drug cost (%)",
+              "ITEMS" = "Number of prescription items (%)",
+              "PATIENTS" = "Number of patients (%)"
             )
           )
         ) %>%
@@ -240,8 +239,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           )
         )
     })
-
-
   })
 }
 

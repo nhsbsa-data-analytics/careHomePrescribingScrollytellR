@@ -30,6 +30,17 @@ mod_definitions_ui <- function(id) {
       "whilst not living in a care home at the time of prescribing."
     ),
     br(),
+    h6("Nursing home"),
+    p(
+      "A nursing home is a care home where a qualified nurse is provided to ",
+      "ensure that the full needs of the person using the service are met."
+    ),
+    br(),
+    h6("Residential home"),
+    p(
+      "A residential is a care home where a qualified nurse is not provided."
+    ),
+    br(),
     h6("Drug cost"),
     p(
       "Calculated as the average total price reimbursed for dispensed drugs ",
@@ -71,22 +82,15 @@ mod_definitions_ui <- function(id) {
       "e.g. Warfarin 1mg, 3mg and 5mg tablets."
     ),
     br(),
-    h6("BNF"),
+    h6("BNF code"),
     p(
-      "This is a fifteen character code, based on the ",
+      "A BNF code is a fifteen character hierarchical code used to identify ",
+      "medicines based on the ",
       enurl(
         text = "British National Formulary (BNF)",
         url = "https://www.bnf.org/products/bnf-online/"
       ),
-      "classifications. The code breakdown as follows: ",
-      tags$li("Char 1 - 2 - BNF Chapter"),
-      tags$li("Char 3 - 4 - BNF Section"),
-      tags$li("Char 5 - 6 - BNF Paragraph"),
-      tags$li("Char 7 - BNF Sub-paragraph"),
-      tags$li("Char 8 - 9 - Chemical substance"),
-      tags$li("Char 10 - 11 - Drug or Product"),
-      tags$li("Char 12 - 13 - Strength/Formulation"),
-      tags$li("Char 14 - 15 - Equivalent drug")
+      " classifications."
     )
   )
 }
