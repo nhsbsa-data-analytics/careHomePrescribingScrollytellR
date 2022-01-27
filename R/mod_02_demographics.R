@@ -184,7 +184,7 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Patients by prescribing status chart
 
-    # Swap NAs for "c" for data download
+    # Swap NAs for "c" for data download adn subset columns
     patients_by_prescribing_status_df <- reactive({
       careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
         dplyr::mutate(
@@ -193,7 +193,8 @@ mod_02_demographics_server <- function(id, export_data) {
             yes = "c",
             no = as.character(SDC_TOTAL_PATIENTS)
           )
-        )
+        ) %>%
+        select(-c(TOTAL_PATIENTS, PCT_PATIENTS))
     })
 
     # Add a download button
