@@ -161,7 +161,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "Exploratory analysis looked at possible reasons why the average drug ",
       "cost per patient month is higher for younger care home patients, but ",
       "the number of prescription items and unique medicines does not show as ",
-      "much variation. "
+      "much variation."
     ),
     p("Analysis indicates that it may be a combination of factors including:"),
     tags$ul(

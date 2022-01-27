@@ -72,6 +72,8 @@ tooltip_text <- list(
   # Care home vs non-care home
   care_home = "<strong>Older care home patients </strong> are patients aged 65+ who received their prescription whilst living in a care home at the time of prescribing.",
   non_care_home = "<strong>Older non-care home patients </strong> are patients aged 65+ who received their prescription whilst not living in a care home at the time of prescribing.",
+  residential_home = "A <strong>residential home</strong> is a care home where a qualified nurse is not provided.",
+  nursing_home = "A <strong>nursing home</strong> is a care home where a qualified nurse is provided to ensure that the full needs of the person using the service are met.",
   # Metrics
   items = "Calculated as the average <strong>number of prescription items</strong> per patient per month.<br><br>A count of the number of times a product, such as a drug or appliance, appears on a prescription form. It does not account for dosage or quantity prescribed.<br><br>For example, a patient could receive 100 x 50mg tablets as an item and another could receive 7 x 5 mg tablets as an item. Both would be counted as 1 item",
   cost = "Calculated as the average total <strong>price reimbursed for dispensed drugs</strong> per patient per month.<br><br>It relates solely to the cost of the drugs, in the quantity prescribed on a prescription form. It does not include any additional fees or discounts that were paid to the dispensing contractors.",

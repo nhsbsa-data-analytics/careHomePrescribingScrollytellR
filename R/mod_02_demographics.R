@@ -125,20 +125,37 @@ mod_02_demographics_ui <- function(id) {
     ),
     br(),
     h6(
-      "Similar proportions of older care home patients live in residential ",
-      "and nursing homes"
+      "Similar proportions of older care home patients live in ",
+      tippy(
+        text = "residential homes",
+        tooltip = tooltip_text$residential_home
+      ),
+      " and ",
+      tippy(
+        text = "nursing homes",
+        tooltip = tooltip_text$nursing_home
+      )
     ),
     p(
       "We estimate similar proportions of care home patients aged 65+ living ",
-      "in ", tags$b("residential homes"), " (41%) and ",
-      tags$b("nursing homes"), " (45%) on average each month.", "A small ",
+      "in ", 
+      tippy(
+        text = "residential homes",
+        tooltip = tooltip_text$residential_home
+      ), 
+      " (41%) and ",
+      tippy(
+        text = "nursing homes",
+        tooltip = tooltip_text$nursing_home
+      ), 
+      " (45%) on average each month.", "A small ",
       "percentage (3%) appear in both settings and there are 11% who we were ",
       "unable to link to the ",
       enurl(
         text = "CQC dataset",
         url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"
       ),
-      " in order to attribute a residential or nursing home flag."
+      " due to incomplete address information in order to attribute this flag."
     ),
     h6(
       "There is little variation in numbers of older care home patients by ",
