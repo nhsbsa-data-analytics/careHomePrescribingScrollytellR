@@ -50,8 +50,8 @@ mod_02_demographics_ui <- function(id) {
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        "Monthly prescribing status of patients aged 65+ who received at ",
-        "least one prescription item in a care home during 2020/21"
+        "Monthly prescribing status of patients aged 65+ in England who ",
+        "received at least one prescription item in a care home (2020/21)"
       ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_prescribing_status_chart"),

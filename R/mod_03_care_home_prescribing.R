@@ -43,9 +43,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
       style = "background-color: #FFFFFF;",
       h6(
         style = "text-align: center;",
-        "Estimated average monthly prescribing metrics for older care home ",
-        "and non-care home patients in England by geography, age band or ",
-        "gender (2020/21)"
+        "Estimated average prescribing metrics per patient month for older ",
+        "care home and non-care home patients in England by geography, age ",
+        "band or gender (2020/21)"
       ),
       col_6(
         selectInput(
@@ -97,7 +97,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
     br(),
     h6("Age and gender"),
     h6(
-      "The estimated average monthly drug cost per patient is highest for ",
+      "The estimated average drug cost per patient month is highest for ",
       "care home patients aged 65 to 69 years."
     ),
     p(
@@ -129,15 +129,16 @@ mod_03_care_home_prescribing_ui <- function(id) {
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        "Estimated average monthly prescribing metrics for older care home ",
-        "and non-care home patients in England by age band and gender (2020/21)"
+        "Estimated average prescribing metrics per patient month for older ",
+        "care home and non-care home patients in England by age band and ",
+        "gender (2020/21)"
       ),
       radioButtons(
         inputId = ns("gender_and_age_band_and_ch_flag_metric"),
         label = NULL,
         choices = c(
-          "Average drug cost" = "SDC_COST_PER_PATIENT_MONTH",
-          "Average prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
+          "Drug cost" = "SDC_COST_PER_PATIENT_MONTH",
+          "Number of prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
           "Number of unique medicines" =
             "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH",
           "Patients on ten or more unique medicines" =
@@ -185,8 +186,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        "Distribution of average cost per patient month for older care home ",
-        "patients (2020/21)"
+        "Distribution of average drug cost per patient month for older care ",
+        "home patients in England (2020/21)"
       ),
       highcharter::highchartOutput(
         outputId = ns("cost_per_patient_by_age_band_chart"),
@@ -215,8 +216,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
       style = "background-color: #FFFFFF;",
       h6(
         style = "text-align: center;",
-        "Estimated average monthly prescribing metrics for care home ",
-        "patients in England by geography (2020/21)"
+        "Estimated average prescribing metrics per patient month for older ",
+        "care home patients in England by geography (2020/21)"
       ),
       col_6(
         style = "margin-bottom: 0;",
@@ -233,10 +234,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
-            "Average drug cost" =
-              "SDC_COST_PER_PATIENT_MONTH",
-            "Number of prescription items" =
-              "SDC_ITEMS_PER_PATIENT_MONTH",
+            "Drug cost" = "SDC_COST_PER_PATIENT_MONTH",
+            "Number of prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
             "Number of unique medicines" =
               "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH",
             "Patients on ten or more unique medicines" =
@@ -629,13 +628,13 @@ mod_03_care_home_prescribing_server <- function(id) {
             title = list(
               text = paste(
                 switch(input$gender_and_age_band_and_ch_flag_metric,
-                  "SDC_COST_PER_PATIENT_MONTH" = "Average drug cost",
+                  "SDC_COST_PER_PATIENT_MONTH" = "Drug cost",
                   "SDC_ITEMS_PER_PATIENT_MONTH" =
-                    "Average number of prescription items",
+                    "Number of prescription items",
                   "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" =
-                    "Average number of unique medicines",
+                    "Number of unique medicines",
                   "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" =
-                    "Average % of patients prescbiring ten or more unique medicines"
+                    "Patients on ten or more unique medicines"
                 )
               )
             )
@@ -746,7 +745,7 @@ mod_03_care_home_prescribing_server <- function(id) {
 
         # Get a nice name for the metric
         nice_metric_name <- switch(input$metric,
-          "SDC_COST_PER_PATIENT_MONTH" = "Total drug cost (£)",
+          "SDC_COST_PER_PATIENT_MONTH" = "Drug cost (£)",
           "SDC_ITEMS_PER_PATIENT_MONTH" = "Number of prescription items",
           "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" = "Number of unique medicines",
           "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" =
@@ -818,7 +817,7 @@ mod_03_care_home_prescribing_server <- function(id) {
               "<b>", input$geography, ":</b> {point.SUB_GEOGRAPHY_NAME}<br><b>",
               switch(input$metric,
                 "SDC_COST_PER_PATIENT_MONTH" =
-                  "Average drug cost:</b> £{point.value}",
+                  "Drug cost:</b> £{point.value}",
                 "SDC_ITEMS_PER_PATIENT_MONTH" =
                   "Number of prescription items:</b> {point.value}",
                 "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" =
