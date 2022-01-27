@@ -26,44 +26,45 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
     tags$ul(
       tags$li(
         style = "font-size: 16pt;",
-        "BNF Chapter - 91% of older care home patients recieved at least one ",
-        "prescription item from the Central Nervous System compared to just ",
-        "under half (49%) of non-care home patients."
+        tags$b("BNF Chapter:"), "91% of older care home patients recieved at ",
+        "least one prescription item from the Central Nervous System compared ",
+        "to just under half (49%) of non-care home patients."
       ),
       tags$li(
         style = "font-size: 16pt;",
-        "BNF Section - Oral nutrition products account for the greatest ",
-        "percentage (14%) of the drug cost in older care home patients, ",
-        "wheras for older non-care home patients it makes up just 2% of the ",
-        "drug cost."
+        tags$b("BNF Section:"), "Oral nutrition products account for the ",
+        "greatest percentage (14%) of the drug cost in older care home ",
+        "patients, whereas for older non-care home patients it makes up just ",
+        "2% of the drug cost."
       ),
       tags$li(
         style = "font-size: 16pt;",
-        "BNF Paragraph - Enteral nutrition makes up 13% of the drug cost in ",
-        "older care home patients but only accounts for 2% of the drug cost ",
-        "for non-care home patients."
+        tags$b("BNF Paragraph:"), "Enteral nutrition makes up 13% of the drug ",
+        "cost in older care home patients but only accounts for 2% of the ",
+        "drug cost for non-care home patients."
       ),
       tags$li(
         style = "font-size: 16pt;",
-        "BNF Chemical Substance - Paracetamol makes up 5% of prescription ",
-        "items for older care home patients, whereas it makes up just 2% of ",
-        "prescription items for older non-care home patients. 64% of older ",
-        "care home patients recieved at least one prescription prescription ",
-        "item for Paracetamol."
+        tags$b("BNF Chemical Substance:"), "Paracetamol makes up 5% of ",
+        "prescription items for older care home patients, whereas it makes up ",
+        "just 2% of prescription items for older non-care home patients. 64% ",
+        "of older care home patients recieved at least one prescription ",
+        "prescription item for Paracetamol."
       )
     ),
     p(
       "The tool below allows you to compare prescribing to older care home ",
       "patients against older non-care home patients at four BNF levels and ",
       "across three metrics in more detail. You can use the scrollbar to view ",
-      "the top 50 medicines sorted by either care home or non-care home."
+      "the most common 50 medicines sorted by either care home or non-care ",
+      "home."
     ),
     fluidRow(
       style = "background-color: #FFFFFF;",
       align = "center",
       h6(
-        "Medicines prescribed to older care home and non-care home ",
-        "patients in England (2020/21)"
+        "Most common medicines prescribed to older care home and non-care ",
+        "home patients in England (2020/21)"
       ),
       col_4(
         selectInput(
