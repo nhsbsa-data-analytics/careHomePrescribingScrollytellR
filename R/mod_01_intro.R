@@ -39,15 +39,15 @@ mod_01_intro_ui <- function(id) {
       "We estimate that there was a monthly average of", tags$b("286 thousand"),
       " care home patients receiving prescriptions each month in 2020/21. ",
       "They received an estimated", tags$b("35 million"), "prescription items ",
-      "at a cost of", tags$b("£320 million"), "during 2020/21."
+      "at a cost of", tags$b("£324 million"), "during 2020/21."
     ),
     p(
-      "This accounts for around", tags$b("4%"), "of ",
+      "This accounts for around", tags$b("5%"), "of ",
       tippy(
         text = "older patients",
         tooltip = tooltip_text$older
       ),
-      "receiving prescription items each month and", tags$b("7%"), " of the ",
+      "receiving prescription items each month and", tags$b("7%"), "of the ",
       "total primary care drug spend for ",
       tippy(
         text = "older patients",
