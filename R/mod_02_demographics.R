@@ -184,7 +184,7 @@ mod_02_demographics_server <- function(id, export_data) {
 
     # Patients by prescribing status chart
 
-    # Swap NAs for "c" for data download adn subset columns
+    # Swap NAs for "c" for data download
     patients_by_prescribing_status_df <- reactive({
       careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
         dplyr::mutate(
@@ -193,8 +193,7 @@ mod_02_demographics_server <- function(id, export_data) {
             yes = "c",
             no = as.character(SDC_TOTAL_PATIENTS)
           )
-        ) %>%
-        select(-c(TOTAL_PATIENTS, PCT_PATIENTS))
+        )
     })
 
     # Add a download button
@@ -378,7 +377,7 @@ mod_02_demographics_server <- function(id, export_data) {
         dplyr::pull(SDC_TOTAL_PATIENTS)
     })
 
-    # Swap NAs for "c" for data download
+    # Swap NAs for "c" for data download and subset columns
     patients_by_geography_and_gender_and_age_band_download_df <- reactive({
       req(input$geography)
       req(input$sub_geography)
@@ -395,7 +394,8 @@ mod_02_demographics_server <- function(id, export_data) {
             yes = "c",
             no = as.character(SDC_PCT_PATIENTS)
           )
-        )
+        ) %>%
+        select(-c(TOTAL_PATIENTS, PCT_PATIENTS))
     })
 
     # Filter out unknown genders for the plot and format
