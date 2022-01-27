@@ -395,7 +395,7 @@ mod_02_demographics_server <- function(id, export_data) {
             no = as.character(SDC_PCT_PATIENTS)
           )
         ) %>%
-        select(-c(TOTAL_PATIENTS, PCT_PATIENTS))
+        dplyr::select(-c(TOTAL_PATIENTS, PCT_PATIENTS))
     })
 
     # Filter out unknown genders for the plot and format
