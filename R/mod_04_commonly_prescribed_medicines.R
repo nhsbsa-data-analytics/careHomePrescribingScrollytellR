@@ -103,7 +103,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
       ),
       highcharter::highchartOutput(
         outputId = ns("metrics_by_bnf_and_ch_flag_chart"),
-        height = "350px"
+        height = "400px"
       )
     ),
     mod_download_ui(
@@ -205,7 +205,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             fontSize = 15
           ),
           title = list(text = paste("BNF", input$bnf)),
-          max = 10
+          max = 14 # it shows n + 1 = 15
         ) %>%
         highcharter::hc_yAxis(
           min = 0,
