@@ -607,13 +607,13 @@ mod_03_care_home_prescribing_server <- function(id) {
             title = list(
               text = paste(
                 switch(input$gender_and_age_band_and_ch_flag_metric,
-                  "SDC_COST_PER_PATIENT_MONTH" = "Drug cost",
+                  "SDC_COST_PER_PATIENT_MONTH" = "Drug cost (£)",
                   "SDC_ITEMS_PER_PATIENT_MONTH" =
                     "Number of prescription items",
                   "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" =
                     "Number of unique medicines",
                   "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" =
-                    "Patients on ten or more unique medicines"
+                    "Patients on ten or more unique medicines (%)"
                 )
               )
             )
@@ -648,10 +648,10 @@ mod_03_care_home_prescribing_server <- function(id) {
         highcharter::hc_add_series_list(
           x = careHomePrescribingScrollytellR::cost_per_patient_by_age_band_series
         ) %>%
-        highcharter::hc_xAxis(title = list(text = "Age Band")) %>%
+        highcharter::hc_xAxis(title = list(text = "Age band")) %>%
         highcharter::hc_yAxis(
           min = 0,
-          title = list(text = "Cost per patient")
+          title = list(text = "Drug cost (£)")
         ) %>%
         highcharter::hc_plotOptions(series = list(showInLegend = FALSE))
     })
