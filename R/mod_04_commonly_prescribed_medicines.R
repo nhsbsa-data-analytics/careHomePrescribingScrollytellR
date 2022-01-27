@@ -32,7 +32,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         style = "font-size: 16pt;",
         tags$b("BNF Chapter:"), "91% of older care home patients recieved at ",
         "least one prescription item from the Central Nervous System compared ",
-        "to just under half (49%) of non-care home patients."
+        "to just under half (49%) of older non-care home patients."
       ),
       tags$li(
         style = "font-size: 16pt;",
@@ -45,7 +45,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         style = "font-size: 16pt;",
         tags$b("BNF Paragraph:"), "Enteral nutrition makes up 13% of the drug ",
         "cost in older care home patients but only accounts for 2% of the ",
-        "drug cost for non-care home patients."
+        "drug cost for older non-care home patients."
       ),
       tags$li(
         style = "font-size: 16pt;",
