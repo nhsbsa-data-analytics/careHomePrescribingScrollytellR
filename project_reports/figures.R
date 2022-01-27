@@ -38,4 +38,25 @@ fact_db %>%
   ungroup() %>%
   count(TOTAL_MONTHS) %>%
   mutate(PCT = n / sum(n))
+
+# 66% female
+careHomePrescribingScrollytellR::metrics_by_breakdown_and_ch_flag_df %>%
+  filter(BREAKDOWN == "Demographical - Gender") %>%
+  filter(CH_FLAG == "Care home") %>%
+  select(SUB_BREAKDOWN_NAME, TOTAL_PATIENTS) %>%
+  mutate(PCT = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100)
+
+# 59% 85+            
+careHomePrescribingScrollytellR::metrics_by_breakdown_and_ch_flag_df %>%
+  filter(BREAKDOWN == "Demographical - Age Band") %>%
+  filter(CH_FLAG == "Care home") %>%
+  select(SUB_BREAKDOWN_NAME, TOTAL_PATIENTS) %>%
+  mutate(PCT = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100)
+
+# Nursing / residential (41% residential, 45% nursing, 3% both, 11% unknown)
+careHomePrescribingScrollytellR::metrics_by_breakdown_and_ch_flag_df %>%
+  filter(BREAKDOWN == "Additional - Care home type") %>%
+  filter(CH_FLAG == "Care home") %>%
+  select(NURSING_HOME_FLAG, RESIDENTIAL_HOME_FLAG, TOTAL_PATIENTS) %>%
+  mutate(PCT = TOTAL_PATIENTS / sum(TOTAL_PATIENTS) * 100)
   
