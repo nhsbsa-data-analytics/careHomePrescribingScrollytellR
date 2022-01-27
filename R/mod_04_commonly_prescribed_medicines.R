@@ -12,47 +12,97 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
   tagList(
     h4("Commonly prescribed medicines"),
     br(),
-    fluidRow(
-      col_4(
-        shiny::htmlOutput(ns("text"))
+    p(
+      "The range of medicines prescribed to older care home patients compared ",
+      "to older non-care home patients differs significantly."
+    ),
+    p(
+      "Each prescribed medicine is attributed a BNF code that defines a ",
+      "heirachy. We can look at prescribing by either the total drug cost, ",
+      "total number of items, or the total number of patients prescribed a ",
+      "medicine."
+    ),
+    p("In England in 2020/21:"),
+    tags$ul(
+      tags$li(
+        style = "font-size: 16pt;",
+        "BNF Chapter - 91% of older care home patients recieved at least one ",
+        "prescription item from the Central Nervous System compared to just ",
+        "under half (49%) of non-care home patients."
       ),
-      col_8(
-        fluidRow(
-          style = "background-color: #FFFFFF;",
-          align = "center",
-          h6(
-            "Medicines prescribed to older care home and non-care home ",
-            "patients in England (2020/21)"
-          ),
-          col_6(
-            selectInput(
-              inputId = ns("bnf"),
-              label = "BNF Level",
-              choices = names(careHomePrescribingScrollytellR::bnfs),
-              width = "100%"
-            )
-          ),
-          col_6(
-            selectInput(
-              inputId = ns("metric"),
-              label = "Metric",
-              choices = c(
-                "Drug cost" = "COST",
-                "Number of prescription items" = "ITEMS",
-                "Number of patients" = "PATIENTS"
-              ),
-              width = "100%"
-            )
-          ),
-          highcharter::highchartOutput(
-            outputId = ns("metrics_by_bnf_and_ch_flag_chart"),
-            height = "600px"
-          )
-        ),
-        mod_download_ui(
-          id = ns("download_metrics_by_bnf_and_ch_flag_chart")
-        )
+      tags$li(
+        style = "font-size: 16pt;",
+        "BNF Section - Oral nutrition products account for the greatest ",
+        "percentage (14%) of the drug cost in older care home patients, ",
+        "wheras for older non-care home patients it makes up just 2% of the ",
+        "drug cost."
+      ),
+      tags$li(
+        style = "font-size: 16pt;",
+        "BNF Paragraph - Enteral nutrition makes up 13% of the drug cost in ",
+        "older care home patients but only accounts for 2% of the drug cost ",
+        "for non-care home patients."
+      ),
+      tags$li(
+        style = "font-size: 16pt;",
+        "BNF Chemical Substance - Paracetamol makes up 5% of prescription ",
+        "items for older care home patients, whereas it makes up just 2% of ",
+        "prescription items for older non-care home patients. 64% of older ",
+        "care home patients recieved at least one prescription prescription ",
+        "item for Paracetamol."
       )
+    ),
+    p(
+      "The tool below allows you to compare prescribing to older care home ",
+      "patients against older non-care home patients at four BNF levels and ",
+      "across three metrics in more detail. You can use the scrollbar to view ",
+      "the top 50 medicines sorted by either care home or non-care home."
+    ),
+    fluidRow(
+      style = "background-color: #FFFFFF;",
+      align = "center",
+      h6(
+        "Medicines prescribed to older care home and non-care home ",
+        "patients in England (2020/21)"
+      ),
+      col_4(
+        selectInput(
+          inputId = ns("bnf"),
+          label = "BNF Level",
+          choices = names(careHomePrescribingScrollytellR::bnfs),
+          width = "100%"
+        )
+      ),
+      col_4(
+        selectInput(
+          inputId = ns("metric"),
+          label = "Metric",
+          choices = c(
+            "Drug cost" = "COST",
+            "Number of prescription items" = "ITEMS",
+            "Number of patients" = "PATIENTS"
+          ),
+          width = "100%"
+        )
+      ),
+      col_4(
+        selectInput(
+          inputId = ns("sort"),
+          label = "Sort by",
+          choices = c(
+            "Care home" = "PCT_CH", 
+            "Non-care home" = "PCT_NON_CH"
+          ),
+          width = "100%"
+        )
+      ),
+      highcharter::highchartOutput(
+        outputId = ns("metrics_by_bnf_and_ch_flag_chart"),
+        height = "350px"
+      )
+    ),
+    mod_download_ui(
+      id = ns("download_metrics_by_bnf_and_ch_flag_chart")
     )
   )
 }
@@ -64,18 +114,19 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Filter data to BNF level and metric and take the top 20
+    # Filter data to BNF level, metric, and sort (taking the top 50)
     metrics_by_bnf_and_ch_flag_df <- reactive({
       req(input$bnf)
       req(input$metric)
+      req(input$sort)
 
       careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_df %>%
         dplyr::filter(
           BNF_LEVEL == input$bnf,
           METRIC == input$metric
         ) %>%
-        dplyr::arrange(desc(PCT_CH)) %>%
-        head(20) %>%
+        dplyr::arrange(desc(.data[[input$sort]])) %>%
+        head(50) %>%
         dplyr::select(-c(PCT_CH, PCT_NON_CH))
     })
 
@@ -83,7 +134,8 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
     metrics_by_bnf_and_ch_flag_download_df <- reactive({
       req(input$bnf)
       req(input$metric)
-
+      req(input$sort)
+      
       metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::mutate(
           SDC_PCT_CH = ifelse(
@@ -106,12 +158,11 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
       export_data = metrics_by_bnf_and_ch_flag_download_df()
     )
 
-    # Need to work on it
+    # Create the chart
     output$metrics_by_bnf_and_ch_flag_chart <- highcharter::renderHighchart({
       req(input$bnf)
       req(input$metric)
-
-      # Create the chart
+      
       highcharter::highchart() %>%
         highcharter::hc_add_series(
           data = metrics_by_bnf_and_ch_flag_df(),
@@ -133,7 +184,11 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             ",
           align = "center"
         ) %>%
-        highcharter::hc_chart(inverted = TRUE) %>%
+        highcharter::hc_chart(
+          inverted = TRUE,
+          marginLeft = 350
+        ) %>%
+        highcharter::hc_scrollbar(enabled = TRUE) %>%
         theme_nhsbsa() %>%
         highcharter::hc_caption(
           text = "Figures are calculated as a percentage of the care home or non-care home group.",
@@ -144,10 +199,15 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           style = list(
             fontSize = 15
           ),
-          title = list(text = paste("BNF", input$bnf))
+          title = list(text = paste("BNF", input$bnf)),
+          max = 10
         ) %>%
         highcharter::hc_yAxis(
           min = 0,
+          max = max(
+            max(metrics_by_bnf_and_ch_flag_df()$SDC_PCT_NON_CH, na.rm = TRUE),
+            max(metrics_by_bnf_and_ch_flag_df()$SDC_PCT_CH, na.rm = TRUE)
+          ),
           title = list(
             text = switch(input$metric,
                "COST" = "Drug cost (%)",
@@ -176,158 +236,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         )
     })
 
-    output$text <- shiny::renderUI({
-      req(input$bnf)
-      req(input$metric)
 
-      text <- dplyr::case_when(
-        input$bnf == "Chapter" & input$metric == "ITEMS" ~
-        paste(p(
-          "Around one in four prescription items (24%) prescribed to care home ",
-          "patients in 2020/21 are ",
-          "from the", tags$b("central nervous system "),
-          tippy(
-            text = "BNF",
-            tooltip = tooltip_text$bnf_code
-          ),
-          "chapter. This compares to 13% for older non-care home patients where ",
-          "the", tags$b("cardiovascular system"), " is the most common BNF chapter by ",
-          "number of prescription items."
-        )),
-        input$bnf == "Chapter" & input$metric == "COST" ~
-        paste(p(
-          "The ", tags$b("central nervous system "),
-          tippy(
-            text = "BNF",
-            tooltip = tooltip_text$bnf_code
-          ),
-          " chapter also accounts for ",
-          "24% of drug cost for older care home patients, compared to 12% for ",
-          "older non-care home patients where again the ", tags$b("cardiovascular system "),
-          "is the most common BNF chapter."
-        )),
-        input$bnf == "Chapter" & input$metric == "PATIENTS" ~
-        paste(p(
-          "Around 9 in 10 (91%) older care home patients received at last one ",
-          "prescription item from the ", tags$b("central nervous system "),
-          "during 2020/21 compared to half of (49%) older non-care home patients. ",
-          "As with prescription items, the ", tags$b("cardiovascular system "),
-          "is the most common BNF chapter in terms of number of older non-care",
-          " home patients receiving at least one prescription item (78%)"
-        )),
-        input$bnf == "Section" & input$metric == "ITEMS" ~
-        paste(p(
-          tags$b("Analgesics "), "(painkillers) and ", tags$b("laxatives "),
-          "are the most common BNF sections for older care home patients in ",
-          "2020/21, accounting for 8% and 7% in terms of prescription items respectively. ",
-          "This compares to 5% and 2% for older non-care home patients where ",
-          tags$b("lipid-regulating drugs "), "(for raised cholesterol) is the most ",
-          "common BNF section (9%)."
-        )),
-        input$bnf == "Section" & input$metric == "COST" ~
-        paste(p(
-          tags$b("Oral nutrition "), "(nutrition supplement) products however ",
-          "account for the greatest percentage of drug cost at ",
-          tippy(
-            text = "BNF",
-            tooltip = tooltip_text$bnf_code
-          ),
-          " section level in ",
-          "older care home patients (14% compared to 2% in older non-care home patients).",
-          "Whereas it is ", tags$b("anticoagulants and protamine "),
-          "(counteract the anticoagulant effect)",
-          " in older non-care home patients (14% of drug cost) compared to 11% ",
-          "for older care home patients."
-        )),
-        input$bnf == "Section" & input$metric == "PATIENTS" ~
-        paste(p(
-          tags$b("Analgesics "), "(painkillers) and ", tags$b("laxatives "),
-          "are the most common BNF sections for older care home patients. ",
-          "There were 76% and 61% of patients respectively receiving at least ",
-          "one prescription item. As with prescription items, ",
-          tags$b("lipid regulating drugs "), "is the most common BNF section ",
-          "in terms of the number of older non-care home patients receivng at ",
-          "least one prescription item (54%)."
-        )),
-        input$bnf == "Paragraph" & input$metric == "ITEMS" ~
-        paste(p(
-          tags$b("Non-opioid analgesics and compound preparations "), "(to relieve pain) ",
-          "and ", tags$b("proton pump inhibitors "), "(acid reflux) each account for ",
-          "5% of prescription items for older care home patients in 2020/21. This ",
-          "compares to 3% for older non-care home patients where around one in ",
-          "ten prescription items (9%) are for ",
-          tags$b("lipid-regulating drugs "), "(raised cholesterol)."
-        )),
-        input$bnf == "Paragraph" & input$metric == "COST" ~
-        paste(p(
-          tags$b("Enteral nutrition "), "(enteral feeding) ",
-          "products however account for the greatest percentage of drug cost ",
-          "at ",
-          tippy(
-            text = "BNF",
-            tooltip = tooltip_text$bnf_code
-          ),
-          " paragraph level (13%) in older care home patients. ",
-          "Whereas it is ", tags$b("oral anticoagulants "), "(prevent blood clots) ",
-          "in older non-care home patients (13% of drug cost), the second most ",
-          "common medicine by drug cost for older care home patients."
-        )),
-        input$bnf == "Paragraph" & input$metric == "PATIENTS" ~
-        paste(p(
-          tags$b("Non-opiod analgesics and compound preparations "),
-          "(to relieve pain) is the most common ",
-          tippy(
-            text = "BNF",
-            tooltip = tooltip_text$bnf_code
-          ),
-          " section, ",
-          "with 68% of older care home patients ",
-          "receiving at least one prescriptoin item. ",
-          tags$b("Lipid regulating drugs "),
-          "is the most common BNF section for ",
-          "non-care home patients with 54% receiving at least one ",
-          "prescription item, ",
-          "compared to 31% of older care home patients."
-        )),
-        input$bnf == "Chemical Substance" & input$metric == "ITEMS" ~
-        paste(p(
-          tags$b("Paracetamol "), "(painkiller) and ",
-          tags$b("Colecalciferol "),
-          "(vitamin D) are the most commonly ",
-          "prescribed drugs at chemical substance ",
-          "level by number of prescription items in 2020/21, ",
-          "accounting for 5% and ",
-          "4% of all prescription items to older care home patients.",
-          " Whereas it is ", tags$b("Atorvastatin "),
-          "(used to lower cholesterol) in older non-care ",
-          "home patients (6%)."
-        )),
-        input$bnf == "Chemical Substance" & input$metric == "COST" ~
-        paste(p(
-          tags$b("Enteral nutrition "),
-          "products however account for the greatest percentage ",
-          "of drug cost at chemical substance level (13%) ",
-          "in older care home patients. Whereas ",
-          "it is ", tags$b("Apixaban "),
-          "(blood thinner) in older non-care home patients ",
-          "(7% of drug cost), ",
-          "the second most common medicine by drug cost for care home patients."
-        )),
-        input$bnf == "Chemical Substance" & input$metric == "PATIENTS" ~
-        paste(p(
-          tags$b("Paracetamol "),
-          "(painkiller) is the most commonly prescribed, with 64% of older care ",
-          "home patients receiving at least once prescription item.",
-          " This compares to 16% of older non-care home patients. ",
-          "As with prescription items, ", tags$b("Atovastatin "),
-          "(used to lower cholesterol) is the most common medicine, ",
-          "based on the number of older non-care home patients receiving ",
-          "at least one prescription item."
-        ))
-      )
-
-      shiny::HTML(paste(text))
-    })
   })
 }
 
