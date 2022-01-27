@@ -63,6 +63,8 @@ mod_01_intro_ui <- function(id) {
       "Average monthly prescribing costs and volumes per care home patient ",
       "vary by age, gender, care home type and geography."
     ),
+    br(),
+    br(),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
       "includes linking primary care prescription address data to care home ",
