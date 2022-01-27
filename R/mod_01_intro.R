@@ -29,26 +29,26 @@ mod_01_intro_ui <- function(id) {
     ),
     p(
       "This is based on experimental data linkage work. We welcome feedback, ",
-      "collaboration and refinement of the methodology to see if it can be used ",
-      "in NHSBSA information systems in the future and we can develop additional ",
-      "analyses."
+      "collaboration and refinement of the methodology to see if it can be ",
+      "used in NHSBSA information systems in the future and we can develop ",
+      "additional analyses."
     ),
     br(),
     br(),
     p(
-      "We estimate that there was a monthly average of", tags$b("285 thousand"),
+      "We estimate that there was a monthly average of", tags$b("286 thousand"),
       " care home patients receiving prescriptions each month in 2020/21. ",
-      "They received an estimated", tags$b("35 million"), "prescription items at a cost of ",
-      tags$b("£320 million"), " during 2020/21."
+      "They received an estimated", tags$b("35 million"), "prescription items ",
+      "at a cost of", tags$b("£320 million"), "during 2020/21."
     ),
     p(
-      "This accounts for around", tags$b("4%"), " of ",
+      "This accounts for around", tags$b("4%"), "of ",
       tippy(
         text = "older patients",
         tooltip = tooltip_text$older
       ),
-      "receiving prescription items each month and", tags$b("7%"), " of the total primary ",
-      "care drug spend for ",
+      "receiving prescription items each month and", tags$b("7%"), " of the ",
+      "total primary care drug spend for ",
       tippy(
         text = "older patients",
         tooltip = tooltip_text$older
@@ -60,12 +60,13 @@ mod_01_intro_ui <- function(id) {
       "non-care home patients receiving prescriptions."
     ),
     p(
-      "Average monthly prescribing costs and volumes per care home patient vary ",
-      "by age, gender, care home type and geography."
+      "Average monthly prescribing costs and volumes per care home patient ",
+      "vary by age, gender, care home type and geography."
     ),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
-      "includes linking primary care prescription address data to care home addresses ",
+      "includes linking primary care prescription address data to care home ",
+      "addresses ",
       "in ",
       enurl(
         text = "AddressBase Plus",
