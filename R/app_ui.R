@@ -67,7 +67,7 @@ app_ui <- function(request) {
       tabPanel(
         enurl(
           text = "Methodology",
-          url = "https://rpubs.com/adnan_shroufi/856841"
+          url = "https://rpubs.com/nhsbsa-data-analytics/859448"
         )
       ),
       tabPanel(
