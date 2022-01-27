@@ -20,8 +20,8 @@ mod_02_demographics_ui <- function(id) {
     ),
     h6("The older care home population fluctuates"),
     p(
-      "We estimate 473 thousand patients aged 65+ years received at least one ",
-      "prescription item in a care home during 2020/21 and an average of 285 ",
+      "We estimate 472 thousand patients aged 65+ years received at least one ",
+      "prescription item in a care home during 2020/21 and an average of 286 ",
       "thousand in any given month. This difference in numbers is explained ",
       "by two key factors:"
     ),
@@ -42,8 +42,8 @@ mod_02_demographics_ui <- function(id) {
       "monthly average number of care home patients."
     ),
     p(
-      "The chart shows the prescribing status of each of these 460 thousand ",
-      "patients by month during 2020/21. Around 3 in 10 (31%) received in ",
+      "The chart shows the prescribing status of each of these 472 thousand ",
+      "patients by month during 2020/21. Around 3 in 20 (15%) received in ",
       "prescriptions in a care home in all 12 months."
     ),
     fluidRow(
@@ -70,7 +70,7 @@ mod_02_demographics_ui <- function(id) {
     p(
       "Our estimated monthly average of ",
       tags$b("286 thousand older care home patients"), " receiving ",
-      "prescriptions, represents around 4% of patients age 65+ years ",
+      "prescriptions, represents around 5% of patients age 65+ years ",
       "receiving prescription items each month."
     ),
     p(
@@ -130,14 +130,15 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "We estimate similar proportions of care home patients aged 65+ living ",
-      "in ", tags$b("residential homes"), " (40%) and ",
-      tags$b("nursing homes"), " (37%) on average each month.", "A small ",
-      "percentage (2%) appear in both settings and there are 21% who we were ",
-      "unable to match against a residential or nursing home in the ",
+      "in ", tags$b("residential homes"), " (41%) and ",
+      tags$b("nursing homes"), " (45%) on average each month.", "A small ",
+      "percentage (3%) appear in both settings and there are 11% who we were ",
+      "unable to link to the ",
       enurl(
-        text = "CQC dataset.",
+        text = "CQC dataset",
         url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"
-      )
+      ),
+      " in order to attribute a residential or nursing home flag."
     ),
     h6(
       "There is little variation in numbers of older care home patients by ",
@@ -376,7 +377,7 @@ mod_02_demographics_server <- function(id, export_data) {
         dplyr::pull(SDC_TOTAL_PATIENTS)
     })
 
-    # Swap NAs for "c" for data download
+    # Swap NAs for "c" for data download and subset columns
     patients_by_geography_and_gender_and_age_band_download_df <- reactive({
       req(input$geography)
       req(input$sub_geography)
@@ -393,7 +394,8 @@ mod_02_demographics_server <- function(id, export_data) {
             yes = "c",
             no = as.character(SDC_PCT_PATIENTS)
           )
-        )
+        ) %>%
+        dplyr::select(-c(TOTAL_PATIENTS, PCT_PATIENTS))
     })
 
     # Filter out unknown genders for the plot and format

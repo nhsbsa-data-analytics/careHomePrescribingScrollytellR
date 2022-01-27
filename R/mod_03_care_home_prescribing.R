@@ -19,12 +19,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
     ),
     p(
       "Older care home patients received an estimated", tags$b("35 million"),
-      "prescription items at a cost of", tags$b("£320 million"), "during ",
+      "prescription items at a cost of", tags$b("£324 million"), "during ",
       "2020/21."
     ),
     p(
-      "This represents 7% of the total primary care drug spend for older patients ",
-      "during 2020/21."
+      "This represents 7% of the total primary care drug spend for older ",
+      "patients during 2020/21."
     ),
     h6(
       "The estimated average monthly drug cost for older care home patients ",
@@ -32,11 +32,11 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "prescriptions."
     ),
     p(
-      "We estimate that older care home patients receive around 1.4 times more ",
-      "prescription items and unique medicines per patient month than older ",
-      "non-care home patients who received prescriptions. At around twice the ",
-      "drug cost. These prescribing metrics vary by age, gender and geography. ",
-      "The chart below allows you to explore them."
+      "We estimate that older care home patients receive around 1.6 times ",
+      "more prescription items and unique medicines per patient month than ",
+      "older non-care home patients who received prescriptions. At around ",
+      "twice the drug cost. These prescribing metrics vary by age, gender and ",
+      "geography. The chart below allows you to explore them."
     ),
     br(),
     fluidRow(
@@ -153,7 +153,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       )
     ),
     mod_download_ui(
-      id = ns("metrics_by_gender_and_age_band_and_ch_flag_chart")
+      id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
     ),
     br(),
     br(),
@@ -474,34 +474,7 @@ mod_03_care_home_prescribing_server <- function(id) {
       careHomePrescribingScrollytellR::metrics_by_breakdown_and_ch_flag_df %>%
       dplyr::filter(BREAKDOWN == "Additional - Gender and Age Band")
 
-    # Pull total NA gender patients from the selected metric
-    gender_and_age_band_and_ch_flag_na_gender <- reactive({
-      req(input$gender_and_age_band_and_ch_flag_metric)
-
-      # Filter to NA
-      tmp_df <- metrics_by_gender_and_age_band_and_ch_flag_df %>%
-        dplyr::filter(is.na(GENDER))
-
-      # Return the total NA gender patients based on the metric
-      if (
-        input$gender_and_age_band_and_ch_flag_metric %in%
-          c("SDC_COST_PER_PATIENT_MONTH", "SDC_ITEMS_PER_PATIENT_MONTH")
-      ) {
-        tmp_df %>%
-          dplyr::summarise(TOTAL_PATIENTS = round(sum(TOTAL_PATIENTS), -1)) %>%
-          dplyr::pull()
-      } else {
-        tmp_df %>%
-          dplyr::summarise(
-            TOTAL_PATIENTS_UNIQUE_MEDICINES =
-              round(sum(TOTAL_PATIENTS_UNIQUE_MEDICINES), -1)
-          ) %>%
-          dplyr::pull()
-      }
-    })
-
-    # Filter out the NA genders (after we have used the metric to calculate the
-    # number of NA genders)
+    # Filter out the NA genders
     metrics_by_gender_and_age_band_and_ch_flag_df_ <- reactive({
       req(input$gender_and_age_band_and_ch_flag_metric)
 
@@ -509,7 +482,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         dplyr::filter(!is.na(GENDER))
     })
 
-    # Swap NAs for "c" for data download
+    # Swap NAs for "c" for data download and subset columns
     metrics_by_gender_and_age_band_and_ch_flag_download_df <- reactive({
       req(input$gender_and_age_band_and_ch_flag_metric)
 
@@ -520,6 +493,12 @@ mod_03_care_home_prescribing_server <- function(id) {
             yes = "c",
             no = as.character(.data[[input$gender_and_age_band_and_ch_flag_metric]])
           )
+        ) %>%
+        dplyr::select(
+          GENDER,
+          AGE_BAND,
+          CH_FLAG,
+          .data[[input$gender_and_age_band_and_ch_flag_metric]]
         )
     })
 
@@ -717,14 +696,11 @@ mod_03_care_home_prescribing_server <- function(id) {
           )
         ) %>%
         dplyr::select(
-          dplyr::all_of(
-            c(
-              "GEOGRAPHY",
-              "SUB_GEOGRAPHY_NAME",
-              "SUB_GEOGRAPHY_CODE",
-              input$metric
-            )
-          )
+          GEOGRAPHY,
+          SUB_GEOGRAPHY_NAME,
+          SUB_GEOGRAPHY_CODE,
+          TOTAL_PATIENTS,
+          .data[[input$metric]]
         )
     })
 
@@ -761,7 +737,12 @@ mod_03_care_home_prescribing_server <- function(id) {
             "{nice_metric_name}" := .data[[input$metric]]
           )
       },
-      options = list(dom = "t", scrollCollapse = TRUE, paging = FALSE, scrollY = "500px"),
+      options = list(
+        dom = "t",
+        scrollCollapse = TRUE,
+        paging = FALSE,
+        scrollY = "500px"
+      ),
       filter = "none"
     )
 

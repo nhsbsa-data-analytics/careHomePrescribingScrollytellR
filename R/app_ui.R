@@ -43,8 +43,8 @@ app_ui <- function(request) {
               ),
               br(),
               scrollytell::scrolly_section(
-                id = "07_final_thoughts",
-                mod_07_final_thoughts_ui("07_final_thoughts_ui_1")
+                id = "05_final_thoughts",
+                mod_05_final_thoughts_ui("05_final_thoughts_ui_1")
               )
             )
           )
@@ -86,7 +86,7 @@ app_ui <- function(request) {
       ),
     ),
     br(),
-    mod_08_footer_ui("08_footer_ui_1")
+    mod_06_footer_ui("06_footer_ui_1")
   )
 }
 
