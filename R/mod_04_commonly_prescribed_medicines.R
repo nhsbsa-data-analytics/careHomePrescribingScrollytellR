@@ -21,8 +21,8 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
           style = "background-color: #FFFFFF;",
           align = "center",
           h6(
-            "Medicines prescribed to older care home patients in England ",
-            "(2020/21)"
+            "Medicines prescribed to older care home and non-care home ",
+            "patients in England (2020/21)"
           ),
           col_6(
             selectInput(
@@ -37,9 +37,9 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
               inputId = ns("metric"),
               label = "Metric",
               choices = c(
-                "Average drug cost" = "COST",
-                "Average prescription items" = "ITEMS",
-                "Patient count" = "PATIENTS"
+                "Drug cost" = "COST",
+                "Number of prescription items" = "ITEMS",
+                "Number of patients" = "PATIENTS"
               ),
               width = "100%"
             )
@@ -111,14 +111,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
       req(input$bnf)
       req(input$metric)
 
-      # Define the axis title
-      axis_title <- switch(input$metric,
-        "COST" = "Drug cost as a % of average drug cost per patient group",
-        "ITEMS" = "Number of items as a % of all items per patient group",
-        "PATIENTS" =
-          "Number of unique patients as a % of all patients per patient group"
-      )
-
       # Create the chart
       highcharter::highchart() %>%
         highcharter::hc_add_series(
@@ -143,6 +135,10 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         ) %>%
         highcharter::hc_chart(inverted = TRUE) %>%
         theme_nhsbsa() %>%
+        highcharter::hc_caption(
+          text = "Figures are calculated as a percentage of the care home or non-care home group.",
+          align = "right"
+        ) %>%
         highcharter::hc_xAxis(
           categories = unique(metrics_by_bnf_and_ch_flag_df()$SUB_BNF_LEVEL_NAME),
           style = list(
@@ -151,9 +147,14 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           title = list(text = paste("BNF", input$bnf))
         ) %>%
         highcharter::hc_yAxis(
-          labels = list(format = "{value}%"),
           min = 0,
-          title = list(text = axis_title)
+          title = list(
+            text = switch(input$metric,
+               "COST" = "Drug cost (%)",
+               "ITEMS" = "Number of prescription items (%)",
+               "PATIENTS" = "Number of patients (%)"
+            )
+          )
         ) %>%
         highcharter::hc_legend(enabled = FALSE) %>%
         highcharter::hc_tooltip(
