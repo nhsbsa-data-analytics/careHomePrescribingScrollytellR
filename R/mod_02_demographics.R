@@ -34,7 +34,7 @@ mod_02_demographics_ui <- function(id) {
       tags$li(
         style = "font-size: 16pt;",
         "Not all care home patients receive a prescription in every month ",
-        "they are in a care home - we estimate around X in 10 do."
+        "they are in a care home - we estimate around 7 in 10 do."
       )
     ),
     p(
