@@ -10,7 +10,7 @@
 mod_caveat_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4("Care home caveats"),
+    h4("Caveats"),
     br(),
     p(
       "The caveats are grouped into three categories, ",
