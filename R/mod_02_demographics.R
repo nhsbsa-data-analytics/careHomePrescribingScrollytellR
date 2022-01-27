@@ -138,19 +138,18 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "We estimate similar proportions of care home patients aged 65+ living ",
-      "in ", 
+      "in ",
       tippy(
         text = "residential homes",
         tooltip = tooltip_text$residential_home
-      ), 
+      ),
       " (41%) and ",
       tippy(
         text = "nursing homes",
         tooltip = tooltip_text$nursing_home
-      ), 
-      " (45%) on average each month.", "A small ",
-      "percentage (3%) appear in both settings and there are 11% who we were ",
-      "unable to link to the ",
+      ),
+      " (45%) on average each month.", "A small percentage (3%) appear in ",
+      "both settings and there are 11% who we were unable to link to the ",
       enurl(
         text = "CQC dataset",
         url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"
@@ -470,8 +469,7 @@ mod_02_demographics_server <- function(id, export_data) {
           ) %>%
           theme_nhsbsa(palette = "gender") %>%
           highcharter::hc_caption(
-            text = "This excludes << 1% of patients with an unknown gender.",
-            align = "right"
+            text = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted."
           ) %>%
           highcharter::hc_annotations(
             list(
