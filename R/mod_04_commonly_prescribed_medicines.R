@@ -17,10 +17,14 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
       "to older non-care home patients differs significantly."
     ),
     p(
-      "Each prescribed medicine is attributed a BNF code that defines a ",
-      "heirachy. We can look at prescribing by either the total drug cost, ",
-      "total number of items, or the total number of patients prescribed a ",
-      "medicine."
+      "Each prescribed medicine is attributed a ",
+      tippy(
+        text = "BNF code",
+        tooltip = tooltip_text$bnf_code
+      ),
+      " that defines a heirachy. We can look at prescribing by either the ",
+      "total drug cost, total number of items, or the total number of ",
+      "patients prescribed a medicine."
     ),
     p("In England in 2020/21:"),
     tags$ul(
