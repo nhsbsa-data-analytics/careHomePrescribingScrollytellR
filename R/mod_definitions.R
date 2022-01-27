@@ -15,18 +15,18 @@ mod_definitions_ui <- function(id) {
     br(),
     h6("Older patients"),
     p(
-      "patients aged 65+ at the time of prescribing."
+      "Patients aged 65+ at the time of prescribing."
     ),
     br(),
     h6("Older care home patients"),
     p(
-      "patients aged 65+ who received their prescription whilst ",
+      "Patients aged 65+ who received their prescription whilst ",
       "living in a care home at the time of prescribing."
     ),
     br(),
     h6("Older non-care home patients"),
     p(
-      "patients aged 65+ who received their prescription ",
+      "Patients aged 65+ who received their prescription ",
       "whilst not living in a care home at the time of prescribing."
     ),
     br(),
