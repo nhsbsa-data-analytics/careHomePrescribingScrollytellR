@@ -290,11 +290,27 @@ mod_02_demographics_server <- function(id, export_data) {
     max_value <- reactive({
       req(input$geography)
       req(input$sub_geography)
-
-      max(
-        patients_by_geography_and_gender_and_age_band_sub_geography_df()$SDC_TOTAL_PATIENTS,
-        na.rm = TRUE
-      )
+      
+      patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
+        dplyr::summarise(max(SDC_TOTAL_PATIENTS, na.rm = TRUE)) %>%
+        dplyr::pull()
+    })
+    
+    # Pull the total
+    total <- reactive({
+      req(input$geography)
+      req(input$sub_geography)
+      
+      patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
+        dplyr::summarise(TOTAL_PATIENTS = sum(TOTAL_PATIENTS, na.rm = TRUE)) %>%
+        dplyr::mutate(
+          SDC_TOTAL_PATIENTS = ifelse(
+            test = TOTAL_PATIENTS %in% c(1, 2, 3, 4),
+            yes = "c",
+            no = format(round(TOTAL_PATIENTS, -1), big.mark = ",")
+          )
+        ) %>%
+        dplyr::pull(SDC_TOTAL_PATIENTS)
     })
 
     # Pull percentage of female patients
@@ -450,10 +466,10 @@ mod_02_demographics_server <- function(id, export_data) {
         # Process annotation
         text <- paste(
           ifelse(input$sub_geography == "Overall", "", "In"),
-          input$sub_geography, "we estimate",
-          tags$b(paste0(percentage_female_patients(), "%")), "of care home",
-          "patients are females and",
-          tags$b(paste0(percentage_elderly_female_patients(), "%")), "are",
+          input$sub_geography, "there were an estimated", tags$b(total()), 
+          "care home patients in 2020/21, of which",
+          tags$b(paste0(percentage_female_patients(), "%")), "were females and",
+          tags$b(paste0(percentage_elderly_female_patients(), "%")), "were",
           "females aged 85 or over."
         )
 
