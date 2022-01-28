@@ -26,36 +26,6 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
       "total drug cost, total number of items, or the total number of ",
       "patients prescribed a medicine."
     ),
-    p("In England in 2020/21:"),
-    tags$ul(
-      tags$li(
-        style = "font-size: 16pt;",
-        tags$b("BNF Chapter:"), "91% of older care home patients recieved at ",
-        "least one prescription item from the Central Nervous System compared ",
-        "to just under half (49%) of older non-care home patients."
-      ),
-      tags$li(
-        style = "font-size: 16pt;",
-        tags$b("BNF Section:"), "Oral nutrition products account for the ",
-        "greatest percentage (14%) of the drug cost in older care home ",
-        "patients, whereas for older non-care home patients it makes up just ",
-        "2% of the drug cost."
-      ),
-      tags$li(
-        style = "font-size: 16pt;",
-        tags$b("BNF Paragraph:"), "Enteral nutrition makes up 13% of the drug ",
-        "cost in older care home patients but only accounts for 2% of the ",
-        "drug cost for older non-care home patients."
-      ),
-      tags$li(
-        style = "font-size: 16pt;",
-        tags$b("BNF Chemical Substance:"), "Paracetamol makes up 5% of ",
-        "prescription items for older care home patients, whereas it makes up ",
-        "just 2% of prescription items for older non-care home patients. 64% ",
-        "of older care home patients recieved at least one prescription ",
-        "prescription item for Paracetamol."
-      )
-    ),
     p(
       "The tool below allows you to compare prescribing to older care home ",
       "patients against older non-care home patients at four BNF levels and ",
