@@ -71,6 +71,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
           width = "100%"
         )
       ),
+      shiny::uiOutput(outputId = ns("text")),
       highcharter::highchartOutput(
         outputId = ns("metrics_by_bnf_and_ch_flag_chart"),
         height = "400px"
@@ -137,6 +138,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
     output$metrics_by_bnf_and_ch_flag_chart <- highcharter::renderHighchart({
       req(input$bnf)
       req(input$metric)
+      req(input$sort)
 
       highcharter::highchart() %>%
         highcharter::hc_add_series(
@@ -209,6 +211,45 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           )
         )
     })
+    
+    # Create dynamic text paragraph - top 2 care home and top 1 non-care home
+    output$text <- shiny::renderUI({
+      req(input$bnf)
+      req(input$metric)
+      
+      top_care_home_df <- metrics_by_bnf_and_ch_flag_df() %>%
+        dplyr::arrange(desc(SDC_PCT_CH)) %>%
+        head(2)
+      
+      top_non_care_home_df <- metrics_by_bnf_and_ch_flag_df() %>%
+        dplyr::arrange(desc(SDC_PCT_NON_CH)) %>%
+        head(1)
+        
+      col_12(
+        class = "highcharts-caption",
+        style = "margin-left: 1%; margin-right: 1%; text-align: left;",
+        tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), "and",
+        tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), "are the most ",
+        "commonly prescribed BNF", paste0(input$bnf, "s"), " by percentage of ",
+        switch(input$metric,
+               "COST" = "drug cost ",
+               "ITEMS" = "prescription items",
+               "PATIENTS" = "patients prescribed"
+        ),
+        " in 2020/21, accounting for ",
+        paste0(top_care_home_df[1, "SDC_PCT_CH"], "%"), " and ",
+        paste0(top_care_home_df[1, "SDC_PCT_NON_CH"], "%"), " of all ",
+        switch(input$metric,
+               "COST" = "drug cost to",
+               "ITEMS" = "prescription items to"
+        ),
+        " older care home patients. For non-care home patients it is",
+        tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME),
+        paste0("(", top_non_care_home_df$SDC_PCT_NON_CH, "%).")
+      )
+      
+    })
+    
   })
 }
 
