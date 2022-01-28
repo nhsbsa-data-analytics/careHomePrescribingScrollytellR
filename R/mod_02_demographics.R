@@ -466,10 +466,10 @@ mod_02_demographics_server <- function(id, export_data) {
         # Process annotation
         text <- paste(
           ifelse(input$sub_geography == "Overall", "", "In"),
-          input$sub_geography, "there are an estimated", tags$b(total()), 
-          "care home patients, of which",
-          tags$b(paste0(percentage_female_patients(), "%")), "are females and",
-          tags$b(paste0(percentage_elderly_female_patients(), "%")), "are",
+          input$sub_geography, "there were an estimated", tags$b(total()), 
+          "care home patients in 2020/21, of which",
+          tags$b(paste0(percentage_female_patients(), "%")), "were females and",
+          tags$b(paste0(percentage_elderly_female_patients(), "%")), "were",
           "females aged 85 or over."
         )
 
