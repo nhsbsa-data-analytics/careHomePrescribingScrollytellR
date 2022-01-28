@@ -84,8 +84,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
           h6("Non-care home")
         )
       ),
-      uiOutput(ns("summary_table"))
+      uiOutput(ns("care_home_vs_non_care_home_table"))
     ),
+    
+    
+    
+    
     br(),
     br(),
     h6("Age and gender"),
@@ -267,7 +271,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     # Overall summary boxes
 
     # Not interested in additional metrics
-    summary_df <-
+    care_home_vs_non_care_home_df <-
       careHomePrescribingScrollytellR::metrics_by_breakdown_and_ch_flag_df %>%
       dplyr::filter(
         BREAKDOWN != "Additional - Gender and Age Band",
@@ -275,7 +279,7 @@ mod_03_care_home_prescribing_server <- function(id) {
       )
 
     # Format cost and percentage cols
-    summary_df <- summary_df %>%
+    care_home_vs_non_care_home_df <- care_home_vs_non_care_home_df %>%
       dplyr::mutate(
         SDC_COST_PER_PATIENT_MONTH = paste0("£", SDC_COST_PER_PATIENT_MONTH),
         SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
@@ -285,22 +289,23 @@ mod_03_care_home_prescribing_server <- function(id) {
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
     # Filter the data based on the breakdown
-    summary_breakdown_df <- reactive({
+    care_home_vs_non_care_home_breakdown_df <- reactive({
       req(input$breakdown)
 
-      summary_df %>%
+      care_home_vs_non_care_home_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown)
     })
 
     # Update the list of choices for sub breakdown from the rows in breakdown
     # dataframe
     observeEvent(
-      eventExpr = summary_breakdown_df(),
+      eventExpr = care_home_vs_non_care_home_breakdown_df(),
       handlerExpr = {
         freezeReactiveValue(input, "sub_breakdown")
         updateSelectInput(
           inputId = "sub_breakdown",
-          choices = summary_breakdown_df()$SUB_BREAKDOWN_NAME %>%
+          choices = 
+            care_home_vs_non_care_home_breakdown_df()$SUB_BREAKDOWN_NAME %>%
             na.omit() %>%
             unique()
         )
@@ -308,16 +313,16 @@ mod_03_care_home_prescribing_server <- function(id) {
     )
 
     # Filter the data based on the sub breakdown
-    summary_table_df <- reactive({
+    care_home_vs_non_care_home_sub_breakdown_df <- reactive({
       req(input$breakdown)
       req(input$sub_breakdown)
 
-      summary_breakdown_df() %>%
+      care_home_vs_non_care_home_breakdown_df() %>%
         dplyr::filter(SUB_BREAKDOWN_NAME == input$sub_breakdown)
     })
 
     # Create the table
-    output$summary_table <- renderUI({
+    output$care_home_vs_non_care_home_table <- renderUI({
       req(input$breakdown)
       req(input$sub_breakdown)
 
@@ -337,7 +342,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             mod_value_box_ui(
               id = "3",
               care_home = TRUE,
-              value = summary_table_df() %>%
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_COST_PER_PATIENT_MONTH),
               icon = "coins"
@@ -347,7 +352,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             mod_value_box_ui(
               id = "4",
               care_home = FALSE,
-              value = summary_table_df() %>%
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
                 dplyr::pull(SDC_COST_PER_PATIENT_MONTH),
               icon = "coins"
@@ -368,7 +373,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             mod_value_box_ui(
               id = "1",
               care_home = TRUE,
-              value = summary_table_df() %>%
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_ITEMS_PER_PATIENT_MONTH),
               icon = "prescription"
@@ -378,7 +383,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             mod_value_box_ui(
               id = "2",
               care_home = FALSE,
-              value = summary_table_df() %>%
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
                 dplyr::pull(SDC_ITEMS_PER_PATIENT_MONTH),
               icon = "prescription"
@@ -399,7 +404,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             mod_value_box_ui(
               id = "5",
               care_home = TRUE,
-              value = summary_table_df() %>%
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
               icon = "pills"
@@ -409,7 +414,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             mod_value_box_ui(
               id = "6",
               care_home = FALSE,
-              value = summary_table_df() %>%
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
                 dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
               icon = "pills"
@@ -430,7 +435,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             mod_value_box_ui(
               id = "7",
               care_home = TRUE,
-              value = summary_table_df() %>%
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
               icon = "pills"
@@ -440,7 +445,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             mod_value_box_ui(
               id = "8",
               care_home = FALSE,
-              value = summary_table_df() %>%
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
                 dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
               icon = "pills"
