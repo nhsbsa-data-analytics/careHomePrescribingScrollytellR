@@ -84,7 +84,54 @@ mod_03_care_home_prescribing_ui <- function(id) {
           h6("Non-care home")
         )
       ),
-      uiOutput(ns("summary_table"))
+      uiOutput(ns("care_home_vs_non_care_home_table"))
+    ),
+    br(),
+    br(),
+    h6(
+      "Medicines used to treat nursing home patients cost more than medicines ",
+      "used to treat residential home patients"
+    ),
+    p(
+      "Dispite being prescribed a", 
+      tags$b("similar number of prescription items"), "(both estimated to be ",
+      "around 10 per patient month)", 
+      "medicines for", tags$b("nursing home patients cost 1.5 times more"),
+      "per patient month than medicines for residential home patients."
+    ),
+    p(
+      tags$b("Both"), "nursing and residential home patients are prescribed a",
+      tags$b("similar number of unique medicines"),
+      "per patient month and", tags$b("both"), "have approximately",
+      tags$b("3 in 10 patients on ten or more unique medicines"), "per patient",
+      "month.",
+    ),
+    p(
+    "That said, nursing home patients have slightly higher metrics than ",
+    "residential home patients and this is what we would expect; a qualified ",
+    "nurse is provided at nursing homes to cater for patients with more ",
+    "complex needs."
+    ),
+    fluidRow(
+      style = "background-color: #FFFFFF;",
+      h6(
+        style = "text-align: center;",
+        "Estimated average prescribing metrics per patient month for older ",
+        "nursing home and residential home patients in England (2020/21)"
+      ),
+      col_6(
+        style = "text-indent: 15px;",
+        h6("Metric")
+      ),
+      col_3(
+        style = "text-align: center;",
+        h6("Nursing home")
+      ),
+      col_3(
+        style = "text-align: center;",
+        h6("Residential home")
+      ),
+      uiOutput(ns("nursing_vs_residential_table"))
     ),
     br(),
     br(),
@@ -264,10 +311,10 @@ mod_03_care_home_prescribing_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Overall summary boxes
+    # Care home vs non-care home boxes
 
     # Not interested in additional metrics
-    summary_df <-
+    care_home_vs_non_care_home_df <-
       careHomePrescribingScrollytellR::metrics_by_breakdown_and_ch_flag_df %>%
       dplyr::filter(
         BREAKDOWN != "Additional - Gender and Age Band",
@@ -275,7 +322,7 @@ mod_03_care_home_prescribing_server <- function(id) {
       )
 
     # Format cost and percentage cols
-    summary_df <- summary_df %>%
+    care_home_vs_non_care_home_df <- care_home_vs_non_care_home_df %>%
       dplyr::mutate(
         SDC_COST_PER_PATIENT_MONTH = paste0("£", SDC_COST_PER_PATIENT_MONTH),
         SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
@@ -285,22 +332,23 @@ mod_03_care_home_prescribing_server <- function(id) {
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
     # Filter the data based on the breakdown
-    summary_breakdown_df <- reactive({
+    care_home_vs_non_care_home_breakdown_df <- reactive({
       req(input$breakdown)
 
-      summary_df %>%
+      care_home_vs_non_care_home_df %>%
         dplyr::filter(BREAKDOWN == input$breakdown)
     })
 
     # Update the list of choices for sub breakdown from the rows in breakdown
     # dataframe
     observeEvent(
-      eventExpr = summary_breakdown_df(),
+      eventExpr = care_home_vs_non_care_home_breakdown_df(),
       handlerExpr = {
         freezeReactiveValue(input, "sub_breakdown")
         updateSelectInput(
           inputId = "sub_breakdown",
-          choices = summary_breakdown_df()$SUB_BREAKDOWN_NAME %>%
+          choices = 
+            care_home_vs_non_care_home_breakdown_df()$SUB_BREAKDOWN_NAME %>%
             na.omit() %>%
             unique()
         )
@@ -308,16 +356,16 @@ mod_03_care_home_prescribing_server <- function(id) {
     )
 
     # Filter the data based on the sub breakdown
-    summary_table_df <- reactive({
+    care_home_vs_non_care_home_sub_breakdown_df <- reactive({
       req(input$breakdown)
       req(input$sub_breakdown)
 
-      summary_breakdown_df() %>%
+      care_home_vs_non_care_home_breakdown_df() %>%
         dplyr::filter(SUB_BREAKDOWN_NAME == input$sub_breakdown)
     })
 
     # Create the table
-    output$summary_table <- renderUI({
+    output$care_home_vs_non_care_home_table <- renderUI({
       req(input$breakdown)
       req(input$sub_breakdown)
 
@@ -336,8 +384,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           col_3(
             mod_value_box_ui(
               id = "3",
-              care_home = TRUE,
-              value = summary_table_df() %>%
+              group = "care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_COST_PER_PATIENT_MONTH),
               icon = "coins"
@@ -346,8 +394,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           col_3(
             mod_value_box_ui(
               id = "4",
-              care_home = FALSE,
-              value = summary_table_df() %>%
+              group = "non_care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
                 dplyr::pull(SDC_COST_PER_PATIENT_MONTH),
               icon = "coins"
@@ -367,8 +415,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           col_3(
             mod_value_box_ui(
               id = "1",
-              care_home = TRUE,
-              value = summary_table_df() %>%
+              group = "care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_ITEMS_PER_PATIENT_MONTH),
               icon = "prescription"
@@ -377,8 +425,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           col_3(
             mod_value_box_ui(
               id = "2",
-              care_home = FALSE,
-              value = summary_table_df() %>%
+              group = "non_care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
                 dplyr::pull(SDC_ITEMS_PER_PATIENT_MONTH),
               icon = "prescription"
@@ -398,8 +446,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           col_3(
             mod_value_box_ui(
               id = "5",
-              care_home = TRUE,
-              value = summary_table_df() %>%
+              group = "care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
               icon = "pills"
@@ -408,8 +456,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           col_3(
             mod_value_box_ui(
               id = "6",
-              care_home = FALSE,
-              value = summary_table_df() %>%
+              group = "non_care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
                 dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
               icon = "pills"
@@ -429,8 +477,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           col_3(
             mod_value_box_ui(
               id = "7",
-              care_home = TRUE,
-              value = summary_table_df() %>%
+              group = "care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
               icon = "pills"
@@ -439,8 +487,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           col_3(
             mod_value_box_ui(
               id = "8",
-              care_home = FALSE,
-              value = summary_table_df() %>%
+              group = "non_care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
                 dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
               icon = "pills"
@@ -459,6 +507,194 @@ mod_03_care_home_prescribing_server <- function(id) {
             "metrics. It should be noted that the distributions are ",
             "positively skewed due to extreme high values for some patients, ",
             "and median values are lower than the mean.",
+            br()
+          )
+        )
+      )
+    })
+    
+    # Nursing home vs residential home boxes
+    
+    # Filter to metric (care homes only)
+    nursing_vs_residential_df <-
+      careHomePrescribingScrollytellR::metrics_by_breakdown_and_ch_flag_df %>%
+      dplyr::filter(
+        BREAKDOWN == "Additional - Care home type",
+        CH_FLAG == "Care home"
+      )
+    
+    # Format cost and percentage cols
+    nursing_vs_residential_df <- nursing_vs_residential_df %>%
+      dplyr::mutate(
+        SDC_COST_PER_PATIENT_MONTH = paste0("£", SDC_COST_PER_PATIENT_MONTH),
+        SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
+          paste0(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH, "%")
+      )
+    
+    # Create the table
+    output$nursing_vs_residential_table <- renderUI({
+      
+      # Create table
+      tagList(
+        fluidRow(
+          col_6(
+            style = "text-indent: 15px;",
+            p(
+              tippy(
+                text = "Drug cost",
+                tooltip = tooltip_text$cost
+              )
+            )
+          ),
+          col_3(
+            mod_value_box_ui(
+              id = "3",
+              group = "nursing_home",
+              value = nursing_vs_residential_df %>%
+                dplyr::filter(
+                  NURSING_HOME_FLAG == 1,
+                  RESIDENTIAL_HOME_FLAG == 0
+                ) %>%
+                dplyr::pull(SDC_COST_PER_PATIENT_MONTH),
+              icon = "coins"
+            )
+          ),
+          col_3(
+            mod_value_box_ui(
+              id = "4",
+              group = "residential_home",
+              value = nursing_vs_residential_df %>%
+                dplyr::filter(
+                  NURSING_HOME_FLAG == 0,
+                  RESIDENTIAL_HOME_FLAG == 1
+                ) %>%
+                dplyr::pull(SDC_COST_PER_PATIENT_MONTH),
+              icon = "coins"
+            )
+          )
+        ),
+        fluidRow(
+          col_6(
+            style = "text-indent: 15px;",
+            p(
+              tippy(
+                text = "Number of prescription items",
+                tooltip = tooltip_text$items
+              )
+            )
+          ),
+          col_3(
+            mod_value_box_ui(
+              id = "1",
+              group = "nursing_home",
+              value = nursing_vs_residential_df %>%
+                dplyr::filter(
+                  NURSING_HOME_FLAG == 1,
+                  RESIDENTIAL_HOME_FLAG == 0
+                ) %>%
+                dplyr::pull(SDC_ITEMS_PER_PATIENT_MONTH),
+              icon = "prescription"
+            ),
+          ),
+          col_3(
+            mod_value_box_ui(
+              id = "2",
+              group = "residential_home",
+              value = nursing_vs_residential_df %>%
+                dplyr::filter(
+                  NURSING_HOME_FLAG == 0,
+                  RESIDENTIAL_HOME_FLAG == 1
+                ) %>%
+                dplyr::pull(SDC_ITEMS_PER_PATIENT_MONTH),
+              icon = "prescription"
+            )
+          )
+        ),
+        fluidRow(
+          col_6(
+            style = "text-indent: 15px;",
+            p(
+              tippy(
+                text = "Number of unique medicines",
+                tooltip = tooltip_text$unique_medicines
+              )
+            )
+          ),
+          col_3(
+            mod_value_box_ui(
+              id = "5",
+              group = "nursing_home",
+              value = nursing_vs_residential_df %>%
+                dplyr::filter(
+                  NURSING_HOME_FLAG == 1,
+                  RESIDENTIAL_HOME_FLAG == 0
+                ) %>%
+                dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
+              icon = "pills"
+            )
+          ),
+          col_3(
+            mod_value_box_ui(
+              id = "6",
+              group = "residential_home",
+              value = nursing_vs_residential_df %>%
+                dplyr::filter(
+                  NURSING_HOME_FLAG == 0,
+                  RESIDENTIAL_HOME_FLAG == 1
+                ) %>%
+                dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
+              icon = "pills"
+            )
+          )
+        ),
+        fluidRow(
+          col_6(
+            style = "text-indent: 15px;",
+            p(
+              tippy(
+                text = "Patients on ten or more unique medicines",
+                tooltip = tooltip_text$ten_or_more_unique_medicines
+              )
+            )
+          ),
+          col_3(
+            mod_value_box_ui(
+              id = "7",
+              group = "nursing_home",
+              value = nursing_vs_residential_df %>%
+                dplyr::filter(
+                  NURSING_HOME_FLAG == 1,
+                  RESIDENTIAL_HOME_FLAG == 0
+                ) %>%
+                dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
+              icon = "pills"
+            )
+          ),
+          col_3(
+            mod_value_box_ui(
+              id = "8",
+              group = "residential_home",
+              value = nursing_vs_residential_df %>%
+                dplyr::filter(
+                  NURSING_HOME_FLAG == 0,
+                  RESIDENTIAL_HOME_FLAG == 1
+                ) %>%
+                dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
+              icon = "pills"
+            )
+          )
+        ),
+        fluidRow(
+          col_12(
+            class = "highcharts-caption",
+            style = "margin-left: 1%; margin-right: 1%;",
+            "This excludes 3% of care home patients in both a nursing and ",
+            "residential home and 11% of care home patients who we were ",
+            "unable to link to the CQC dataset. The mean average has been ",
+            "used to calculate per patient month metrics. It should be noted ",
+            "that the distributions are positively skewed due to extreme high ",
+            "values for some patients, and median values are lower than the ",
+            "mean.",
             br()
           )
         )
