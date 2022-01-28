@@ -11,14 +11,15 @@ mod_value_box_ui <- function(id,
                              value,
                              subtitle = "",
                              icon_name,
-                             care_home) {
+                             group) {
   ns <- NS(id)
-
-  if (care_home) {
-    color <- "#005EB8"
-  } else {
-    color <- "#768692"
-  }
+  
+  color <- switch(group,
+    "care_home" = "#005EB8",
+    "non_care_home" = "#768692",
+    "nursing_home" = "#004281",
+    "residential_home" = "#4D8ECD"
+  )
 
   tagList(
     div(
