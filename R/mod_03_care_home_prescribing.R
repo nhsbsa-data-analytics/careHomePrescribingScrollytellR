@@ -88,6 +88,30 @@ mod_03_care_home_prescribing_ui <- function(id) {
     ),
     br(),
     br(),
+    h6(
+      "Medicines used to treat nursing home patients cost more than medicines ",
+      "used to treat residential home patients"
+    ),
+    p(
+      "Dispite being prescribed a", 
+      tags$b("similar number of prescription items"), "(both estimated to be ",
+      "around 10 per patient month)", 
+      "medicines for", tags$b("nursing home patients cost 1.5 times more"),
+      "per patient month than medicines for residential home patients."
+    ),
+    p(
+      tags$b("Both"), "nursing and residential home patients are prescribed a",
+      tags$b("similar number of unique medicines"),
+      "per patient month and", tags$b("both"), "have approximately",
+      tags$b("3 in 10 patients on ten or more unique medicines"), "per patient",
+      "month.",
+    ),
+    p(
+    "That said, nursing home patients have slightly higher metrics than ",
+    "residential home patients and this is what we would expect; a qualified ",
+    "nurse is provided at nursing homes to cater for patients with more ",
+    "complex needs."
+    ),
     fluidRow(
       style = "background-color: #FFFFFF;",
       h6(
