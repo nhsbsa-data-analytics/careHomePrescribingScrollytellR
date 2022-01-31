@@ -36,10 +36,11 @@ mod_01_intro_ui <- function(id) {
     br(),
     br(),
     p(
-      "We estimate that there was a monthly average of", tags$b("286 thousand"),
-      " care home patients receiving prescriptions each month in 2020/21. ",
-      "They received an estimated", tags$b("35 million"), "prescription items ",
-      "at a cost of", tags$b("£324 million"), "during 2020/21."
+      "We estimate that there was a monthly average of", 
+      tags$b("286 thousand care home patients"), "receiving prescriptions ",
+      "each month in 2020/21. They received an estimated", tags$b("35 million"), 
+      "prescription items", tags$b("at a cost of £324 million"), "during ",
+      "2020/21."
     ),
     p(
       "This accounts for around", tags$b("5%"), "of ",
@@ -56,8 +57,11 @@ mod_01_intro_ui <- function(id) {
       "during 2020/21."
     ),
     p(
-      "As might be expected, care home patients receive more prescribing than ",
-      "non-care home patients receiving prescriptions."
+      "As might be expected,", 
+      tags$b("care home patients receive more prescribing"), "than non-care ",
+      "home patients receiving prescriptions. They also receive a different ",
+      "range of medicines, and are somewhat more likely to receive ",
+      "prescribing for pain relief."
     ),
     p(
       "Average monthly prescribing costs and volumes per care home patient ",

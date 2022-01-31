@@ -89,15 +89,15 @@ mod_03_care_home_prescribing_ui <- function(id) {
     br(),
     br(),
     h6(
-      "Medicines used to treat nursing home patients cost more than medicines ",
-      "used to treat residential home patients"
+      "The estimated average monthly drug cost for nursing home patients is ",
+      "around 1.5 times more than for residential home patients"
     ),
     p(
-      "Dispite being prescribed a", 
+      "Despite being prescribed a", 
       tags$b("similar number of prescription items"), "(both estimated to be ",
       "around 10 per patient month)", 
-      "medicines for", tags$b("nursing home patients cost 1.5 times more"),
-      "per patient month than medicines for residential home patients."
+      "the drug cost for", tags$b("nursing home patients is 1.5 times more"),
+      "per patient month than for residential home patients."
     ),
     p(
       tags$b("Both"), "nursing and residential home patients are prescribed a",
@@ -107,10 +107,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "month.",
     ),
     p(
-    "That said, nursing home patients have slightly higher metrics than ",
-    "residential home patients and this is what we would expect; a qualified ",
-    "nurse is provided at nursing homes to cater for patients with more ",
-    "complex needs."
+    "Nursing home patients would be expected to have slightly higher ",
+    "prescribing metrics than residential home patients; a qualified nurse is ",
+    "provided at nursing homes to cater for patients with more complex needs."
     ),
     fluidRow(
       style = "background-color: #FFFFFF;",
@@ -151,10 +150,16 @@ mod_03_care_home_prescribing_ui <- function(id) {
     p(
       "Among care home patients, average drug costs per patient month ",
       "decrease as age increases, whereas the reverse is true for non-care ",
-      "home patients. They are highest for the males and female care home ",
-      "patients aged 65 to 69 years, and over 1.5 times higher than for 90+ ",
-      "year care home patients. Drug costs are also higher for male care home ",
-      "patients than females in all age groups."
+      "home patients.", 
+      tags$b(
+        "Average monthly drug costs are highest for care home patients aged ",
+        "65 to 69 years,"
+      ),
+      "and over 1.5 times higher than for 90+ year care home patients.",
+      tags$b(
+        "Drug costs are also higher for male care home patients than females"
+      ),
+      "in all age groups."
     ),
     p(
       "The average number of prescription items, unique medicines and ",
