@@ -20,10 +20,10 @@ mod_02_demographics_ui <- function(id) {
     ),
     h6("The older care home population fluctuates"),
     p(
-      "We estimate 472 thousand patients aged 65+ years received at least one ",
-      "prescription item in a care home during 2020/21 and an average of 286 ",
-      "thousand in any given month. This difference in numbers is explained ",
-      "by two key factors:"
+      "We estimate", tags$b("472 thousand patients"), "aged 65+ years ",
+      "received at least one prescription item in a care home during 2020/21 ",
+      "and an average of", tags$b("286 thousand"), "in any given month. This ",
+      "difference in numbers is explained by two key factors:"
     ),
     tags$ul(
       tags$li(
@@ -43,7 +43,7 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "The chart shows the prescribing status of each of these 472 thousand ",
-      "patients by month during 2020/21. Around 3 in 20 (15%) received in ",
+      "patients by month during 2020/21. Around 3 in 10 (31%) received ",
       "prescriptions in a care home in all 12 months."
     ),
     fluidRow(
@@ -68,10 +68,10 @@ mod_02_demographics_ui <- function(id) {
       "10 are aged 85+ years"
     ),
     p(
-      "Our estimated monthly average of ",
-      tags$b("286 thousand older care home patients"), " receiving ",
-      "prescriptions, represents around 5% of patients age 65+ years ",
-      "receiving prescription items each month."
+      "Our estimated monthly average of",
+      tags$b("286 thousand older care home patients"), "receiving ",
+      "prescriptions, represents around", tags$b("5% of patients age 65+"), 
+      "years receiving prescription items each month."
     ),
     p(
       "The age and gender profile is broadly comparable to",
@@ -466,9 +466,9 @@ mod_02_demographics_server <- function(id, export_data) {
         # Process annotation
         text <- paste(
           ifelse(input$sub_geography == "Overall", "", "In"),
-          input$sub_geography, "there were an estimated", tags$b(total()), 
+          input$sub_geography, "there are an estimated", tags$b(total()), 
           "care home patients in 2020/21, of which",
-          tags$b(paste0(percentage_female_patients(), "%")), "were females and",
+          tags$b(paste0(percentage_female_patients(), "%")), "are females and",
           tags$b(paste0(percentage_elderly_female_patients(), "%")), "were",
           "females aged 85 or over."
         )

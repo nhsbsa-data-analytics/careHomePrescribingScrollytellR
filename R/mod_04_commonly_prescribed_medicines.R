@@ -12,26 +12,28 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
   tagList(
     h4("Commonly prescribed medicines"),
     br(),
-    p(
-      "The range of medicines prescribed to older care home patients compared ",
-      "to older non-care home patients differs significantly."
+    h6(
+      "The range of medicines prescribed to older care home patients differs ",
+      "significantly to older non-care home patients."
     ),
     p(
-      "Each prescribed medicine is attributed a ",
+      "Care home patients are more likely to receive", 
+      tags$b("drugs for pain relief"), "than non-care home patients, in terms ",
+      "of number of prescription items and patients receiving them. Whilst",
+      tags$b("nutrition products"), "account for a greater percentage of drug ",
+      "cost."
+    ),
+    p(
+      "The chart below allows you to view and compare the 50 most common ",
+      "medicines prescribed to older care home patients and older non-care ",
+      "home patients across three prescribing metrics."
+    ),
+    p(
+      "Medicines have been identified using a",
       tippy(
-        text = "BNF code",
+        text = "BNF code and are grouped at 4 levels.",
         tooltip = tooltip_text$bnf_code
-      ),
-      " that defines a heirachy. We can look at prescribing by either the ",
-      "total drug cost, total number of items, or the total number of ",
-      "patients prescribed a medicine."
-    ),
-    p(
-      "The tool below allows you to compare prescribing to older care home ",
-      "patients against older non-care home patients at four BNF levels and ",
-      "across three metrics in more detail. You can use the scrollbar to view ",
-      "the most common 50 medicines sorted by either care home or non-care ",
-      "home."
+      )
     ),
     fluidRow(
       style = "background-color: #FFFFFF;",
