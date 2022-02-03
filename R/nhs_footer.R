@@ -37,7 +37,7 @@ nhs_footer <- function() {
               a(
                 class = "nhsuk-footer__list-item-link",
                 style = "text-decoration: underline;",
-                href = "https://github.com/nhsbsa-data-analytics/lowIncomeSchemeScrollytellR",
+                href = "https://github.com/nhsbsa-data-analytics/careHomePrescribingScrollytellR",
                 target = "_blank",
                 "GitHub"
               )
