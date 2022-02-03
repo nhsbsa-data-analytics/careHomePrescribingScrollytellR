@@ -34,11 +34,10 @@ mod_01_intro_ui <- function(id) {
       "additional analyses."
     ),
     br(),
-    br(),
     p(
-      "We estimate that there was a monthly average of", 
+      "We estimate that there was a monthly average of",
       tags$b("286 thousand care home patients"), "receiving prescriptions ",
-      "each month in 2020/21. They received an estimated", tags$b("35 million"), 
+      "each month in 2020/21. They received an estimated", tags$b("35 million"),
       "prescription items", tags$b("at a cost of £324 million"), "during ",
       "2020/21."
     ),
@@ -57,7 +56,7 @@ mod_01_intro_ui <- function(id) {
       "during 2020/21."
     ),
     p(
-      "As might be expected,", 
+      "As might be expected,",
       tags$b("care home patients receive more prescribing"), "than non-care ",
       "home patients receiving prescriptions. They also receive a different ",
       "range of medicines, and are somewhat more likely to receive ",
@@ -67,7 +66,6 @@ mod_01_intro_ui <- function(id) {
       "Average monthly prescribing costs and volumes per care home patient ",
       "vary by age, gender, care home type and geography."
     ),
-    br(),
     br(),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",

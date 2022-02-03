@@ -32,6 +32,10 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
     maxColor = nhsbsaR::palette_nhsbsa(palette = "gradient")[2]
   )
 
+  # Style based on the NHS frontend toolkit
+  theme_nhsbsa_hc$xAxis$className <- "nhsuk-body-s"
+  theme_nhsbsa_hc$yAxis$className <- "nhsuk-body-s"
+
   # Add the theme to the chart and then remove the credits afterwards (currently
   # does not work to do this within the theme)
   hc %>%

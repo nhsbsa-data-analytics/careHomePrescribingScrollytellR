@@ -38,7 +38,6 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "twice the drug cost. These prescribing metrics vary by age, gender and ",
       "geography. The chart below allows you to explore them."
     ),
-    br(),
     fluidRow(
       style = "background-color: #FFFFFF;",
       h6(
@@ -48,7 +47,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "band or gender (2020/21)"
       ),
       col_6(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("breakdown"),
           label = "Breakdown",
           choices = names(careHomePrescribingScrollytellR::breakdowns) %>%
@@ -58,18 +57,17 @@ mod_03_care_home_prescribing_ui <- function(id) {
                 pattern = "Additional - "
               )
             ),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       col_6(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("sub_breakdown"),
           label = "Sub Breakdown",
           choices = NULL, # dynamically generated
-          width = "100%"
+          full_width = TRUE
         )
       ),
-      br(),
       fluidRow(
         col_6(
           style = "text-indent: 15px;",
@@ -93,9 +91,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "around 1.5 times more than for residential home patients"
     ),
     p(
-      "Despite being prescribed a", 
+      "Despite being prescribed a",
       tags$b("similar number of prescription items"), "(both estimated to be ",
-      "around 10 per patient month)", 
+      "around 10 per patient month)",
       "the drug cost for", tags$b("nursing home patients is 1.5 times more"),
       "per patient month than for residential home patients."
     ),
@@ -107,9 +105,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "month.",
     ),
     p(
-    "Nursing home patients would be expected to have slightly higher ",
-    "prescribing metrics than residential home patients; a qualified nurse is ",
-    "provided at nursing homes to cater for patients with more complex needs."
+      "Nursing home patients would be expected to have slightly higher ",
+      "prescribing metrics than residential home patients; a qualified nurse is ",
+      "provided at nursing homes to cater for patients with more complex needs."
     ),
     fluidRow(
       style = "background-color: #FFFFFF;",
@@ -150,7 +148,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
     p(
       "Among care home patients, average drug costs per patient month ",
       "decrease as age increases, whereas the reverse is true for non-care ",
-      "home patients.", 
+      "home patients.",
       tags$b(
         "Average monthly drug costs are highest for care home patients aged ",
         "65 to 69 years,"
@@ -178,9 +176,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "care home and non-care home patients in England by age band and ",
         "gender (2020/21)"
       ),
-      radioButtons(
+      nhs_selectInput(
         inputId = ns("gender_and_age_band_and_ch_flag_metric"),
-        label = NULL,
+        label = "Metric",
         choices = c(
           "Drug cost" = "SDC_COST_PER_PATIENT_MONTH",
           "Number of prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
@@ -189,15 +187,14 @@ mod_03_care_home_prescribing_ui <- function(id) {
           "Patients on ten or more unique medicines" =
             "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH"
         ),
-        inline = TRUE,
-        width = "100%"
+        full_width = FALSE
       ),
       highcharter::highchartOutput(
         outputId = ns("metrics_by_gender_and_age_band_and_ch_flag_chart"),
         height = "350px"
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
     ),
     br(),
@@ -266,16 +263,16 @@ mod_03_care_home_prescribing_ui <- function(id) {
       ),
       col_6(
         style = "margin-bottom: 0;",
-        selectInput(
+        nhs_selectInput(
           inputId = ns("geography"),
           label = "Geography",
           choices = c("Region", "STP", "Local Authority"),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       col_6(
         style = "margin-bottom: 0;",
-        selectInput(
+        nhs_selectInput(
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
@@ -286,24 +283,21 @@ mod_03_care_home_prescribing_ui <- function(id) {
             "Patients on ten or more unique medicines" =
               "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH"
           ),
-          width = "100%"
+          full_width = TRUE
         )
       ),
-      br(),
-      col_8(
+      col_7(
         align = "center",
-        style = "background-color: #FFFFFF;",
         highcharter::highchartOutput(
           outputId = ns("map_chart"),
           height = "700px"
         )
       ),
-      col_4(
-        style = "background-color: #FFFFFF;",
-        DT::dataTableOutput(outputId = ns("map_table"))
+      col_5(
+        DT::DTOutput(outputId = ns("map_table"))
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_map_chart")
     )
   )
@@ -352,10 +346,10 @@ mod_03_care_home_prescribing_server <- function(id) {
         freezeReactiveValue(input, "sub_breakdown")
         updateSelectInput(
           inputId = "sub_breakdown",
-          choices = 
+          choices =
             care_home_vs_non_care_home_breakdown_df()$SUB_BREAKDOWN_NAME %>%
-            na.omit() %>%
-            unique()
+              na.omit() %>%
+              unique()
         )
       }
     )
@@ -517,9 +511,9 @@ mod_03_care_home_prescribing_server <- function(id) {
         )
       )
     })
-    
+
     # Nursing home vs residential home boxes
-    
+
     # Filter to metric (care homes only)
     nursing_vs_residential_df <-
       careHomePrescribingScrollytellR::metrics_by_breakdown_and_ch_flag_df %>%
@@ -527,7 +521,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         BREAKDOWN == "Additional - Care home type",
         CH_FLAG == "Care home"
       )
-    
+
     # Format cost and percentage cols
     nursing_vs_residential_df <- nursing_vs_residential_df %>%
       dplyr::mutate(
@@ -535,10 +529,10 @@ mod_03_care_home_prescribing_server <- function(id) {
         SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
           paste0(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH, "%")
       )
-    
+
     # Create the table
     output$nursing_vs_residential_table <- renderUI({
-      
+
       # Create table
       tagList(
         fluidRow(
@@ -742,7 +736,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     })
 
     # Add data download
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_metrics_by_gender_and_age_band_and_ch_flag_chart",
       filename = "metrics_by_gender_and_age_band_and_ch_flag_chart.csv",
       export_data = metrics_by_gender_and_age_band_and_ch_flag_download_df()
@@ -953,7 +947,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     })
 
     # Create a table to go alongside the map
-    output$map_table <- DT::renderDataTable(
+    output$map_table <- DT::renderDT(
       expr = {
         req(input$geography)
         req(input$metric)
@@ -972,17 +966,23 @@ mod_03_care_home_prescribing_server <- function(id) {
           dplyr::arrange(desc(.data[[input$metric]])) %>%
           dplyr::select(SUB_GEOGRAPHY_NAME, .data[[input$metric]]) %>%
           dplyr::rename(
-            "{input$geography}" := SUB_GEOGRAPHY_NAME,
-            "{nice_metric_name}" := .data[[input$metric]]
-          )
-      },
-      options = list(
-        dom = "t",
-        scrollCollapse = TRUE,
-        paging = FALSE,
-        scrollY = "500px"
-      ),
-      filter = "none"
+            "<span class='nhsuk-body-s'>{input$geography}</span>" :=
+              SUB_GEOGRAPHY_NAME,
+            "<span class='nhsuk-body-s'>{nice_metric_name}</span>" :=
+              .data[[input$metric]]
+          ) %>%
+          DT::datatable(
+            escape = FALSE,
+            options = list(
+              dom = "t",
+              scrollCollapse = TRUE,
+              paging = FALSE,
+              scrollY = "500px"
+            ),
+            filter = "none"
+          ) %>%
+          DT::formatStyle(columns = 0:2, `font-size` = "14px")
+      }
     )
 
 
@@ -1003,7 +1003,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     })
 
     # Add a download button
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_map_chart",
       filename = "map_chart.csv",
       export_data = download_map_df()

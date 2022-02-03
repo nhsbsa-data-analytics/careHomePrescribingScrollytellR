@@ -11,32 +11,25 @@ mod_definitions_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Definitions"),
-    br(),
-    br(),
     h6("Older patients"),
     p("Patients aged 65+ at the time of prescribing."),
-    br(),
     h6("Older care home patients"),
     p(
       "Patients aged 65+ who received their prescription whilst living in a ",
       "care home at the time of prescribing."
     ),
-    br(),
     h6("Older non-care home patients"),
     p(
       "Patients aged 65+ who received their prescription whilst not living in ",
       "a care home at the time of prescribing."
     ),
-    br(),
     h6("Nursing home"),
     p(
       "A nursing home is a care home where a qualified nurse is provided to ",
       "ensure that the full needs of the person using the service are met."
     ),
-    br(),
     h6("Residential home"),
     p("A residential is a care home where a qualified nurse is not provided."),
-    br(),
     h6("Drug cost"),
     p(
       "Calculated as the average total price reimbursed for dispensed drugs ",
@@ -45,7 +38,6 @@ mod_definitions_ui <- function(id) {
       "additional fees or discounts that were paid to the dispensing ",
       "contractors."
     ),
-    br(),
     h6("Number of prescription items"),
     p(
       "Calculated as the average number of prescription items per patient ",
@@ -55,7 +47,6 @@ mod_definitions_ui <- function(id) {
       "100 x 50mg tablets as an item and another could receive 7 x 5 mg ",
       "tablets as an item. Both would be counted as 1 item"
     ),
-    br(),
     h6("Number of unique medicines"),
     p(
       "Calculated as the average number of unique medicines per patient ",
@@ -66,7 +57,6 @@ mod_definitions_ui <- function(id) {
       "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and ",
       "5mg tablets."
     ),
-    br(),
     h6("Patients on ten or more unique medicines"),
     p(
       "Calculated as the average percentage of patients prescribed ten or ",
@@ -77,7 +67,6 @@ mod_definitions_ui <- function(id) {
       "chemical substance descriptor would be counted as one (single) unique ",
       "product e.g. Warfarin 1mg, 3mg and 5mg tablets."
     ),
-    br(),
     h6("BNF code"),
     p(
       "A BNF code is a fifteen character hierarchical code used to identify ",
@@ -107,14 +96,16 @@ mod_definitions_ui <- function(id) {
     ),
     p(
       "The code breakdown as follows: ",
-      tags$li("Char 1 - 2 - BNF Chapter"),
-      tags$li("Char 3 - 4 - BNF Section"),
-      tags$li("Char 5 - 6 - BNF Paragraph"),
-      tags$li("Char 7 - BNF Sub-paragraph"),
-      tags$li("Char 8 - 9 - Chemical substance"),
-      tags$li("Char 10 - 11 - Drug or Product"),
-      tags$li("Char 12 - 13 - Strength/Formulation"),
-      tags$li("Char 14 - 15 - Equivalent drug")
+      tags$ul(
+        tags$li("Char 1 - 2 - BNF Chapter"),
+        tags$li("Char 3 - 4 - BNF Section"),
+        tags$li("Char 5 - 6 - BNF Paragraph"),
+        tags$li("Char 7 - BNF Sub-paragraph"),
+        tags$li("Char 8 - 9 - Chemical substance"),
+        tags$li("Char 10 - 11 - Drug or Product"),
+        tags$li("Char 12 - 13 - Strength/Formulation"),
+        tags$li("Char 14 - 15 - Equivalent drug")
+      )
     )
   )
 }
