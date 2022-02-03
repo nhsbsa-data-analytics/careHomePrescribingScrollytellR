@@ -176,9 +176,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "care home and non-care home patients in England by age band and ",
         "gender (2020/21)"
       ),
-      radioButtons(
+      nhs_selectInput(
         inputId = ns("gender_and_age_band_and_ch_flag_metric"),
-        label = NULL,
+        label = "Metric",
         choices = c(
           "Drug cost" = "SDC_COST_PER_PATIENT_MONTH",
           "Number of prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
@@ -187,8 +187,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
           "Patients on ten or more unique medicines" =
             "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH"
         ),
-        inline = TRUE,
-        width = "100%"
+        full_width = FALSE
       ),
       highcharter::highchartOutput(
         outputId = ns("metrics_by_gender_and_age_band_and_ch_flag_chart"),
