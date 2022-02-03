@@ -43,7 +43,11 @@ app_ui <- function(request) {
                 br(),
                 scrollytell::scrolly_section(
                   id = "03_care_home_prescribing",
-                  mod_03_care_home_prescribing_ui("03_care_home_prescribing_ui_1")
+                  mod_03_care_home_prescribing_ui("03_care_home_prescribing_ui_1"),
+                  # Add breaks to prevent graying out
+                  br(),
+                  br()
+                  
                 ),
                 br(),
                 scrollytell::scrolly_section(
