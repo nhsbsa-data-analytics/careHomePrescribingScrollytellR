@@ -1,4 +1,4 @@
-#' caveat UI Function
+#' caveats UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,42 +7,51 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_caveat_ui <- function(id) {
+mod_caveats_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Caveats"),
-    br(),
     p(
-      "The caveats are grouped into three categories, ",
-      "those concerning the underlying prescriptions data, ",
-      "the linking methodology, and the interactive analysis itself. ",
-      "Each group of caveats are described within their corresponding tab below."
+      "The caveats are grouped into three categories, those concerning the ",
+      "underlying prescriptions data, the linking methodology, and the ",
+      "interactive analysis itself. Each group of caveats are described ",
+      "within their corresponding tab below."
     ),
     tabsetPanel(
       type = "tabs",
       tabPanel(
         title = "Prescriptions data",
-        tags$style("li a { font-weight: bold; font-size: 20px}"),
-        htmlOutput(ns("prescription"))
+        htmlOutput(outputId = ns("prescription"))
       ),
-      tabPanel(title = "Patient data", htmlOutput(ns("patient"))),
-      tabPanel(title = "Lookup address", htmlOutput(ns("address"))),
-      tabPanel(title = "Address matching", htmlOutput(ns("matching"))),
-      tabPanel(title = "Metrics & Charts", htmlOutput(ns("metric")))
+      tabPanel(
+        title = "Patient data", 
+        htmlOutput(outputId = ns("patient"))
+      ),
+      tabPanel(
+        title = "Lookup address", 
+        htmlOutput(outputId = ns("address"))
+      ),
+      tabPanel(
+        title = "Address matching", 
+        htmlOutput(outputId = ns("matching"))
+      ),
+      tabPanel(
+        title = "Metrics & Charts", 
+        htmlOutput(outputId = ns("metric"))
+      )
     )
   )
 }
 
-#' caveat Server Functions
+#' caveats Server Functions
 #'
 #' @noRd
-mod_caveat_server <- function(id) {
+mod_caveats_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     output$prescription <- renderUI({
       tags$ul(
-        style = "font-size: 14pt;",
         br(),
         tags$li(
           "Analysis is based on primary care prescription data collected by the ",
@@ -115,7 +124,7 @@ mod_caveat_server <- function(id) {
           "does not result in amendments to data held in NHSBSA systems. ",
           "Further Prescription Processing Information Accuracy can be found ",
           enurl(
-            text = "here",
+            text = "here.",
             url = "https://www.nhsbsa.nhs.uk/pharmacies-gp-practices-and-appliance-contractors/payments-and-pricing/how-we-process-prescriptions"
           )
         )
@@ -124,7 +133,6 @@ mod_caveat_server <- function(id) {
 
     output$patient <- renderUI({
       tags$ul(
-        style = "font-size: 14pt;",
         br(),
         tags$li(
           "The analysis focuses on prescriptions for older patients ",
@@ -134,7 +142,7 @@ mod_caveat_server <- function(id) {
           "Patient Demographic Service (PDS). Further details on ",
           "the process of patient age determination can be found ",
           enurl(
-            text = "here",
+            text = "here.",
             url = "https://www.nhsbsa.nhs.uk/sites/default/files/2018-02/180115%20Age%20Logic%20Summary%20Flow%20Chart%20-%20Revised%20Layout.pdf"
           )
         ),
@@ -209,7 +217,6 @@ mod_caveat_server <- function(id) {
 
     output$address <- renderUI({
       tags$ul(
-        style = "font-size: 14pt;",
         br(),
         tags$li(
           "Ordnance Survey AddressBase (AB) was the foundation of the ",
@@ -269,7 +276,6 @@ mod_caveat_server <- function(id) {
 
     output$matching <- renderUI({
       tags$ul(
-        style = "font-size: 14pt;",
         br(),
         tags$li(
           "Many of the functions within the ",
@@ -335,7 +341,6 @@ mod_caveat_server <- function(id) {
 
     output$metric <- renderUI({
       tags$ul(
-        style = "font-size: 14pt;",
         br(),
         tags$li(
           "The patient prescribing status required Date of Death (DOD) ",
@@ -428,7 +433,7 @@ mod_caveat_server <- function(id) {
 }
 
 ## To be copied in the UI
-# mod_caveat_ui("caveat_ui_1")
+# mod_caveats_ui("caveats_ui_1")
 
 ## To be copied in the server
-# mod_caveat_server("caveat_ui_1")
+# mod_caveats_server("caveats_ui_1")

@@ -11,7 +11,6 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Commonly prescribed medicines"),
-    br(),
     h6(
       "The range of medicines prescribed to older care home patients differs ",
       "significantly to older non-care home patients."
@@ -43,15 +42,15 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         "home patients in England (2020/21)"
       ),
       col_4(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("bnf"),
           label = "BNF Level",
           choices = names(careHomePrescribingScrollytellR::bnfs),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       col_4(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
@@ -59,18 +58,18 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
             "Number of prescription items" = "ITEMS",
             "Number of patients" = "PATIENTS"
           ),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       col_4(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("sort"),
           label = "Sort by",
           choices = c(
             "Care home" = "PCT_CH",
             "Non-care home" = "PCT_NON_CH"
           ),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       shiny::uiOutput(outputId = ns("text")),
@@ -79,7 +78,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         height = "400px"
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_metrics_by_bnf_and_ch_flag_chart")
     )
   )
@@ -130,7 +129,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
     })
 
     # Add a download button
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_metrics_by_bnf_and_ch_flag_chart",
       filename = "metrics_by_bnf_and_ch_flag_df.csv",
       export_data = metrics_by_bnf_and_ch_flag_download_df()

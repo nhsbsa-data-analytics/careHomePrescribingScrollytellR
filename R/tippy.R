@@ -12,9 +12,6 @@ tippy <- function(tooltip,
                   text) {
   tippy::tippy(
     tooltip = tooltip,
-    text = text,
-    # placement = "right-end",
-    interactive = "true",
-    allowHTML = "true"
+    text = text
   )
 }

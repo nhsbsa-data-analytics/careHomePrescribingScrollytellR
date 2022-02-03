@@ -38,7 +38,6 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "twice the drug cost. These prescribing metrics vary by age, gender and ",
       "geography. The chart below allows you to explore them."
     ),
-    br(),
     fluidRow(
       style = "background-color: #FFFFFF;",
       h6(
@@ -48,7 +47,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "band or gender (2020/21)"
       ),
       col_6(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("breakdown"),
           label = "Breakdown",
           choices = names(careHomePrescribingScrollytellR::breakdowns) %>%
@@ -58,18 +57,17 @@ mod_03_care_home_prescribing_ui <- function(id) {
                 pattern = "Additional - "
               )
             ),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       col_6(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("sub_breakdown"),
           label = "Sub Breakdown",
           choices = NULL, # dynamically generated
-          width = "100%"
+          full_width = TRUE
         )
       ),
-      br(),
       fluidRow(
         col_6(
           style = "text-indent: 15px;",
@@ -197,7 +195,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
         height = "350px"
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
     ),
     br(),
@@ -266,16 +264,16 @@ mod_03_care_home_prescribing_ui <- function(id) {
       ),
       col_6(
         style = "margin-bottom: 0;",
-        selectInput(
+        nhs_selectInput(
           inputId = ns("geography"),
           label = "Geography",
           choices = c("Region", "STP", "Local Authority"),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       col_6(
         style = "margin-bottom: 0;",
-        selectInput(
+        nhs_selectInput(
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
@@ -286,24 +284,21 @@ mod_03_care_home_prescribing_ui <- function(id) {
             "Patients on ten or more unique medicines" =
               "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH"
           ),
-          width = "100%"
+          full_width = TRUE
         )
       ),
-      br(),
-      col_8(
+      col_7(
         align = "center",
-        style = "background-color: #FFFFFF;",
         highcharter::highchartOutput(
           outputId = ns("map_chart"),
           height = "700px"
         )
       ),
-      col_4(
-        style = "background-color: #FFFFFF;",
-        DT::dataTableOutput(outputId = ns("map_table"))
+      col_5(
+        DT::DTOutput(outputId = ns("map_table"))
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_map_chart")
     )
   )
@@ -742,7 +737,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     })
 
     # Add data download
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_metrics_by_gender_and_age_band_and_ch_flag_chart",
       filename = "metrics_by_gender_and_age_band_and_ch_flag_chart.csv",
       export_data = metrics_by_gender_and_age_band_and_ch_flag_download_df()
@@ -953,7 +948,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     })
 
     # Create a table to go alongside the map
-    output$map_table <- DT::renderDataTable(
+    output$map_table <- DT::renderDT(
       expr = {
         req(input$geography)
         req(input$metric)
@@ -972,17 +967,23 @@ mod_03_care_home_prescribing_server <- function(id) {
           dplyr::arrange(desc(.data[[input$metric]])) %>%
           dplyr::select(SUB_GEOGRAPHY_NAME, .data[[input$metric]]) %>%
           dplyr::rename(
-            "{input$geography}" := SUB_GEOGRAPHY_NAME,
-            "{nice_metric_name}" := .data[[input$metric]]
-          )
-      },
-      options = list(
-        dom = "t",
-        scrollCollapse = TRUE,
-        paging = FALSE,
-        scrollY = "500px"
-      ),
-      filter = "none"
+            "<span class='nhsuk-body-s'>{input$geography}</span>" := 
+              SUB_GEOGRAPHY_NAME,
+            "<span class='nhsuk-body-s'>{nice_metric_name}</span>" := 
+              .data[[input$metric]]
+          ) %>%
+          DT::datatable(
+            escape = FALSE,
+            options = list(
+              dom = "t",
+              scrollCollapse = TRUE,
+              paging = FALSE,
+              scrollY = "500px"
+            ),
+            filter = "none"
+          ) %>%
+          DT::formatStyle(columns = 0:2, `font-size` = "14px")
+      }
     )
 
 
@@ -1003,7 +1004,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     })
 
     # Add a download button
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_map_chart",
       filename = "map_chart.csv",
       export_data = download_map_df()

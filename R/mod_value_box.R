@@ -9,7 +9,6 @@
 #' @importFrom shiny NS tagList
 mod_value_box_ui <- function(id,
                              value,
-                             subtitle = "",
                              icon_name,
                              group) {
   ns <- NS(id)
@@ -33,13 +32,15 @@ mod_value_box_ui <- function(id,
             class = "row",
             div(
               class = "col-xs-4 col-sm-4 col-md-4 col-lg-4",
-              icon(icon_name, "fa-3x"),
+              style = "float:left;",
+              icon(icon_name, "fa-2x"),
               style = "color: #FFFFFF"
             ),
             div(
               class = "col-xs-8 col-sm-8 col-md-8 col-lg-8",
               div(
-                style = "font-size: 28px; font-weight: bold; color: #FFFFFF; text-align: right;",
+                class = "nhsuk-heading-m",
+                style = "color: #FFFFFF; float: right;",
                 value
               )
             )

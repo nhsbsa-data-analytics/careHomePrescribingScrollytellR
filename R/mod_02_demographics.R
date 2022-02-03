@@ -27,12 +27,10 @@ mod_02_demographics_ui <- function(id) {
     ),
     tags$ul(
       tags$li(
-        style = "font-size: 16pt;",
         "The population is not stable – some patients become 65 years during ",
         "the year, some move in or out of the care home and others may die."
       ),
       tags$li(
-        style = "font-size: 16pt;",
         "Not all care home patients receive a prescription in every month ",
         "they are in a care home - we estimate around 7 in 10 do."
       )
@@ -55,11 +53,10 @@ mod_02_demographics_ui <- function(id) {
       ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_prescribing_status_chart"),
-        height = "350px",
-        width = "900px"
+        height = "350px"
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_patients_by_prescribing_status_chart")
     ),
     br(),
@@ -83,44 +80,35 @@ mod_02_demographics_ui <- function(id) {
       "explored by region, local authority and STP (Sustainability and ",
       "Transformation Plan area)."
     ),
-    br(),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
       h6(
-        style = "margin-bottom: 0;",
         "Age band and gender of estimated older care home patients in England ",
         "(2020/21)"
       ),
       col_6(
-        style = "margin-bottom: 0;",
-        div(
-          selectInput(
-            inputId = ns("geography"),
-            label = "Geography",
-            choices = names(careHomePrescribingScrollytellR::geographys),
-            width = "100%"
-          )
+        nhs_selectInput(
+          inputId = ns("geography"),
+          label = "Geography",
+          choices = names(careHomePrescribingScrollytellR::geographys),
+          full_width = TRUE
         )
       ),
       col_6(
-        style = "margin-bottom: 0;",
-        div(
-          selectInput(
-            inputId = ns("sub_geography"),
-            label = "Sub Geography",
-            choices = NULL, # dynamically generated
-            width = "100%"
-          )
+        nhs_selectInput(
+          inputId = ns("sub_geography"),
+          label = "Sub Geography",
+          choices = NULL, # dynamically generated
+          full_width = TRUE
         )
       ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
-        height = "350px",
-        width = "900px"
+        height = "350px"
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
     ),
     br(),
@@ -171,7 +159,6 @@ mod_02_demographics_ui <- function(id) {
       tags$b("IMD quintile,"),
       " which suggests equal distribution and little variation."
     ),
-    br(),
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
@@ -181,11 +168,10 @@ mod_02_demographics_ui <- function(id) {
       ),
       highcharter::highchartOutput(
         outputId = ns("patients_by_imd_chart"),
-        height = "250px",
-        width = "900px"
+        height = "250px"
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_patients_by_imd_chart")
     )
   )
@@ -213,7 +199,7 @@ mod_02_demographics_server <- function(id, export_data) {
     })
 
     # Add a download button
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_patients_by_prescribing_status_chart",
       filename = "patients_by_prescribing_status_chart.csv",
       export_data = patients_by_prescribing_status_df()
@@ -451,7 +437,7 @@ mod_02_demographics_server <- function(id, export_data) {
     })
 
     # Add a download button
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_patients_by_geography_and_gender_and_age_band_chart",
       filename = "patients_by_geography_and_gender_and_age_band_chart.csv",
       export_data = patients_by_geography_and_gender_and_age_band_download_df()
@@ -580,7 +566,7 @@ mod_02_demographics_server <- function(id, export_data) {
       )
 
     # Add a download button
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_patients_by_imd_chart",
       filename = "patients_by_imd_chart.csv",
       export_data = patients_by_imd_download_df

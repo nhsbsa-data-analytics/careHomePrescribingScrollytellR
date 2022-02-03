@@ -34,7 +34,6 @@ mod_01_intro_ui <- function(id) {
       "additional analyses."
     ),
     br(),
-    br(),
     p(
       "We estimate that there was a monthly average of", 
       tags$b("286 thousand care home patients"), "receiving prescriptions ",
@@ -67,7 +66,6 @@ mod_01_intro_ui <- function(id) {
       "Average monthly prescribing costs and volumes per care home patient ",
       "vary by age, gender, care home type and geography."
     ),
-    br(),
     br(),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
