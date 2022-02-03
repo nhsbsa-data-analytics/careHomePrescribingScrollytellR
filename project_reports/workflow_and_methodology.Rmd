@@ -1,0 +1,3643 @@
+---
+title: "<b>Identifying Older Care Home Prescribing <br> Workflow and Methodology</b>"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    global_numbering: 
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(kableExtra)
+library(highcharter)
+```
+
+```{css, echo=FALSE}
+pre {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+pre[class] {
+  max-height: 300px;
+}
+```
+
+
+```{css, echo=FALSE}
+.scroll-500 {
+  max-height: 500px;
+  overflow-y: auto;
+  background-color: inherit;
+}
+```
+
+```{r, echo=FALSE}
+my_kable <- function(table_name){
+  
+  kable({{ table_name }}, align = "l") %>%
+    kable_styling(full_width = F, c("bordered", "striped"), position = "left")
+}
+
+my_colour_kable <- function(table_name){
+  
+  table_name %>% 
+    mutate_all(~cell_spec(.x,background = case_when(
+      .x == 1 ~ "green",
+      .x > 0 & .x < 0.8 ~ "red",
+      .x >= 0.8 ~ "orange",
+      T ~ ""),
+      bold = ifelse(.x > 0, T, F)
+      )) %>% 
+    kable(escape = F, align = "l") %>%
+      kable_styling(full_width = F, c("bordered", "striped"), position = "left")
+} 
+```
+
+<br>
+<br>
+<br>
+<br>
+
+# **Introduction**
+
+<br>
+<br>
+
+## Overview
+
+<br>
+
+This R-notebook describes the workflow and methodology that enabled primary care prescription forms from the 2020/21 Financial Year for English residents, to be labelled as being for an older patient in a care home or otherwise. An older patient is defined as aged 65 or above at the time of prescribing.
+
+Key to this process, is matching patient address details against a comprehensive list of addresses with a care home identifier. The Ordnance Survey AddressBase product is used to do this, supplemented with CQC data. Aside from address matching, other key features of patient records were used to identify care home address locations. These were the number of older patients receiving prescribing from the same address in a month during the 2020/21 Financial Year, and whether certain keywords were contained within the patient address text. 
+
+<br>
+
+## Contents
+
+<br>
+
+The workflow creates a single flat table with a flag to signify which prescription forms were believed to be for an older patient living in a care home. The workflow and methodology can be summarised by the following:
+
+<br>
+
+```{r, echo = F}
+table <- data.frame(
+  Section = c(1:7),
+  Description = c('Introduction.',
+                  'Processing Patient Address Information.',
+                  'Processing AddressBase and CQC Information.',
+                  'Address Matching Patient Records.',
+                  'Additional Methods to Identifying Care Home Prescriptions.',
+                  'Final Results & Result Validation.',
+                  'Further Information & Next Steps.')
+  )
+
+my_kable(table)
+```
+
+<br>
+
+## About this Notebook
+
+<br>
+
+In addition to describing the workflow and methodology, this R-notebook also describes the code and helping functions used to generate the analysis. This code will appear in chunks of varying size, that a user can choose to scroll though.
+
+<br>
+
+## About the Code
+
+<br>
+
+The code is written using `{dbplyr}`, a package which enables users to use remote database tables as if they are in-memory data frames by automatically converting `{dplyr}` code into `SQL`. The advantage of this is that `{dplyr}` functions can be used to query a database and process the output using succinct and easy-to-read code. A disadvantage is that `{dbplyr}` code sometimes needs to be structured in a way to optimise how it is converted into `SQL`.
+
+An important point to note is that the code and helper functions were created for use with an Oracle database. This means some code will require tweaking or rewriting if used within a different database.
+
+The functions specific to address matching can be found at the following NHSBSA GitHub page:
+https://github.com/nhsbsa-data-analytics/addressMatchR/tree/master/R
+
+The generic functions within the notebook that have many potential uses beyond just address matching can be found at the following NHSBSA GitHub page:
+https://github.com/nhsbsa-data-analytics/nhsbsaR/tree/main/R
+
+<br>
+<br>
+  
+# **Processing Patient Address Information**
+  
+<br>
+<br>
+
+## Overview
+
+<br>
+
+The NHSBSA is the most comprehensive source of data relating to NHS prescriptions dispensed in the community. Despite this, work is still required to attribute a patient address to all prescription forms. Prescription forms are issued either electronically or on paper, and the data captured from each form type differs. 
+
+<br>
+
+## Electronic Prescriptions
+
+<br>
+
+Electronic prescribing captures a patient address, and the rate of electronic prescribing has increased year on year. Overall, electronic prescribing accounted for around 85% of prescribing in the 2020/21 financial year. In the context of patients aged 65 or above, electronic prescribing accounted for around 89% of prescribing in the 2020/21 financial year. This meant we readily had addresses available for the majority of prescription forms. 
+
+<br>
+
+## Paper Prescriptions
+
+<br>
+
+While paper prescription forms also have a patient address recorded, this information is not captured during scanning procedures and does not end up in the NHSBSA Data Warehouse. To attribute an address to these forms, we either need to use information from the Patient Demographic Service (PDS), or information from electronic prescription forms. After an address can be attributed to all forms, they can be cleaned and processed together, in preparation for later address matching.
+
+<br>
+
+### Using PDS to Attribute an Address to Paper Forms
+
+<br>
+
+PDS is the national electronic database of NHS patient demographic data, including information such as name, address and date of birth linked to each NHS number.  NHSBSA receives data from PDS monthly to supplement patient information for all NHS numbers identified from the processed NHS prescription data.
+
+Within the NHSBSA Data Warehouse, each monthly response file from PDS is retained in a staging area prior to ETL processes being applied, to prepare the data to be available for analysis. This response data enables us to track the patient information related to a NHS number across each of the request/response cycles.
+
+There is a notable lag, largely unavoidable for paper prescribing, in the time between a prescription being issued to a patient and the prescription data being available within the NHSBSA Data Warehouse. This time lag is extended when requesting data from PDS, as requests are only made once a patient can be identified in the processed prescription data. An example of this timeline is described below:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Step = c(1:6),
+  Date = c('Jan-21', 'Early Feb-21', 'Feb-21', 'Mid Mar-21', 'Mid Mar-21', 'Mid Apr-21'),
+  Description = c('Prescription issued to patient and dispensed by pharmacy.',
+           'Prescription bundled and submitted to NHSBSA for processing as part of Jan-21 data.',
+           'Data processed by NHSBSA.',
+           'Processed data loaded to NHSBSA Data Warehouse.',
+           'Patient info passed to PDS for patient matching and response.',
+           'PDS response incorporated into ETL load for Feb-21 prescription data.')
+  )
+
+my_kable(table)
+```
+
+<br>
+
+The lag between patient address details being recorded and loaded into the NHSBSA Data Warehouse, is estimated to be within a range of 6-10 weeks, roughly two calendar months. Additionally, the response from PDS will reflect the patient information when the response was made, not necessarily when the prescription was issued.
+
+In short, this means that a PDS response, including patient address information, based on a request from prescription data two months prior, would be the closest PDS approximation of their address. For example, data requested from January prescriptions would be received during March and therefore most closely match the patient address for prescribing issued in March.
+
+<br>
+
+### Using Electronic Forms to Attribute an Address to Paper Forms
+
+<br>
+
+It is possible for a patient to receive a mix of paper and electronic prescribing (ETP). This can be for many reasons and a patient can even receive a mix of paper prescribing and ETP prescribing in the same month. In these circumstances, we could attribute the patient address captured from ETP prescriptions to any paper prescribing. This may be deemed more suitable than using PDS as there is added confidence that the patient has used the address to receive prescribing during the same prescribing period. 
+
+If a patient receives multiple ETP prescriptions within a month, with multiple addresses recorded, this raises the question of whether any of these could be considered as the most appropriate address to attribute to paper prescriptions.
+
+As with assigning data from PDS, ETP data from additional months around the same time period could also be considered where time periods cannot be exactly aligned.
+
+<br>
+
+### Using both PDS and ETP to Attribute an Address to Paper Forms
+
+<br>
+
+Taking the above information into account, both PDS and ETP were used to attribute an address to paper forms based on the following logic to determine which data source should take priority (dependent on address information being available). If an address were sought for a paper form in April 2021, this would be the 10 ways in which it could be derived.
+
+The table below describes this ranking preference. If 'Apr-21 ETP Px Data' is present, this should be used first to derive a paper address. If not 'Apr-21 PDS Data' should be used. If not 'Mar-21 ETP Px Data' should be used, and so on. 
+
+<br>
+
+```{r, echo=FALSE}
+table = data.frame(
+  Rank = c(7,3,1,4,8,9,5,2,6,10),
+  Date = rep(c('Feb-21', 'Mar-21', 'Apr-21', 'May-21', 'Jun-21'),2),
+  Step = c(rep("ETP Px Data", 5), rep("PDS Data", 5))
+  ) %>% 
+  arrange(Rank)
+
+my_kable(table)
+```
+
+<br>
+
+If the above information is represented graphically, the relationship the month of prescribing and the preference of ETP over PDS data can be seen from a different perspective. 
+
+<br>
+
+```{r, echo=FALSE}
+table = data.frame(
+  Date = rep(c('Feb-21', 'Mar-21', 'Apr-21', 'May-21', 'Jun-21'),2),
+  Step = c(rep("ETP Px Data", 5), rep("PDS Data", 5)),
+  Number = c(7,3,1,4,8,9,5,2,6,10)
+  )
+
+month_vec = c('Feb-21', 'Mar-21', 'Apr-21', 'May-21', 'Jun-21')
+
+table %>% 
+  mutate(Date = factor(Date, levels = month_vec)) %>% 
+  hchart("heatmap", hcaes(Date, Step, value = Number),
+       borderColor = "black",
+       borderWidth = 0.7,
+       name = "Ranked Order for Attributing an Adddress to a Paper Form",
+       dataLabels = list(enabled = T, style = list(fontSize = "20px"))
+       ) %>% 
+  hc_colorAxis(minColor = "blue", maxColor = "white") %>% 
+  hc_title(text = "<b>Priority Guide for Attributing Patient Address Information to Paper Prescribing during April 2021</b>") %>% 
+  hc_subtitle(text = "ETP data will only be used where a single patient address could be identified within a single month<br><br>
+              PDS data has a process lag and therefore a response received in Apr-21 will be for requests relating to Feb-21 prescriptions.") %>% 
+  hc_caption(text = "<em>1 = the most preferred choice & 10 = the least preferred choice</em>", align = "center") %>% 
+  hc_legend(enabled = F) %>% 
+  hc_tooltip(
+    pointFormat = "<b>Rank:</b> {point.Number}<br>
+    <b>Data Source:</b> {point.Step}<br>
+    <b>Date:</b> {point.Date}"
+  ) %>% 
+  hc_size(height=450,width=470) %>% 
+  hc_credits(enabled = T)
+```
+
+<br>
+
+The end result, is now being able to attribute an address to the vast majority of paper forms which initially did not have an address recorded. For the 2020/21 Financial Year, patient addresses could be allocated for 99.7% of paper prescription forms where the patient’s NHS number could be identified, and the patient was aged 65+. 
+
+The code for the complex process is shown below. 
+
+<br>
+
+````
+```{r}`r''`
+library(dplyr)
+library(dbplyr)
+
+# Set up connection to DWCP and DALP
+con_dwcp <- nhsbsaR::con_nhsbsa(database = "DWCP")
+con_dalp <- nhsbsaR::con_nhsbsa(database = "DALP")
+
+# Check if the table exists
+exists <- con_dalp %>%
+  DBI::dbExistsTable(name = "INT615_FORM_LEVEL_FACT")
+
+# Drop any existing table beforehand
+if (exists) {
+  con_dalp %>%
+    DBI::dbRemoveTable(name = "INT615_FORM_LEVEL_FACT")
+}
+
+# EPS payload message data
+
+# First we have to create a filtered version of EPS payload message data in DALP
+
+# Check if the table exists DALP
+exists_dalp_eps_payload <- con_dalp %>%
+  DBI::dbExistsTable(name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
+
+# Drop any existing table beforehand
+if (exists_dalp_eps_payload) {
+  con_dalp %>%
+    DBI::dbRemoveTable(name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA")
+}
+
+# Create a lazy table from SCD2 payload message table
+eps_payload_messages_db <- con_dalp %>% 
+  tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")))
+
+# Create the single line address and subset columns
+eps_payload_messages_db <- eps_payload_messages_db %>%
+  # Bring back ETP data from the month previous until 2 months after (and buffer 
+  # the end of part date by 10 days
+  filter(
+    PART_DATE >= 20200201L,
+    PART_DATE <= 20210610L
+  ) %>%
+  # Concatenate fields together by a single space for the single line address
+  mutate(
+    SINGLE_LINE_ADDRESS = paste(
+      PAT_ADDRESS_LINE1,
+      PAT_ADDRESS_LINE2,
+      PAT_ADDRESS_LINE3,
+      PAT_ADDRESS_LINE4
+    )
+  ) %>%
+  select(
+    PART_DATE, 
+    EPM_ID, 
+    POSTCODE = PAT_ADDRESS_POSTCODE, 
+    SINGLE_LINE_ADDRESS
+  )
+
+# Tidy postcode and format single line addresses
+eps_payload_messages_db <- eps_payload_messages_db %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
+
+# Write the table back to DALP with indexes
+eps_payload_messages_db <- eps_payload_messages_db %>%
+  compute(
+    name = "INT615_SCD2_ETP_DY_PAYLOAD_MSG_DATA",
+    indexes = list(c("PART_DATE", "EPM_ID"), c("POSTCODE")),
+    temporary = FALSE
+  )
+
+# PDS trace data
+
+# First we have to create a filtered version of PDS import data in DALP
+
+# Check if the table exists DWCP and DALP
+exists_dalp_pds_import <- con_dalp %>%
+  DBI::dbExistsTable(name = "INT615_SCD2_EXT_PD_IMPORT_DATA")
+
+# Drop any existing table beforehand
+if (exists_dalp_pds_import) {
+  con_dalp %>%
+    DBI::dbRemoveTable(name = "INT615_SCD2_EXT_PD_IMPORT_DATA")
+}
+
+# Create a lazy table from year month dim table in DWCP
+year_month_db <- con_dwcp %>% 
+  tbl(from = in_schema("DIM", "YEAR_MONTH_DIM")) %>%
+  select(YEAR_MONTH_ID, YEAR_MONTH)
+
+# Create a lazy table from SCD2 PDS import data table in DWCP
+pds_import_db <- con_dwcp %>% 
+  tbl(from = in_schema("SCD2", "SCD2_EXT_PD_IMPORT_DATA"))
+
+# Create a lazy table from the CIP patient dim table in DWCP
+cip_db <- con_dwcp %>%
+  tbl(from = in_schema("DIM", "CIP_PATIENT_DIM"))
+
+# Filter to successful traces in the period of interest
+pds_import_db <- pds_import_db %>% 
+  filter(
+    RECORD_TYPE_R %in% c("20", "30", "33", "40"),
+    PART_MONTH >= 201912L & PART_MONTH <= 202104L
+  )
+
+# Extract the year month and single line address
+pds_import_db <- pds_import_db %>%
+  mutate(
+    SINGLE_LINE_ADDRESS = paste(
+      ADDRESS_LINE1_R,
+      ADDRESS_LINE2_R,
+      ADDRESS_LINE3_R,
+      ADDRESS_LINE4_R, 
+      ADDRESS_LINE5_R
+    )
+  ) 
+
+# Select the columns of interest
+pds_import_db <- pds_import_db %>%
+  select(
+    YEAR_MONTH = PART_MONTH, 
+    POSTCODE = POSTCODE_R, 
+    SINGLE_LINE_ADDRESS,
+    NHS_NO_PDS = TRACE_RESULT_NEW_NHS_NUMBER_R,
+    RECORD_NO
+  )
+
+# Keep the latest record for each year month and nhs number
+pds_import_db <- pds_import_db %>%
+  group_by(YEAR_MONTH, NHS_NO_PDS) %>%
+  slice_max(order_by = RECORD_NO, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(-RECORD_NO)
+
+# Join the year month details (shift by 1 month from part month)
+pds_import_db <- pds_import_db %>%
+  inner_join(y = year_month_db) %>%
+  select(-YEAR_MONTH) %>%
+  mutate(YEAR_MONTH_ID = YEAR_MONTH_ID + 1L) %>% 
+  inner_join(y = year_month_db) %>%
+  select(-YEAR_MONTH) %>%
+  relocate(YEAR_MONTH_ID)
+
+# Join the NHS_NO on so we can join to the FACT table
+pds_import_db <- pds_import_db %>%
+  inner_join(y = cip_db %>% select(NHS_NO_PDS, NHS_NO = NHS_NO_CIP)) %>%
+  select(-NHS_NO_PDS)
+
+# Tidy postcode and format single line addresses
+pds_import_db <- pds_import_db %>%
+  addressMatchR::tidy_postcode(col = POSTCODE) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS)
+
+# Write the table back to DWCP with indexes
+pds_import_db <- pds_import_db %>%
+  compute(
+    name = "INT615_SCD2_EXT_PD_IMPORT_DATA",
+    indexes = list(c("YEAR_MONTH_ID", "NHS_NO"), c("POSTCODE")),
+    temporary = FALSE
+  )
+
+# Grant Access to DALP_USER
+con_dwcp %>%
+  DBI::dbSendStatement(
+    statement = "GRANT SELECT ON INT615_SCD2_EXT_PD_IMPORT_DATA TO DALP_USER"
+  )
+
+# Create a lazy table in DALP from filtered version of SCD2_EXT_PD_IMPORT_DATA
+# in DWCP
+pds_import_db <- con_dalp %>% 
+  tbl(
+    from = in_schema(
+      schema = sql(Sys.getenv("DB_DWCP_USERNAME")), 
+      table = sql("INT615_SCD2_EXT_PD_IMPORT_DATA@dwcpb")
+    )
+  )
+
+# Write the table back to DALP with indexes
+pds_import_db <- pds_import_db %>%
+  compute(
+    name = "INT615_SCD2_EXT_PD_IMPORT_DATA",
+    indexes = list(c("YEAR_MONTH", "NHS_NO"), c("POSTCODE")),
+    temporary = FALSE
+  )
+
+# Drop the table from DWCP
+con_dwcp %>%
+  DBI::dbRemoveTable(name = "INT615_SCD2_EXT_PD_IMPORT_DATA")
+
+# Disconnect from DWCP
+DBI::dbDisconnect(con_dwcp)
+
+# Pull relevant data from FACT table for the period
+
+# Create a lazy table from the year month table
+year_month_db <- con_dalp %>%
+  tbl(from = in_schema("DALL_REF", "YEAR_MONTH_DIM")) %>%
+  select(YEAR_MONTH_ID, YEAR_MONTH)
+
+# Create a lazy table from the item level FACT table
+fact_db <- con_dalp %>%
+  tbl(from = in_schema("AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
+
+# Standard exclusions on the FACT table
+fact_db <- fact_db %>%
+  filter(
+    PAY_DA_END == "N", # excludes disallowed items
+    PAY_ND_END == "N", # excludes not dispensed items
+    PAY_RB_END == "N", # excludes referred back items
+    CD_REQ == "N", # excludes controlled drug requisitions 
+    OOHC_IND == 0L, # excludes out of hours dispensing
+    PRIVATE_IND == 0L, # excludes private dispensers
+    IGNORE_FLAG == "N" # excludes LDP dummy forms
+  )
+
+# Subset the columns
+fact_db <- fact_db %>%
+  select(
+    YEAR_MONTH,
+    PF_ID,
+    EPS_FLAG,
+    PART_DATE = EPS_PART_DATE,
+    EPM_ID,
+    PDS_GENDER,
+    CALC_AGE,
+    PATIENT_IDENTIFIED,
+    NHS_NO,
+    ITEM_COUNT
+  )
+
+# Get the elderly patients in 2020/2021
+elderly_nhs_no_db <- fact_db %>%
+  filter(
+    CALC_AGE >= 65L,
+    YEAR_MONTH >= 202004L,
+    YEAR_MONTH <= 202103L
+  ) %>%
+  select(NHS_NO)
+
+# Join the year month information
+fact_db <- fact_db %>%
+  inner_join(y = year_month_db) %>%
+  relocate(YEAR_MONTH_ID)
+
+# Subset the paper forms
+paper_fact_db <- fact_db %>%
+  filter(
+    EPS_FLAG == "N",
+    YEAR_MONTH >= 202004L,
+    YEAR_MONTH <= 202103L,
+    CALC_AGE >= 65L
+  ) %>%
+  select(-ITEM_COUNT)
+
+# Subset the EPS forms (buffer the period so that we can search for addresses 
+# for paper forms from more months of EPS forms) to elderly patients in 2020/21
+# and join on their addresses
+eps_fact_db <- fact_db %>%
+  filter(
+    EPS_FLAG == "Y",
+    YEAR_MONTH >= 202002L,
+    YEAR_MONTH <= 202105L
+  ) %>%
+  semi_join(y = elderly_nhs_no_db) %>%
+  left_join(y = eps_payload_messages_db)
+
+# Get EPS addresses
+
+# Get a single postcode and address per EPS patient
+eps_single_address_db <- eps_fact_db %>%
+  filter(!is.na(POSTCODE)) %>%
+  # Remove patients with multiple postcodes in the same month
+  group_by(YEAR_MONTH_ID, NHS_NO) %>%
+  mutate(POSTCODE_COUNT = n_distinct(POSTCODE)) %>%
+  filter(POSTCODE_COUNT == 1) %>%
+  select(-POSTCODE_COUNT) %>%
+  # And keep their address with the biggest item count in each postcode 
+  group_by(POSTCODE, SINGLE_LINE_ADDRESS, .add = TRUE) %>%
+  summarise(ITEM_COUNT = sum(ITEM_COUNT)) %>%
+  ungroup(POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  slice_max(order_by = ITEM_COUNT, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(-ITEM_COUNT)
+
+# Get the PDS patients that we need to find an address for
+
+# Get the patients that we want an address for
+paper_patient_db <- paper_fact_db %>% 
+  distinct(YEAR_MONTH_ID, NHS_NO)
+
+# Add the year month information
+paper_patient_db <- paper_patient_db %>%
+  mutate(
+    YEAR_MONTH_ID_M2 = YEAR_MONTH_ID - 2L,
+    YEAR_MONTH_ID_M1 = YEAR_MONTH_ID - 1L,
+    YEAR_MONTH_ID_P1 = YEAR_MONTH_ID + 1L,
+    YEAR_MONTH_ID_P2 = YEAR_MONTH_ID + 2L
+  )
+
+# Define a function that will make the joining process easier
+left_join_address <- function(x, y, year_month_id_col, suffix){
+  
+  left_join(
+    x = x,
+    y = y %>%
+      rename(
+        "{{year_month_id_col}}" := YEAR_MONTH_ID,
+        "POSTCODE_{{year_month_id_col}}_{{suffix}}" := POSTCODE,
+        "SINGLE_LINE_ADDRESS_{{year_month_id_col}}_{{suffix}}" := 
+          SINGLE_LINE_ADDRESS
+      ),
+    by = c(rlang::as_name(rlang::enquo(year_month_id_col)), "NHS_NO")
+  )
+}
+
+# Join the ETP / PDS postcode and addresses for each year month ID and coalesce
+# to get the most appropriate postcode and address
+paper_patient_db <- paper_patient_db %>%
+  left_join_address(
+    y = eps_single_address_db,
+    year_month_id_col = YEAR_MONTH_ID,
+    suffix = EPS
+  ) %>%
+  left_join_address(
+    y = pds_import_db,
+    year_month_id_col = YEAR_MONTH_ID,
+    suffix = PDS
+  ) %>%
+  left_join_address(
+    y = eps_single_address_db,
+    year_month_id_col = YEAR_MONTH_ID_M1,
+    suffix = EPS
+  ) %>%
+  left_join_address(
+    y = eps_single_address_db,
+    year_month_id_col = YEAR_MONTH_ID_P1,
+    suffix = EPS
+  ) %>%
+  left_join_address(
+    y = pds_import_db,
+    year_month_id_col = YEAR_MONTH_ID_M1,
+    suffix = PDS
+  ) %>%
+  left_join_address(
+    y = pds_import_db,
+    year_month_id_col = YEAR_MONTH_ID_P1,
+    suffix = PDS
+  ) %>%
+  left_join_address(
+    y = eps_single_address_db,
+    year_month_id_col = YEAR_MONTH_ID_M2,
+    suffix = EPS
+  ) %>%
+  left_join_address(
+    y = eps_single_address_db,
+    year_month_id_col = YEAR_MONTH_ID_P2,
+    suffix = EPS
+  ) %>%
+  left_join_address(
+    y = pds_import_db,
+    year_month_id_col = YEAR_MONTH_ID_M2,
+    suffix = PDS
+  ) %>%
+  left_join_address(
+    y = pds_import_db,
+    year_month_id_col = YEAR_MONTH_ID_P2,
+    suffix = PDS
+  ) %>%
+  mutate(
+    POSTCODE = coalesce(
+      POSTCODE_YEAR_MONTH_ID_EPS,
+      POSTCODE_YEAR_MONTH_ID_PDS,
+      POSTCODE_YEAR_MONTH_ID_M1_EPS,
+      POSTCODE_YEAR_MONTH_ID_P1_EPS,
+      POSTCODE_YEAR_MONTH_ID_M1_PDS,
+      POSTCODE_YEAR_MONTH_ID_P1_PDS,
+      POSTCODE_YEAR_MONTH_ID_M2_EPS,
+      POSTCODE_YEAR_MONTH_ID_P2_EPS,
+      POSTCODE_YEAR_MONTH_ID_M2_PDS,
+      POSTCODE_YEAR_MONTH_ID_P2_PDS
+    ),
+    SINGLE_LINE_ADDRESS = coalesce(
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_PDS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M1_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P1_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M1_PDS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P1_PDS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M2_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P2_EPS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_M2_PDS,
+      SINGLE_LINE_ADDRESS_YEAR_MONTH_ID_P2_PDS
+    )
+  ) %>%
+  select(YEAR_MONTH_ID, NHS_NO, POSTCODE, SINGLE_LINE_ADDRESS)
+
+# Combine EPS and paper data with the FACT
+
+# Stack EPS and paper back together
+fact_db <- union_all(
+  x = eps_fact_db %>%
+    # Remember to filter unwanted periods from the EPS FACT table (as it 
+    # includes the buffer used to find addresses for paper forms)
+    filter(
+      CALC_AGE >= 65L,
+      YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L
+    ) %>%
+    select(-c(YEAR_MONTH_ID, ITEM_COUNT)) %>%
+    distinct(), 
+  y = paper_fact_db %>%    
+    distinct() %>%
+    # Join the addresses
+    left_join(y = paper_patient_db) %>%
+    select(-YEAR_MONTH_ID)
+)
+
+# Write the table back to DALP with indexes
+fact_db %>%
+  compute(
+    name = "INT615_FORM_LEVEL_FACT",
+    indexes = list(c("YEAR_MONTH", "PF_ID"), c("POSTCODE")),
+    temporary = FALSE
+  )
+
+# Disconnect from database
+DBI::dbDisconnect(con_dalp)
+```
+````
+
+<br>
+
+## Joining together the Paper and Electronic Forms
+
+<br>
+
+After PDS and ETP data is used to attribute an address to paper prescription forms, this could then be combined with the electronic prescribing data. Each of these data were first joined back to the prescription FACT table, which is a prescription item-level base table in the NHSBSA Data Warehouse. This was so filters and exclusions could be uniformly applied. 
+
+The prescription item-level FACT table includes data relating to each prescription item, including patient identifiers and age calculated at the time of prescribing.
+
+The data at this point was aggregated to a prescription form-level, rather than item-level, as patient information is consistent across a prescription form and item information could be retrieved at a later point using the Prescription Form ID. 
+
+After joining to this item-level FACT table the following filters were applied:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Filter = c(1:5),
+  Description = c('Only prescription forms for patients with an NHS number aged 65 or over.',
+                  'Only prescription forms within the 2020/21 Financial Year.',
+                  'Only prescriptions based on drugs that were reimbursed by the NHSBSA.',
+                  'Not including prescription forms with a known non-english address.',
+                  'Not including items not dispensed, disallowed and returned for clarification.')
+)
+
+my_kable(table)
+```
+
+<br>
+
+There were around 257M prescription forms in total for patients aged 65 or above during the 2020/21 Financial Year, with the above criteria applied. The data at this point comprised five fields which were:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Field = c(1:5),
+  Description = c('The year and month of the prescription.',
+                  'The prescription form ID.',
+                  'The patient NHS Number.',
+                  'The patient postcode.',
+                  'The patient address.')
+)
+
+my_kable(table)
+```
+
+<br>
+
+## Postcode and Address Cleaning
+
+<br>
+
+The postcode and address of these combined records were then cleaned to uniform their appearance. This meant they could be grouped together in greater numbers later during the workflow, with less variation between them. A function was created to do this postcode string cleaning. The function did the following things:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Step = c(1:3),
+  Description = c('Transform text to uppercase.',
+                  'Remove all spaces.',
+                  'Remove everything except alphanumeric characters.')
+)
+
+my_kable(table)
+```
+
+<br>
+
+The following code was used within this function. As mentioned in the introduction, this code was configured to work with an Oracle database. Different databases may require different commands to be used. This function is contained with the NHSBSA `{addressMatchR}` package, developed as a result of this initiative.
+
+<br>
+
+```{r, eval=F, attr.source='.numberLines'}
+#' Tidy a postcode
+#'
+#' Tidy a postcode so it is ready for joining.
+#'
+#' @param df Database table
+#' @param col Postcode column
+#'
+#' @examples
+#'
+#' @export
+tidy_postcode <- function(df, col) {
+
+  # Tide the postcode column
+  df %>%
+    dplyr::mutate(
+
+      {{ col }} := REGEXP_REPLACE(toupper({{ col }}), # Uppercase
+                                  "[^A-Z0-9]", "")    # Remove anything not a character or digit
+
+    )
+}
+```
+
+<br>
+
+The address was cleaned by the following steps:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Step = c(1:7),
+  Description = c('Remove the following non-alphanumeric characters: # ; : ( ) . ,',
+                  'Add a space between any digit followed by a non-digit (e.g. 1A becomes 1 A)',
+                  'Add a space between any non-digit followed by a digit (e.g. A1 becomes A 1).',
+                  'Replace the ampersand character with the string "and".',
+                  'Replace multiple spaces with a single space.',
+                  'Remove any spaces around a hyphen.',
+                  'Transform text to uppercase.')
+)
+
+my_kable(table)
+```
+
+<br>
+
+A seperate function was created to carry out the above cleaning steps.
+This function is also contained with the NHSBSA `{addressMatchR}` package.
+
+<br>
+
+```{r}
+#' Tidy a single line address
+#'
+#' Tidy a single line address ready for tokenising.
+#'
+#' @param df Database table
+#' @param col Single line address column
+#' @param remove_postcode If to remove the postcode. Default is FALSE
+#'
+#' @examples
+#' @export
+tidy_single_line_address <- function(df, col, remove_postcode = FALSE) {
+
+  # Remove postcode from single line address if necessary (e.g. after last ",")
+  if (remove_postcode) {
+    df <- df %>%
+      dplyr::mutate({{ col }} := REGEXP_REPLACE({{ col }}, "[,][^,]+$", ""))
+  }
+
+  # Prep the single line address for tokenisation
+  df %>%
+    dplyr::mutate(
+
+      {{ col }} := trimws(REPLACE(REGEXP_REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(toupper({{ col }}),           # Uppercase
+                                                                                                              "[,.();:#'']", " "),  # replace special characters with a single space
+                                                                                                              "(\\d)(\\D)", "\\1 \\2"), # add a space between any digit followed by a non-digit (e.g. 1A becomes 1 A)
+                                                                                                              "(\\D)(\\d)", "\\1 \\2"), # add a space between any non-digit followed by a digit (e.g. A1 becomes A 1)
+                                                                                                              "&", " AND "),        # replace the ampersand character with the string "and"
+                                                                                                              "( ){2,}", " "),      # replace any multiple spaces with a single space
+                                                                                                              " - ", "-")           # remove any spaces around a hyphen
+                                                                                                              )                     # Trim whitespace
+    )
+}
+```
+
+<br>
+
+## Grouping the Cleaned Data
+
+<br>
+
+The runtime of the later address matching methodology can be quite long when applied to a large number of records. This is due to the methodology using the Jaro-Winkler algorithm extensively. As 100 records each with the same exact address would receive the same matching outcome, only one record from this group would need to be matched. The same result would then apply to all such records. As said, the address cleaning helped group the patient addresses into as few groups as possible. 
+
+By grouping the cleaned address records, the 257M forms each with an address, could be condensed into around 8M distinct address-level records. An arbitrary ID was attributed to each record to aid the later processing of the data. This combined and cleaned set of patient prescription forms was now ready to be address matched against a list of different (or 'look up') addresses. This was to flag which records were related to prescribing from a care home. The Ordnance Survey AddressBase Product was used to do this, as it has a care home identifier within its building classification type field. 
+
+<br>
+<br>
+
+# **Processing AddressBase and CQC Information**
+
+<br>
+<br>
+
+## Overview
+
+<br>
+
+AddressBase (AB) is the most developed addressing product released by Ordnance Survey. This takes addressing information from both Local Authorities and Royal Mail and combines them to create a dataset of around 32M English address records. There were several reasons why this was chosen to match against patient address information:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Reason = c(1:4),
+  Description = c('As AB describes all addresses, this meant non-care homes could be accurately labelled as non-care home records.',
+             'Each AB address has a Unique Property Reference Number (UPRN) which allows AB records to be handled and processed easily.',
+             'Each AB address has a property classification meaning addressed can be selected or filtered by their building classification type.',
+             'Critically, within the above classification was a care home building type.')
+)
+
+my_kable(table)
+```
+
+<br>
+
+The property classifications within AB were crucial to the matching methodology. These classifications described different levels of property detail. Examples of 'Primary', 'Secondary' and 'Tertiary' property classifications are given below. The corresponding property classification code is described beside the the property classification descriptions. As can be seen, the Tertiary classification haas the most detailed property classification descriptions and codes.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Classification Level' = c('Primary', 'Secondary', 'Tertiary'),
+  'Example One' = c('Commercial - C', 'Agricultural - CA', 'Fishery - CA02'),
+  'Example Two' = c('Residential - R', 'Residential Institution - RI', 'Care / Nursing Home - RI01'),
+  check.names = F
+)
+
+my_kable(table)
+```
+
+<br>
+
+Three formats of AB were considered for this analysis. The level of property classification within each format was a key priority. Each of the three formats are described below:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'AddressBase Format' = c('Core', 'Plus', 'Premium'),
+  Description = c('A single flat table, with property addresses condensed into a Single Line Address (SLA), although only with a Secondary Level Classification (not the most granular level classification) associated with properties.',
+                  'A single flat table, with property address spread across many cells (meaning having to manually generate an SLA), although with a Tertiary Level Classification (the most detailed classification) associated with properties.',
+                  'A schema of tables, containing all of the information of AddressBase Plus, yet with a historic view of UPRN addresses and information.'),
+  check.names = F
+)
+
+my_kable(table)
+```
+
+<br>
+
+AddressBase Plus was chosen because it was the simplest product that met the requirements of the analysis, as it had a Tertiary Level Classification and the ability to generate an SLA.
+
+<br>
+
+## Postcode Filter
+
+<br>
+
+The later address matching was conducted at a postcode-level, meaning a patient address is only matched against other addresses within the same postcode. This was done for a few reasons:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Reason = c(1:2),
+  Description = c('Matching a patient address against all other addresses would take a long time.',
+             'As AB was a comprehensive dataset of all addresses, the most appropriate match would be found within the patient address postcode.')
+)
+
+my_kable(table)
+```
+
+<br>
+
+As a result, only AB addresses were used for matching if they appeared within a postcode where a care home was present.
+
+<br>
+
+## Other Filters
+
+<br>
+
+AB Plus is released every 6 weeks. The epoch closest to the end of the analysis time period was chosen, which was March 15th 2021. AB products are in state of continual refinement and address information validation, meaning the epoch closest to the end of the analysis time-period was the most up to date. Aside from the release date, the following filters were also applied to the AB Plus data:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Filter = c(1:5),
+  Description = c('Only English addresses were retained.',
+                  'Street Records were removed.',
+                  '‘Objects of Interest’ were removed.',
+                  'Car Park Spaces, Lock-ups, Garages and Garage Courts were removed.',
+                  '‘Land’ and ‘Other’ property classifications were removed.')
+  )
+
+my_kable(table)
+```
+
+<br>
+
+## Single Line Address (SLA) Generation
+
+<br>
+
+Two varieties of SLA can be generated from AB Plus, which are:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Abbreviation = c('DPA', 'GEO'),
+  Description = c('The Delivery Point Single Line Address',
+                  'The Geographic Address Single Line Address')
+  )
+
+my_kable(table)
+```
+
+<br>
+
+The DPA uses mail delivery fields sourced from Royal Mail. The GEO uses geographic field sourced from Local Authorities. The `SQL` to generate each SLA can be found at the Ordnance Survey GitHub page: https://github.com/OrdnanceSurvey/AddressBase/tree/master/SQL
+
+The `SQL` has been translated into `{dbplyr}` code and converted into two functions. These functions are contained within the NHSBSA `{addressMatchR}` package. Both of the `calc_addresssbase_plus_dpa_single_line_address` and `calc_addresssbase_plus_geo_single_line_address` functions are described below:
+
+<br>
+
+```{r}
+#' Calculate AddressBase Plus DPA single line address
+#'
+#' Calculate AddressBase Plus DPA single line address.
+#'
+#' @param df AddressBase Plus DB table
+#' @param include_postcode Whether or not to include postcode. Default is FALSE.
+#'
+#' @examples
+#' @export
+calc_addressbase_plus_dpa_single_line_address <- function(
+  df,
+  include_postcode = FALSE
+) {
+
+  # Create the single line address
+  df <- df %>%
+    dplyr::mutate(
+      DPA_SINGLE_LINE_ADDRESS = paste0(
+        ifelse(
+          test = !is.null(DEPARTMENT_NAME),
+          yes = paste0(DEPARTMENT_NAME, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(RM_ORGANISATION_NAME),
+          yes = paste0(RM_ORGANISATION_NAME, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(SUB_BUILDING_NAME),
+          yes = paste0(SUB_BUILDING_NAME, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(BUILDING_NAME),
+          yes = paste0(BUILDING_NAME, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(BUILDING_NUMBER),
+          yes = paste0(BUILDING_NUMBER, " "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(PO_BOX_NUMBER),
+          yes = paste0("PO BOX ", PO_BOX_NUMBER, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(DEP_THOROUGHFARE),
+          yes = paste0(DEP_THOROUGHFARE, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(THOROUGHFARE),
+          yes = paste0(THOROUGHFARE, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(DOU_DEP_LOCALITY),
+          yes = paste0(DOU_DEP_LOCALITY, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(DEP_LOCALITY),
+          yes = paste0(DEP_LOCALITY, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(POST_TOWN),
+          yes = paste0(POST_TOWN, ", "),
+          no = ""
+        )
+      )
+    )
+
+  # Add the postcode if necessary
+  if (include_postcode) {
+
+    df <- df %>%
+      dplyr::mutate(
+        DPA_SINGLE_LINE_ADDRESS = paste0(DPA_SINGLE_LINE_ADDRESS, POSTCODE)
+      )
+
+  }
+
+  df
+
+}
+
+
+#' Calculate AddressBase Plus GEO single line address
+#'
+#' Calculate AddressBase Plus GEO single line address.
+#'
+#' @param df AddressBase Plus DB table
+#' @param include_postcode Whether or not to include postcode. Default is FALSE.
+#'
+#' @examples
+#' @export
+calc_addressbase_plus_geo_single_line_address <- function(
+  df,
+  include_postcode = FALSE
+) {
+
+  # Create the single line address
+  df <- df %>%
+    dplyr::mutate(
+      GEO_SINGLE_LINE_ADDRESS = paste0(
+        ifelse(
+          test = !is.null(LA_ORGANISATION),
+          yes = paste0(LA_ORGANISATION, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(SAO_TEXT),
+          yes = paste0(SAO_TEXT, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(SAO_START_NUMBER) &
+            is.null(SAO_START_SUFFIX) &
+            is.null(SAO_END_NUMBER),
+          yes = paste0(SAO_START_NUMBER, ", "),
+          no = ifelse(
+            test = is.null(SAO_START_NUMBER),
+            yes = "",
+            no = as.character(SAO_START_NUMBER)
+          )
+        ),
+        ifelse(
+          test = !is.null(SAO_START_SUFFIX) & is.null(SAO_END_NUMBER),
+          yes = paste0(SAO_START_SUFFIX, ", "),
+          no = ifelse(
+            test = !is.null(SAO_START_SUFFIX) & !is.null(SAO_END_NUMBER),
+            yes = SAO_START_SUFFIX,
+            no = ""
+          )
+        ),
+        ifelse(
+          test = !is.null(SAO_END_SUFFIX) & !is.null(SAO_END_NUMBER),
+          yes = "-",
+          no = ifelse(
+            test = !is.null(SAO_START_NUMBER) & !is.null(SAO_END_NUMBER),
+            yes = "-",
+            no = ""
+          )
+        ),
+        ifelse(
+          test = !is.null(SAO_END_NUMBER) & is.null(SAO_END_SUFFIX),
+          yes = paste0(SAO_END_NUMBER, ", "),
+          no = ifelse(
+            test = is.null(SAO_END_NUMBER),
+            yes = "",
+            no = as.character(SAO_END_NUMBER)
+          )
+        ),
+        ifelse(
+          test = !is.null(PAO_TEXT),
+          yes = paste0(PAO_TEXT, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(PAO_START_NUMBER) &
+            is.null(PAO_START_SUFFIX) &
+            is.null(PAO_END_NUMBER),
+          yes = paste0(PAO_START_NUMBER, ", "),
+          no = ifelse(
+            test = is.null(PAO_START_NUMBER),
+            yes = "",
+            no = as.character(PAO_START_NUMBER)
+          )
+        ),
+        ifelse(
+          test = !is.null(PAO_START_SUFFIX) & is.null(PAO_END_NUMBER),
+          yes = paste0(PAO_START_SUFFIX, ", "),
+          no = ifelse(
+            test = !is.null(PAO_START_SUFFIX) & !is.null(PAO_END_NUMBER),
+            yes = PAO_START_SUFFIX,
+            no = ""
+          )
+        ),
+        ifelse(
+          test = !is.null(PAO_END_SUFFIX) & !is.null(PAO_END_NUMBER),
+          yes = "-",
+          no = ifelse(
+            test = !is.null(PAO_START_NUMBER) & !is.null(PAO_END_NUMBER),
+            yes = "-",
+            no = ""
+          )
+        ),
+        ifelse(
+          test = !is.null(PAO_END_NUMBER) & is.null(PAO_END_SUFFIX),
+          yes = paste0(PAO_END_NUMBER, ", "),
+          no = ifelse(
+            test = is.null(PAO_END_NUMBER),
+            yes = "",
+            no = as.character(PAO_END_NUMBER)
+          )
+        ),
+        ifelse(
+          test = !is.null(STREET_DESCRIPTION),
+          yes = paste0(STREET_DESCRIPTION, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(LOCALITY),
+          yes = paste0(LOCALITY, ", "),
+          no = ""
+        ),
+        ifelse(
+          test = !is.null(TOWN_NAME),
+          yes = paste0(TOWN_NAME, ", "),
+          no = ""
+        )
+      )
+    )
+
+  # Add the postcode if necessary
+  if (include_postcode) {
+
+    df <- df %>%
+      dplyr::mutate(
+        GEO_SINGLE_LINE_ADDRESS = paste0(
+          GEO_SINGLE_LINE_ADDRESS,
+          ifelse(
+            test = !is.null(POSTCODE_LOCATOR),
+            yes = POSTCODE_LOCATOR,
+            no = ""
+          )
+        )
+      )
+
+  }
+
+  df
+
+}
+```
+
+<br>
+
+However, both the DPA and GEO can differ from the SLA supplied by AB Core. In such cases, the closest approximation was to concatenate all the fields from DPA and GEO to create a Core SLA (CRA). `SQL` was generated to concatenate two address strings whilst retaining as much word order as possible. This was in turn converted into `{dbplyr}` code and created as a function, named `oracle_merge_strings`. This function, having uses beyond just address-matching, is found within the `{nhsbsaR}` package. This function was created to work with an Oracle database. There is another `{nhsbsaR}` function referenced here, named `oracle_unnest_tokens` that is described later.
+
+<br>
+
+```{r}
+#' Merge Two Strings Together Whilst Retaining an Order of Some Kind
+#'
+#' This is intended to be used with differing address strings
+#' The result is a 'master' address string that contains all parts of each address
+#'
+#' @param df Lazy Oracle table
+#' @param first_col First column
+#' @param second_col Second column
+#' @param merge_col Name to give merged column
+#'
+#' @details Requires `nhsbsaR::oracle_unnest_tokens()`.
+#'
+#' @examples
+#' table_db %>%
+#'   nhsbsaR::oracle_merge_strings(
+#'     first_col = "ADDRESS_ONE",
+#'     second_col = "ADDRESS_TWO",
+#'     merge_col = "ADDRESS_MERGED"
+#'   )
+#' @returns original df with additional merged column added
+#'
+#' @export
+oracle_merge_strings <- function(df, first_col, second_col, merge_col) {
+
+  # Get the unique combinations we want to merge (in case there are duplicates)
+  distinct_df <- df %>%
+    dplyr::distinct(.data[[first_col]], .data[[second_col]])
+
+  # Process columns (loop over each one as we repeat the processing)
+  col_dfs <- list()
+  for (col in c(first_col, second_col)) {
+    col_dfs[[col]] <- distinct_df %>%
+      # Get the unique values
+      dplyr::distinct(.data[[col]]) %>%
+      # Tokenise
+      nhsbsaR::oracle_unnest_tokens(
+        col = col,
+        drop = FALSE
+      ) %>%
+      # Give each token a rank within the string (e.g. 'CITY-1', 'CITY-2', etc)
+      dplyr::group_by(.data[[col]], TOKEN) %>%
+      dplyr::mutate(TOKEN_RANK = dplyr::row_number(TOKEN_NUMBER)) %>%
+      dplyr::ungroup() %>%
+      # Rename the token number column
+      dplyr::rename("{col}_TOKEN_NUMBER" := TOKEN_NUMBER) %>%
+      # Join back to the unique combinations (handy for full_join later)
+      dplyr::inner_join(y = distinct_df)
+  }
+
+  # Join the tokenised data together (attempt to join by TOKEN and TOKEN_RANK)
+  distinct_df <-
+    dplyr::full_join(
+      x = col_dfs[[first_col]],
+      y = col_dfs[[second_col]]
+    )
+
+  # Pull the DB connection
+  db_connection <- df$src$con
+
+  # Build SQL Query
+  sql_query <- dbplyr::build_sql(
+    con = db_connection,
+    "WITH LT AS
+    (
+      SELECT ",
+        dplyr::sql(first_col), ", ",
+        dplyr::sql(second_col), ", ",
+        dplyr::sql(first_col), "_TOKEN_NUMBER, ",
+        dplyr::sql(second_col), "_TOKEN_NUMBER, ", "
+        TOKEN,
+        COALESCE(", dplyr::sql(first_col), "_TOKEN_NUMBER, ", "LEAD(", dplyr::sql(first_col), "_TOKEN_NUMBER IGNORE NULLS) OVER (PARTITION BY ", dplyr::sql(first_col), ", ", dplyr::sql(second_col), " ORDER BY ", dplyr::sql(second_col), "_TOKEN_NUMBER)) AS LEAD_TOKEN_NUMBER
+      FROM
+        (", dbplyr::sql_render(distinct_df), ")
+    )
+    SELECT ",
+      dplyr::sql(first_col), ", ",
+      dplyr::sql(second_col), ",
+      LISTAGG(TOKEN, ' ') within group (order by LEAD_TOKEN_NUMBER, ", dplyr::sql(second_col), "_TOKEN_NUMBER) as ", dplyr::sql(merge_col), "
+    FROM
+      LT
+    GROUP BY ",
+      dplyr::sql(first_col), ", ",
+      dplyr::sql(second_col)
+  )
+
+  # Generate merged strings from the query
+  merged_df <- dplyr::tbl(src = db_connection, dplyr::sql(sql_query))
+
+  # Output the original data with the merged string joined to it
+  df %>%
+    dplyr::inner_join(y = merged_df)
+}
+```
+
+<br>
+
+This meant that between one and three SLA could be generated for a UPRN.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'SLA Count' = c('One', 'Two', 'Three'),
+  Description = c('If DPA was the same as GEO',
+                  'If DPA and GEO differed, yet one was a subset of the other',
+                  'If DPA and GEO differed, yet one was not a subset of the other, meaning a third CRA could be generated.'),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+An example of how a CRA SLA could be generated from a DPA SLA and GEO SLA, where one was not a subset of the other, is given below.
+The address fields in bold are those unique for each of the DPA and GEO SLA, carried forward into the generation of the CRA SLA.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'SLA' = c('DPA', 'GEO', 'CRA'),
+  Description = c('24 KINGS ROAD TYNEMOUTH <b>NORTH SHIELDS</b>',
+                  '<b>APPLE COTTAGE</b> 24 KINGS ROAD TYNEMOUTH',
+                  '<b>APPLE COTTAGE</b> 24 KINGS ROAD TYNEMOUTH <b>NORTH SHIELDS</b>'),
+  check.names = F
+  )
+
+
+
+kable(table, escape = F, align = 'll') %>% 
+ kable_styling(full_width = F, c("bordered", "striped"), position = "left")
+```
+
+<br>
+
+Multiple SLAs for the same UPRN were carried forward into the matching stage as this enabled a greater number of exact address string matches, plus more options for a higher scoring address match. Once generated, all SLA address information was cleaned in the same way as the patient address information.
+
+<br>
+
+## CQC Data Supplement
+
+<br>
+
+While AB Plus was the foundation for the matching process, it was decided to bolster this with some care home information from CQC. CQC information was sourced from the CQC API. Another benefit of incorporating this information, is that it enabled a distinction between Nursing Homes and Residential Homes to be made. This was important for the analysis results. The code to query and process the data from the CQC API is describe below:
+
+<br>
+
+````
+```{r, echo=F}`r''`
+library(dplyr)
+
+# Connections and Existing Table check
+
+# Set up connection to the DB
+con <- nhsbsaR::con_nhsbsa(database = "DALP")
+
+# Check if the table exists
+exists <- DBI::dbExistsTable(conn = con, name = "INT615_CQC")
+
+# Drop any existing table beforehand
+if (exists) DBI::dbRemoveTable(conn = con, name = "INT615_CQC")
+
+# Pull CQC data
+
+# Set a partner code (if we don't set this then we struggle to throttle calls)
+cqcr::cqc_partner_code() # NHSBSA
+
+# When we use the CQC API we need to be careful not to exceed 600 requests per
+# minute (10 per second)
+
+# Pull the CQC ID name and postcode for every care home (~ 60 requests)
+cqc_locations_df <- cqcr::cqc_locations_search(care_home = TRUE)
+
+# Now we need to get the details for these care homes. So we batch up our ~ 30k
+# care homes into bundles of 10 and ensure we wait just over a second before 
+# starting the next batch
+cqc_locations_dfs <- split(cqc_locations_df, seq(nrow(cqc_locations_df)) %/% 10)
+cqc_batch_details <- list()
+for (batch in cqc_locations_dfs) {
+  
+  # Record the start time
+  start <- Sys.time()
+  
+  # Get the batch results and append them to the existing ones
+  cqc_batch_details <- c(cqc_batch_details, cqcr::cqc_location_details(batch))
+  
+  # Pause for the remainder of just over a second
+  Sys.sleep(max(0, 1.1 - as.numeric(Sys.time() - start)))
+  
+}
+
+# Process CQC data and write to DB
+
+# Convert the batch results into a dataframe
+cqc_details_df <- purrr::map_df(
+  .x = cqc_batch_details, 
+  .f = ~ bind_rows(unlist(x = .x))
+)
+
+# For care homes project we are only interested in a subset of columns, so lets
+# extract them
+cqc_details_df <- cqc_details_df %>%
+  # Filter to the period of interest
+  mutate(
+    # Add the nursing home / residential home flag
+    nursing_home = ifelse(
+      test = if_any(
+        .cols = starts_with("gac") & contains("name"), 
+        .fns = ~ grepl(pattern = "Nursing home", x = .x)
+      ),
+      yes = 1L,
+      no = 0L
+    ),
+    residential_home = ifelse(
+      test = if_any(
+        .cols = starts_with("gac") & contains("name"), 
+        .fns = ~ grepl(pattern = "Residential home", x = .x)
+      ),
+      yes = 1L,
+      no = 0L
+    ),
+    # Change type of numeric col
+    number_of_beds = as.integer(number_of_beds)
+  ) %>%
+  # Select the required cols and uppercase
+  select(
+    location_id,
+    uprn,
+    registration_status,
+    registration_date,
+    deregistration_date,
+    dormancy,
+    name,
+    postal_address_line_1,
+    postal_address_line_2,
+    postal_address_town_city,
+    postal_address_county,
+    postal_code,
+    nursing_home,
+    residential_home,
+    type,
+    number_of_beds
+  ) %>%
+  rename_with(toupper)
+
+# Upload to DB with indexes
+con %>%
+  copy_to(
+    df = cqc_details_df,
+    name = "INT615_CQC",
+    indexes = list(c("LOCATION_ID"), c("UPRN"), c("POSTAL_CODE")),
+    temporary = FALSE
+  )
+
+# Disconnect connection to database
+DBI::dbDisconnect(con)
+```
+````
+
+<br>
+
+The nature of the later described matching process enabled the two streams of address information to be combined. The rationale for including this additional data, and why we were eligible to do so, was due to the following:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Reason= c(1:4),
+  Description = c('Instances of a different CQC care home spelling would provide another SLA option.',
+                  'Additional SLA would only increase overall potential accuracy.',
+                  'CQC care home information itself goes on to inform the AB care home classification, so is already a parallel of AB care home information.',
+                  'Due to the lag between AB being updated by CQC information, there would be some CQC care home address information not yet in AB, which would benefit the results.')
+  )
+
+my_kable(table)
+```
+
+<br>
+
+All that said, AB Plus was still the foundation of the process, as the comprehensive list of all addresses enabled the distinction between non-care home and care home addresses to be made.
+
+As all addresses were required for postcodes where there was a care home, AB information needed to be included for postcodes where there was a CQC classified care home, but not an AB care home classified property.
+
+<br>
+
+## Stacking of AB and CQC SLA
+
+<br>
+
+These various SLA could then be stacked, ready for later matching, each accompanied by their UPRN or CQC-ID. While all care home information was distinct at this point, non-care home information still had a few exceptions, where two UPRN might share the same postcode and address. Non-care home data was processed so that every postcode-address combination was distinct. This prevented  with a handful of UPRN dropped as a result. Properties now had up to four SLA variations if they were a care home, and up to three if they were not a care home. An arbitrary unique identifier was generated to distinguish the SLA variations within a single property. 
+
+As can be seen, the script to stack the Ab and CQC data, uses the functions `tidy_postcode`, `tidy_single_line_address`, `calc_addresssbase_plus_dpa_single_line_address` and `calc_addresssbase_plus_geo_single_line_address` from the `{addressMatchR}` package, along with the `oracle_merge_strings` function from the `{nhsbsaR}` package. 
+
+<br>
+
+````
+```{r}`r'''`
+library(dplyr)
+library(dbplyr)
+
+# Set up connection to the DB
+con <- nhsbsaR::con_nhsbsa(database = "DALP")
+
+# Check if the table exists
+exists <- DBI::dbExistsTable(conn = con, name = "INT615_ADDRESSBASE_PLUS_CQC")
+
+# Drop any existing table beforehand
+if (exists) {
+  DBI::dbRemoveTable(conn = con, name = "INT615_ADDRESSBASE_PLUS_CQC")
+}
+
+# Process CQC care home table
+
+# Create a lazy table from the CQC care home table
+cqc_db <- con %>% 
+  tbl(from = "INT615_CQC")
+
+# Convert registration and deregistration columns to dates and filter to 2020/21
+cqc_db <- cqc_db %>%
+  mutate(
+    REGISTRATION_DATE = ifelse(
+      test = is.na(REGISTRATION_DATE),
+      yes = NA,
+      no = TO_DATE(REGISTRATION_DATE ,"YYYY-MM-DD")
+    ),
+    DEREGISTRATION_DATE = ifelse(
+      test = is.na(DEREGISTRATION_DATE),
+      yes = NA,
+      no = TO_DATE(DEREGISTRATION_DATE ,"YYYY-MM-DD")
+    )
+  ) %>% 
+  filter(
+    REGISTRATION_DATE <= TO_DATE("2021-03-31","YYYY-MM-DD"),
+    is.na(DEREGISTRATION_DATE) | 
+      DEREGISTRATION_DATE >= TO_DATE("2020-04-01","YYYY-MM-DD")
+  )
+
+# Create a tidy single line address and postcode
+cqc_db <- cqc_db %>%
+  mutate(
+    SINGLE_LINE_ADDRESS = paste(
+      NAME,
+      POSTAL_ADDRESS_LINE_1,
+      POSTAL_ADDRESS_LINE_2,
+      POSTAL_ADDRESS_TOWN_CITY,
+      POSTAL_ADDRESS_COUNTY
+    )
+  ) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS) %>%
+  addressMatchR::tidy_postcode(col = POSTAL_CODE) %>%
+  rename(POSTCODE = POSTAL_CODE)
+
+# Convert to a distinct postcode and single line address table by taking the 
+# max of the attribute columns
+cqc_uprn_postcode_address_db <- cqc_db %>%
+  group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  summarise(
+    LOCATION_ID = max(LOCATION_ID, na.rm = TRUE),
+    # Change UPRN to numeric and loose 2 doing max
+    UPRN = max(as.integer(UPRN), na.rm = TRUE),
+    NURSING_HOME_FLAG = max(as.integer(NURSING_HOME), na.rm = TRUE),
+    RESIDENTIAL_HOME_FLAG = max(as.integer(RESIDENTIAL_HOME), na.rm = TRUE)
+  ) %>% 
+  ungroup() %>%
+  relocate(UPRN, LOCATION_ID)
+
+# Process AddressBase Plus care home table
+
+# Create a lazy table from the AddressBase Plus table
+addressbase_plus_db <- con %>% 
+  tbl(from = in_schema("DALL_REF", "ADDRESSBASE_PLUS"))
+
+# Filter AddressBase Plus to English properties in at the end of 2021 FY and
+# create a care home flag
+addressbase_plus_db <- addressbase_plus_db %>%
+  filter(
+    COUNTRY == "E",
+    substr(CLASS, 1, 1) != "L", # Land
+    substr(CLASS, 1, 1) != "O", # Other (Ordnance Survey only)
+    substr(CLASS, 1, 2) != "PS", # Street Record
+    substr(CLASS, 1, 2) != "RC", # Car Park Space
+    substr(CLASS, 1, 2) != "RG", # Lock-Up / Garage / Garage Court
+    substr(CLASS, 1, 1) != "Z", # Object of interest
+    RELEASE_DATE == TO_DATE("2021-03-15", "YYYY-MM-DD")
+  ) %>%
+  mutate(CH_FLAG = ifelse(CLASS == "RI01", 1L, 0L)) %>%
+  # Take POSTCODE_LOCATOR as the postcode as it is equal to POSTCODE (whenever 
+  # one exists) but more complete and tidy it
+  mutate(POSTCODE = POSTCODE_LOCATOR) %>%
+  addressMatchR::tidy_postcode(col = POSTCODE)
+
+# Get postcodes where there is a care home present (including CQC data)
+care_home_postcodes_db <- 
+  union_all(
+    x = addressbase_plus_db %>% 
+      filter(CH_FLAG == 1L) %>%
+      select(POSTCODE),
+    y = cqc_uprn_postcode_address_db %>%
+      select(POSTCODE)
+  )
+
+# Filter AddressBase Plus to postcodes where there is a care home present
+addressbase_plus_db <- addressbase_plus_db %>%
+  semi_join(y = care_home_postcodes_db)
+
+# Create and tidy the DPA and GEO single line addresses
+addressbase_plus_db <- addressbase_plus_db %>%
+  addressMatchR::calc_addressbase_plus_dpa_single_line_address() %>%
+  addressMatchR::calc_addressbase_plus_geo_single_line_address() %>%
+  addressMatchR::tidy_single_line_address(col = DPA_SINGLE_LINE_ADDRESS) %>% 
+  addressMatchR::tidy_single_line_address(col = GEO_SINGLE_LINE_ADDRESS) %>% 
+  select(
+    UPRN,
+    POSTCODE,
+    DPA_SINGLE_LINE_ADDRESS,
+    GEO_SINGLE_LINE_ADDRESS,
+    CH_FLAG
+  )
+
+# When DPA != GEO then add a CORE single line address
+addressbase_plus_db <- 
+  union_all(
+    x = addressbase_plus_db %>%
+      filter(
+        is.na(DPA_SINGLE_LINE_ADDRESS) | 
+          is.na(GEO_SINGLE_LINE_ADDRESS) | 
+          DPA_SINGLE_LINE_ADDRESS == GEO_SINGLE_LINE_ADDRESS
+      ),
+    y = addressbase_plus_db %>%
+      filter(
+        !is.na(DPA_SINGLE_LINE_ADDRESS),
+        !is.na(GEO_SINGLE_LINE_ADDRESS),
+        DPA_SINGLE_LINE_ADDRESS != GEO_SINGLE_LINE_ADDRESS
+      ) %>%
+      nhsbsaR::oracle_merge_strings(
+        first_col = "DPA_SINGLE_LINE_ADDRESS",
+        second_col = "GEO_SINGLE_LINE_ADDRESS",
+        merge_col = "CORE_SINGLE_LINE_ADDRESS"
+      )
+  )
+
+# Combine AddressBase Plus (care home postcodes) and CQC
+
+# Join the CQC attributes to existing UPRNs (take the max flags where there are 
+# duplicate UPRN)
+addressbase_plus_cqc_db <- addressbase_plus_db %>%
+  left_join(
+    y = cqc_uprn_postcode_address_db %>%
+      group_by(UPRN) %>%
+      summarise(
+        LOCATION_ID = max(LOCATION_ID, na.rm = TRUE),
+        NURSING_HOME_FLAG = max(NURSING_HOME_FLAG, na.rm = TRUE), 
+        RESIDENTIAL_HOME_FLAG = max(RESIDENTIAL_HOME_FLAG, na.rm = TRUE)
+      ) %>% 
+      ungroup()
+  )
+
+# Convert to a long table of distinct stacked single line addresses
+addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
+  tidyr::pivot_longer(
+    cols = ends_with("SINGLE_LINE_ADDRESS"),
+    names_to = "ADDRESS_TYPE",
+    values_to = "SINGLE_LINE_ADDRESS"
+  ) %>%
+  filter(!is.na(SINGLE_LINE_ADDRESS)) %>%
+  select(-ADDRESS_TYPE) %>%
+  relocate(SINGLE_LINE_ADDRESS, .after = POSTCODE)
+
+# Stack the CQC data and make distinct (take max row)
+addressbase_plus_cqc_db <- addressbase_plus_cqc_db %>%
+  union_all(y = cqc_uprn_postcode_address_db %>% mutate(CH_FLAG = 1L)) %>%
+  group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>% 
+  slice_max(order_by = UPRN, with_ties = FALSE) %>%
+  ungroup()
+
+# Write the table back to the DB with indexes
+addressbase_plus_cqc_db %>%
+  compute(
+    name = "INT615_ADDRESSBASE_PLUS_CQC",
+    indexes = list(c("UPRN", c("POSTCODE"))), # single line address too long
+    temporary = FALSE
+  )
+
+# Disconnect from database
+DBI::dbDisconnect(con)
+```
+````
+
+<br>
+
+There are two functions from the `{nhbsaR}` package, called `connect_nhsbsa` and `oracle_create_table`, that are used within the above script although not documented here, as they are purely helper functions with an internal purpose (they help connect and write back to a database). At this point the processed and combined AB and CQC address information was ready to be matched against the patient address records.
+
+<br>
+
+## Summary of Workflow until this Point
+
+<br>
+
+The following fllow chart summarises the workflow and methodology up until this point, namely all of the data processing and preparation before any matching has taken place.
+
+<br>
+
+```{r, echo = F}
+g = "#238b45"
+b = "#2171b5"
+
+highchart() %>%
+  hc_chart(type = 'organization') %>%
+  hc_add_series(
+    name = '',
+    color = "red",
+    nodeWidth = 85,
+    nodeHeight = 120,
+    data = list(
+      list(from = 'Processing Patient Paper Forms', to = 'Total Patient Information'),
+      list(from = 'Processing Patient Electronic Forms', to = 'Total Patient Information'),
+      list(from = 'Total Patient Information', to = 'Beginning of Matching Process'),
+      list(from = 'Processing AB Address Data', to = 'Total Look up Address Information'),
+      list(from = 'Processing CQC Address Data', to = 'Total Look up Address Information'),
+      list(from = 'Total Look up Address Information', to = 'Beginning of Matching Process')
+    )
+  ) %>% 
+  hc_chart(inverted=T) %>% 
+  hc_colors(c(b, b, b, 'orange', g, g, g)) %>% 
+  hc_title(text = "<b>Care Home Address Matching Methodology Summary</b>") %>% 
+  hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial')))) %>% 
+  hc_tooltip(enabled = F) %>% 
+  hc_credits(enabled = T) %>% 
+  hc_size(height = 550, width = 470)
+```
+
+<br>
+<br>
+
+# **Address Matching Patients Records**
+
+<br>
+<br>
+
+## Overview
+
+<br>
+
+Patient address records were matched against AB-CQC address records and then flagged if the matched address was classified as a care home. While all CQC addresses were care homes, only a selection of AB addresses were classified as such. There were two ways to create this address match:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Match Type' = c(1,2),
+  'Match Description' = c('Exact string match.',
+                          'Non-exact string match, or Jaro-Winkler (JW) string match.'),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+## Exact String Match
+
+<br>
+
+Each cleaned patient address record was matched against each cleaned AB-CQC record that shared the same postcode. When these two strings exactly matched, this was classified as an Exact Match. Of address records matched to a care home, around 9% were an Exact Match. Exact matches had two benefits:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Benefit = c(1,2),
+  Description = c('Certainty about the AB-CQC record it was matched to.',
+                  'Less records being JW matched, which was a more resource-intensive process.')
+  )
+
+my_kable(table)
+```
+
+<br>
+
+## Non-Exact String Match
+
+<br>
+
+The remaining records that were not exact matches were attempted to be matched using the non-exact string match method, or JW method. This was a method developed, iterated and validated by the Data Science team with the NHSBSA. The JW matching method has two key characteristics:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Characteristic = c(1,2),
+  Description = c('Address strings were split into tokens and matching is done on a token-level.',
+                  'Non-exact token matches are given a matching score using the JW algorithm.')
+  )
+
+my_kable(table)
+```
+
+<br>
+
+The JW matching method has several steps which are outlined below.
+
+<br>
+
+## Tokenising Patient Address Records and AB-CQC Address Records
+
+<br>
+
+Tokenising a piece of text, such as an address, means splitting the text into individual words. Tokenising was crucial to the address-matching process and a function was created to do this, called `oracle_unnest_tokens`. It was essential that this process could be carried out in the database. This is found within the `{nhsbsaR}` package, as it has general uses beyond address-matching. The function is for use with Oracle databases, although the source code could be easily configured to work with other databases. The code for the function is described below:
+
+<br>
+
+```{r}
+#' Split a column of an Oracle table into tokens
+#'
+#' A rip off of `tidytext::unnest_tokens` that will work on lazy Oracle tables.
+#' This function will retain all columns and add TOKEN_NUMBER and TOKEN columns
+#' to the table.
+#'
+#' Inspiration:
+#' https://stackoverflow.com/questions/59537458/how-to-pipe-sql-into-rs-dplyr
+#'
+#' @param df Lazy Oracle table
+#' @param col Column to be tokenised
+#' @param drop Whether original input column should get dropped
+#' @param regex regex to tokenise by
+#'
+#' @examples
+#' table_db %>% nhsbsaR::oracle_unnest_tokens(col = "DUMMY")
+#' @export
+oracle_unnest_tokens <- function(df, col, drop = TRUE, pattern = "[:space:]") {
+
+  # Pull the connection
+  db_connection <- df$src$con
+
+  # Which columns do we want to output
+  output_cols <- colnames(df)
+  if (drop) {
+    output_cols <- output_cols[output_cols != col]
+  }
+
+  # Convert to a comma'd list sring of cols "col1, col2, col3" to use in  SQL
+  output_cols <- paste0(output_cols, collapse = ", ")
+
+  # Formulate the SQL for tokenising in Oracle
+  sql_query <- dbplyr::build_sql(
+    con = db_connection,
+    "
+      SELECT
+        ", dplyr::sql(output_cols), ",
+        ROW_NUMBER() OVER (PARTITION BY ", dplyr::sql(output_cols), " ORDER BY lines.column_value) AS TOKEN_NUMBER,
+        TRIM(REGEXP_SUBSTR(", dplyr::sql(col), ", '[^", dplyr::sql(pattern), "]+', 1, lines.column_value))        AS TOKEN
+      FROM
+        (", dbplyr::sql_render(df), "),
+        TABLE(CAST(MULTISET(SELECT LEVEL FROM dual CONNECT BY INSTR(", dplyr::sql(col), " , ' ', 1, LEVEL - 1) > 0)  as  sys.odciNumberList))  lines
+      "
+  )
+
+  dplyr::tbl(db_connection, dplyr::sql(sql_query))
+}
+```
+
+<br>
+
+JW matches, like exact matches, were carried out on a postcode-level. This meant a patient address record was matched against all AB-CQC records within the same postcode. Before address strings were tokenised, they were cleaned using the `tidy_single_line_function` function. After being tokenised, the single address string of '34 KING ROAD SOMERTON' would become the four separate tokens (or words) of '34', 'KING', 'ROAD' and 'SOMERTON'.  Each token of an AB-CQC address was matched against each token of a patient record address. If '34 KING ROAD SOMERTON' was matched against '33 CORNER SHOP KINGS ROAD SOMEPLACE', every word from the first address would be matched against every word from the second address. The below grid shows the 24 word-level (or token-level) matches that would be carried out in this instance.
+
+<br>
+
+```{r, echo = FALSE}
+add_two = data.frame(
+  add_two = c('34', 'KING', 'ROAD', "SOMERTON"),
+  value = 1,
+  check.names = F
+  ) %>% 
+  mutate(add_two = factor(
+    add_two,
+    levels = c('SOMERTON', 'ROAD', 'KING', '34'))
+    )
+
+add_one = data.frame(
+  add_one = c('33', 'CORNER', 'SHOP', 'KINGS', 'ROAD', 'SOMEPLACE'),
+  value = 1,
+  check.names = F
+  ) %>% 
+  mutate(add_one = factor(
+    add_one,
+    levels = c('33', 'CORNER', 'SHOP', 'KINGS', 'ROAD', 'SOMEPLACE'))
+    )
+
+add = full_join(add_one, add_two, by = 'value')
+
+add %>% 
+  mutate(value = NA) %>%  
+  hchart('heatmap', hcaes(add_one, add_two, value = value),
+       dataLabels = list(enabled = T),
+       borderWidth = 2,
+       borderColor = "black"
+       ) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_xAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_yAxis(title = list(text = "Primary Address (Patient)")) %>% 
+  hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_size(height=300,width=470) %>% 
+  hc_credits(enabled = T)
+```
+
+<br>
+
+Each token-level match was then given a score. Numerical token score and character token scores each had their own rules.
+
+<br>
+
+## Numerical Token Match Scores
+
+<br>
+
+When matching the two address types, numerical tokens were only matched against other numerical tokens. If '34 KING ROAD SOMERTON' was matched against '33 KING ROAD', '34' would be scored against '33'. If '34 KINGS ROAD' was matched against '33 CORNER SHOP KINGS ROAD SOMEPLACE', one single numerical token match would be carried out. The scoring and logic was as follows:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  `Numerical Token Approach` = c('Numerical matches were given a score of 4 or 0.',
+                  'This was 4 for an exact numerical token match, or otherwise 0. For example, ‘34’ vs ‘33’ would be a score of 0, while ‘34’ vs ‘34’ would be a score of 4.',
+                  'In effect, this was giving a high score to two addresses who shared a numerical token, who were also at the same postcode.',
+                  'In practice, in some instances it is possible to identify an address just using postcode and leading numerical token, which this scoring method leverages.'),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+Using the above scoring, the grid of 24 values could be partially completed. Every numerical versus non-numerical match was 0, while '33' versus '34' was also 0, as this was not an exact numerical token match.
+
+<br>
+
+```{r, echo = F}
+add %>% 
+  mutate(
+    value = NA,
+    value = ifelse(add_two == 34, 0, value),
+    value = ifelse(add_one == 33, 0, value)
+    ) %>%  
+  hchart('heatmap', hcaes(add_one, add_two, value = value),
+       dataLabels = list(enabled = T),
+       borderWidth = 2,
+       borderColor = "black"
+       ) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_xAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_yAxis(title = list(text = "Primary Address (Patient)")) %>% 
+  hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_size(height=300, width=470) %>% 
+  hc_colorAxis(minColor = "white", maxColor = "white") %>% 
+  hc_credits(enabled = T)
+```
+
+<br>
+
+A final point to note is that the decision to attribute a score of 4 or 0 to numerical token matches was arrived at by validation of address match results. This sufficiently promoted matches of address records that shared the same numerical token, without unintended consequences.
+
+<br>
+
+## Character Token Match Scores
+
+<br>
+
+Character tokens were likewise only matched against character tokens. If '34 KING ROAD SOMERTON'’ was matched against '33 CORNER SHOP KINGS ROAD SOMEPLACE', then 'KINGS', 'ROAD' and 'SOMERTON' would each be matched against the 5 tokens, 'CORNER', 'SHOP', 'KING', 'ROAD' and 'SOMEPLACE'. The scoring and logic or character token matches was as follows:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  `Character Token Approach` = c(
+    'Character token matches ranged from 0 to 1.',
+    'Exact character token matches had a score of 1.',
+    'Non-exact character token matches had a score less than 1.',
+    'The JW similarity algorithm was used to score non-exact character token matches.',
+    'Any JW score of less than 0.8 was then rendered as 0.',
+    'This meant that poor quality matches could not contribute to an overall score, as the 0.8 threshold required a degree of similarity from the outset.'
+    ),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+As with the exact numerical token match score of 4, the JW threshold value of 0.8 was also arrived at by validation of address match results. This is carried out during a previous initiative. Including character token matches with a JW threshold of either 0.7 or 0.6 led to a greater number of incorrect matches. 
+
+<br>
+
+## Reducing the Number of Token-Level JW Matches Performed
+
+<br>
+
+Calculating token-level JW scores was the most resource-intensive aspect of the methodology. With this in mind, minimising how often these calculations were performed helped speed up runtime. Not scoring numerical tokens against character tokens, and attributing a score of 1 to an exact token match, helped this goal. To further reduce runtime, a JW calculation would only be applied if one of the following were true:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Condition = c(1:2),
+  Description = c(
+    'Two character tokens shared the same first, second or last letter.',
+    'One token was a substring of the other, for example ‘KING’ is a substring of ‘KINGFISHER’'
+    ),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+With these conditions in place, we could derive several 0 scores within our scoring grid, and a score of 1 for the exact match of 'ROAD' versus 'ROAD'. This was again prior to any JW matches being carried out. As can be seen, out of the initial 24 cells, we could derive a value for 17/24 cells prior to any application of JW.
+
+<br>
+
+```{r, echo=FALSE}
+add %>% 
+  mutate(
+    value = NA,
+    value = case_when(
+      add_two == 34 ~ 0,
+      add_one == 33 ~ 0,
+      add_one == 'ROAD' & add_two == 'ROAD' ~ 1,
+      add_one == 'CORNER' & add_two == 'KING' ~ 0,
+      add_one == 'SHOP' & add_two == 'KING' ~ 0,
+      add_one == 'SHOP' & add_two == 'ROAD' ~ 0,
+      add_one == 'KINGS' & add_two == 'ROAD' ~ 0,
+      add_one == 'KINGS' & add_two == 'SOMERTON' ~ 0,
+      add_one == 'ROAD' & add_two == 'KING' ~ 0,
+      add_one == 'SOMEPLACE' & add_two == 'KING' ~ 0
+      # add_one == 'CORNER' & add_two == 'SOMERTON' ~ NA,
+      # add_one == 'SHOP' & add_two == 'SOMERTON' ~ NA,
+      # add_one == 'KINGS' & add_two == 'ROAD' ~ NA,
+      # add_one == 'ROAD' & add_two == 'ROAD' ~ NA,
+      # add_one == 'ROAD' & add_two == 'SOMERTON' ~ NA,
+      # add_one == 'SOMEPLACE' & add_two == 'ROAD' ~ NA,
+      # add_one == 'SOMEPLACE' & add_two == 'SOMERTON' ~ NA,
+    )
+  ) %>% 
+  hchart('heatmap', hcaes(add_one, add_two, value = value),
+       dataLabels = list(enabled = T),
+       borderWidth = 2,
+       borderColor = "black"
+       ) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_yAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_xAxis(title = list(text = "Primary Address (Patient)")) %>% 
+  hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_size(height=300,width=470) %>% 
+  hc_colorAxis(minColor = "white", maxColor = "green") %>% 
+  hc_credits(enabled = T)
+```
+
+<br>
+
+Finally, we can now calculate a JW similarity score for the remaining 7 token matches.
+
+<br>
+
+```{r, echo=FALSE}
+add %>% 
+  mutate(
+    value = NA,
+    value = case_when(
+      add_two == 34 ~ 0,
+      add_one == 33 ~ 0,
+      add_one == 'ROAD' & add_two == 'ROAD' ~ 1,
+      add_one == 'CORNER' & add_two == 'KING' ~ 0,
+      add_one == 'SHOP' & add_two == 'KING' ~ 0,
+      add_one == 'SHOP' & add_two == 'ROAD' ~ 0,
+      add_one == 'KINGS' & add_two == 'ROAD' ~ 0,
+      add_one == 'KINGS' & add_two == 'SOMERTON' ~ 0,
+      add_one == 'ROAD' & add_two == 'KING' ~ 0,
+      add_one == 'SOMEPLACE' & add_two == 'KING' ~ 0,
+      add_one == 'KINGS' & add_two == 'KING' ~0.93,
+      add_one == 'CORNER' & add_two == 'ROAD' ~ 0.44,
+      add_one == 'CORNER' & add_two == 'SOMERTON' ~ 0.51,
+      add_one == 'ROAD' & add_two == 'SOMERTON' ~ 0.46,
+      add_one == 'SOMEPLACE' & add_two == 'ROAD' ~ 0.45,
+      add_one == 'SOMEPLACE' & add_two == 'SOMERTON' ~ 0.65,
+      add_one == 'SHOP' & add_two == 'SOMERTON' ~ 0.58
+    )
+  ) %>% 
+  hchart('heatmap', hcaes(add_one, add_two, value = value),
+       dataLabels = list(enabled = T),
+       borderWidth = 2,
+       borderColor = "black"
+       ) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_xAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_yAxis(title = list(text = "Primary Address (Patient)")) %>% 
+  hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_size(height=300,width=470) %>% 
+  hc_colorAxis(minColor = "white", maxColor = "green") %>% 
+  hc_credits(enabled = T)
+```
+
+<br>
+
+As can be seen in the grid, only 8/24 cells were scored. One of these was an exact match (dark green) and the others were JW matches (lighter green). All of the JW token match scores less than 0.8 were rendered as 0. The final grid, after being simplified, would therefore look like this:
+
+<br>
+
+```{r, echo=FALSE}
+add %>% 
+  mutate(
+    value = NA,
+    value = case_when(
+      add_two == 34 ~ 0,
+      add_one == 33 ~ 0,
+      add_one == 'ROAD' & add_two == 'ROAD' ~ 1,
+      add_one == 'CORNER' & add_two == 'KING' ~ 0,
+      add_one == 'SHOP' & add_two == 'KING' ~ 0,
+      add_one == 'SHOP' & add_two == 'ROAD' ~ 0,
+      add_one == 'KINGS' & add_two == 'ROAD' ~ 0,
+      add_one == 'KINGS' & add_two == 'SOMERTON' ~ 0,
+      add_one == 'ROAD' & add_two == 'KING' ~ 0,
+      add_one == 'SOMEPLACE' & add_two == 'KING' ~ 0,
+      add_one == 'KINGS' & add_two == 'KING' ~0.93,
+      add_one == 'CORNER' & add_two == 'ROAD' ~ 0,
+      add_one == 'CORNER' & add_two == 'SOMERTON' ~ 0,
+      add_one == 'ROAD' & add_two == 'SOMERTON' ~ 0,
+      add_one == 'SOMEPLACE' & add_two == 'ROAD' ~ 0,
+      add_one == 'SOMEPLACE' & add_two == 'SOMERTON' ~ 0,
+      add_one == 'SHOP' & add_two == 'SOMERTON' ~ 0
+    )
+  ) %>% 
+  hchart('heatmap', hcaes(add_one, add_two, value = value),
+       dataLabels = list(enabled = T),
+       borderWidth = 2,
+       borderColor = "black"
+       ) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_xAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_yAxis(title = list(text = "Primary Address (Patient)")) %>% 
+  hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
+  hc_legend(enabled = F) %>% 
+  hc_size(height=300,width=470) %>% 
+  hc_colorAxis(minColor = "white", maxColor = "green") %>% 
+  hc_credits(enabled = T)
+```
+
+
+<br>
+
+## Generating an Overall Match Score
+
+<br>
+
+Through these token-level matches, each patient address token could be scored against each AB-CQC address token. The best score of any AB-CQC token matched against a patient address token was chosen. Due to the JW threshold, the minimum best score for a scoring match was 0.8. This was done for each patient address token. As can be inferred, the same AB-CQC token could be used twice, if the patient address record had the same word occurring multiple times. For that reason, only the distinct AB-CQC tokens per address were required, which again helped streamline the workflow. A score could now be attributed to each patient address to AB-CQC address match. First the maximum score had to be calculated. '34 KING ROAD SOMERTON' would have a maximum score of 7, due to one numerical token (1 * 4) and three character tokens (3 * 1). When '33 CORNER SHOP KINGS ROAD SOMEPLACE' is matched *against* '34 KING ROAD SOMERTON', the final results would look like this:
+
+<br>
+
+```{r, echo=FALSE}
+add_one = c('34', 'KING', 'ROAD', "SOMERTON", "TOTAL")
+
+table <- data.frame(
+  row.names = add_one,
+  'Best Matching Score' = c(0, 0.93, 1, 0, 1.93),
+  'Best Possible Score' = c(4, 1, 1, 1, 7),
+  check.names = F
+  )
+
+my_kable(table) %>% 
+  row_spec(row = 5,  bold = T, background = "lightblue")
+```
+
+<br>
+
+The score of 1.93 out of 7 was equivalent to a percentage score of 28%. After each total score was calculated for each patient address against every AB-CQC address within the same postcode, the AB-CQC address with the highest score was selected. Sometimes multiple addresses would have the same top score. Each of these was brought forward to be resolved.
+
+<br>
+
+### The Address Matching Function
+
+<br>
+
+The function `calc_match_addresses` is contained within the NHSBSA `{addressMatchR}` package, and performs the whole process of matching a list of primary addresses against a list of look-up addresses. All of the address string tokenising is carried out within the function. As mentioned, matches will only be performed for primary addresses with a postcode that also appears within the look-up addresses. The function is described below:
+
+<br>
+
+```{r}
+#' Match two sets of addresses
+#'
+#' Match a distinct dataframe of primary addresses to a distinct dataframe of
+#' lookup addresses.
+#'
+#' Returns a dataframe of exact matches (postcode and single line address) and
+#' non exact matches (postcode and fuzzy single line address). For non exact
+#' matches it will retain draws.
+#'
+#' @param primary_df Dataframe of distinct primary addresses
+#' @param primary_postcode_col Column containing the primary postcode
+#' @param primary_address_col Column containing the primary single line address
+#' @param lookup_df Dataframe of distinct lookup addresses
+#' @param lookup_postcode_col Column containing the lookup postcode
+#' @param lookup_address_col Column containing the lookup single line address
+#'
+#' @examples
+#' @export
+calc_match_addresses <- function(
+  primary_df,
+  primary_postcode_col,
+  primary_address_col,
+  lookup_df,
+  lookup_postcode_col,
+  lookup_address_col
+) {
+
+  # Rename the lookup postcode column name to be the same as the primary
+  # postcode column name
+  lookup_df <- lookup_df %>%
+    dplyr::rename("{primary_postcode_col}" := .data[[lookup_postcode_col]])
+
+  # First step is to do the exact matches. We mock join address column here so
+  # that we can do the join easily.
+  exact_match_df <-
+    dplyr::inner_join(
+      x = primary_df %>%
+        # Mock a join address column on the primary dataframe
+        dplyr::mutate(JOIN_ADDRESS = .data[[primary_address_col]]),
+      y = lookup_df %>%
+        # Mock a join address column on the lookup dataframe
+        dplyr::mutate(JOIN_ADDRESS = .data[[lookup_address_col]]),
+      by = c(primary_postcode_col, "JOIN_ADDRESS"),
+      suffix = c("", "_LOOKUP"),
+      copy = TRUE
+    ) %>%
+    dplyr::select(-JOIN_ADDRESS)
+
+  # Now get the rows that haven't already been matched
+  non_exact_match_df <- primary_df %>%
+    dplyr::anti_join(
+      y = exact_match_df,
+      na_matches = "na",
+      copy = TRUE
+    )
+
+  # Filter non exact matches to postcodes in the lookup
+  non_exact_match_df <- non_exact_match_df %>%
+    dplyr::semi_join(
+      y = lookup_df %>%
+        dplyr::select(.data[[primary_postcode_col]]),
+      copy = TRUE
+    )
+
+  # Tokenise non exact match addresses
+  non_exact_match_df <- non_exact_match_df %>%
+    nhsbsaR::oracle_unnest_tokens(col = primary_address_col, drop = FALSE) %>%
+    dplyr::mutate(TOKEN_WEIGHT = ifelse(REGEXP_LIKE(TOKEN, "[0-9]"), 4, 1))
+
+  # Add the theoretical max score for each non exact match address
+  non_exact_match_df <- non_exact_match_df %>%
+    dplyr::group_by(across(-c(TOKEN_NUMBER, TOKEN, TOKEN_WEIGHT))) %>%
+    dplyr::mutate(MAX_SCORE = sum(TOKEN_WEIGHT, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+
+  # Tokenise lookup addresses
+  lookup_df <- lookup_df %>%
+    nhsbsaR::oracle_unnest_tokens(col = lookup_address_col, drop = FALSE) %>%
+    dplyr::select(-TOKEN_NUMBER) %>%
+    dplyr::distinct() %>%
+    dplyr::mutate(TOKEN_WEIGHT = ifelse(REGEXP_LIKE(TOKEN, "[0-9]"), 4, 1))
+
+  # We want to minimise the amount of Jaro–Winkler calculations we do. So first
+  # do the exact token level matches
+  non_exact_match_exact_match_df <- non_exact_match_df %>%
+    dplyr::inner_join(
+      y = lookup_df,
+      by = c(primary_postcode_col, "TOKEN_WEIGHT", "TOKEN"),
+      suffix = c("", "_LOOKUP"),
+      copy = TRUE
+    ) %>%
+    dplyr::mutate(TOKEN_LOOKUP = TOKEN)
+
+  # Now get the remaining candidates to consider for Jaro–Winkler matching
+  # (character token types that aren't an exact match)
+  non_exact_match_jw_match_df <- non_exact_match_df %>%
+    dplyr::inner_join(
+      y = lookup_df,
+      by = c(primary_postcode_col, "TOKEN_WEIGHT"),
+      suffix = c("", "_LOOKUP"),
+      copy = TRUE
+    ) %>%
+    dplyr::filter(
+      TOKEN_WEIGHT == 1,
+      TOKEN != TOKEN_LOOKUP
+    )
+
+  # We can also apply some other filters
+  non_exact_match_jw_match_df <- non_exact_match_jw_match_df %>%
+    dplyr::filter(
+      # Tokens share the same first letter
+      SUBSTR(TOKEN_LOOKUP, 1, 1) == SUBSTR(TOKEN, 1, 1) |
+        # Tokens share same second letter
+        SUBSTR(TOKEN_LOOKUP, 2, 1) == SUBSTR(TOKEN, 2, 1) |
+        # Tokens share same last letter
+        SUBSTR(TOKEN_LOOKUP, LENGTH(TOKEN_LOOKUP), 1) == SUBSTR(TOKEN, LENGTH(TOKEN), 1) |
+        # One token is a substring of the other
+        INSTR(TOKEN_LOOKUP, TOKEN) > 1 |
+        INSTR(TOKEN, TOKEN_LOOKUP) > 1
+    )
+
+  # Now calculate the jarrow winkler scores
+  non_exact_match_jw_match_df <- non_exact_match_jw_match_df %>%
+    dplyr::mutate(SCORE = UTL_MATCH.JARO_WINKLER(TOKEN, TOKEN_LOOKUP))
+
+  # And filter to scores above 0.8
+  non_exact_match_jw_match_df <- non_exact_match_jw_match_df %>%
+    dplyr::filter(SCORE > 0.8)
+
+  # Now stack the non exact exact and Jaro–Winkler matches back together
+  non_exact_match_df <- dplyr::union_all(
+    x = non_exact_match_exact_match_df %>%
+      dplyr::mutate(SCORE = 1),
+    y = non_exact_match_jw_match_df
+  )
+
+  # Multiply the score by the token weight
+  non_exact_match_df <- non_exact_match_df %>%
+    dplyr::mutate(SCORE = SCORE * TOKEN_WEIGHT)
+
+  # Get the max score for each primary token in the primary address from each
+  # lookup address
+  non_exact_match_df <- non_exact_match_df %>%
+    dplyr::group_by(dplyr::across(-c(TOKEN_LOOKUP, SCORE))) %>%
+    dplyr::summarise(SCORE = max(SCORE, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+
+  # Sum the score for each single line address combination
+  non_exact_match_df <- non_exact_match_df %>%
+    dplyr::group_by(
+      dplyr::across(-c(TOKEN_NUMBER, TOKEN, TOKEN_WEIGHT, SCORE))
+    ) %>%
+    dplyr::summarise(SCORE = sum(SCORE, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+
+  # Normalise the score
+  non_exact_match_df <- non_exact_match_df %>%
+    dplyr::mutate(SCORE = SCORE / MAX_SCORE) %>%
+    dplyr::select(-MAX_SCORE)
+
+  # Take the top scoring lookup address for each primary address (if there are
+  # draws then keep all of them)
+  non_exact_match_df <- non_exact_match_df %>%
+    dplyr::group_by(
+      dplyr::all_of(c(primary_postcode_col, primary_address_col))
+    ) %>%
+    dplyr::slice_max(order_by = SCORE) %>%
+    dplyr::ungroup()
+
+  # Stack the exact and non exact matches together and output
+  dplyr::union_all(
+    x = exact_match_df %>%
+      dplyr::mutate(SCORE = 1, MATCH_TYPE = "EXACT"),
+    y = non_exact_match_df %>%
+      dplyr::mutate(MATCH_TYPE = "NON-EXACT")
+  )
+
+}
+```
+
+<br>
+
+When using this function, there will be instances where multiple look-up addresses have the same top score for a JW match. Each of these joint top scoring matches will be retained. These can then be dealt with by the user, depending on the use case. Finally, three simple pre-processing steps must be carried out on *both* the list of primary and look-up addresses before the function is performed. These are described below:
+
+<br>
+
+```{r, echo = F}
+table <- data.frame(
+  Step = c(1:3),
+  Description = c("Clean Postcode", "Clean Address", "Only Retain Distinct Addresses"),
+  Method = c(
+    "Using the <em>tidy_postcode</em> function",
+    "Using the <em>tidy_single_line_address</em> function",
+    "By user manually generating a list of distinct postcode-address combinations"
+    ),
+  check.names = F
+)
+
+kable(table, align = "l", escape = F) %>% 
+  kable_styling(full_width = F, c("bordered", "striped"), position = "left")
+```
+
+<br>
+
+## Resolving Joint Top Match Scores  
+
+<br>
+
+Some simple rules were applied to resolve instances where there were several AB-CQC addresses with a joint top match score. These rules need to be considered in the context of the analysis, which required determining a care home flag, rather than identifying specific properties or care homes.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Rule = c(1:3),
+  Description = c(
+    'If all joint top matches were care homes, a care home classification was given, knowing that the various SLA related to the same UPRN or property.',
+    'If one of more of the joint top matches were care homes, while one or more of the joint top matches was also for a non-care home, then a non-care home classification was given.',
+    'If all joint top matches were non-care homes, then a non-care home classification was given.'
+    ),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+The second of these rules was to err on the side of caution regarding labelling a patient address record as a care home, as the address record still had the possibility of being labelled as such through later steps. After resolving these drawed scores, every patient address record at a postcode where there is a care home would either be Exact matched or JW matched to a single AB-CQC address record. A proportion of those would have a care home flag. Patient address records at a postcode without a care home had not yet been considered. 
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Postcode Type' = c('Where there is a care home', 'Where there isn’t a care home'),
+  'Patient Type' = c('65 or over', '65 or over'),
+  'Address Count' = c('269 k', '7,796 k'),
+  'Address Proportion' = c('3.3 %', '96.7 %'),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+As can be seen from the above table, only 3.3% of patient address records were at a postcode where there was a care home, where a patient aged 65 or over was living at the address. It is the same 3.3% whose address was matched against AB-CQC data by this point.
+
+<br>
+
+# **Additional Methods to Identifying Care Home Prescriptions**
+
+<br>
+
+## Overview
+
+<br>
+
+The Exact matches and JW matches were supplemented by two extra steps that helped identify further patient address records as being a care home. They were:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Step = c(1,2),
+  Description = c(
+    "The number of patients aged 65 or above at an address receiving prescriptions per month within the 2020/21 Financial Year. This was caalled as a 'Patient Count' match",
+    "The presence of keywords within the patient address record string, or a 'Keyword' match"
+    )
+  )
+
+my_kable(table)
+```
+
+<br>
+
+The first of these was only applied to patient address records at a postcode with a care home within the AB-CQC address data set. The second of these was applied to records at all postcodes. The application of these rules to the patient address type is summarised below:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Step = c('Exact', 'JW', 'Patient Count', 'Keyword'),
+  'Address Records at a Postcode with a care home' = c("&#x2714;", "&#x2714;", "&#x2714;", "&#x2714;"),
+  'Address Records at a Postcode without a care home' = c("&#x2718;", "&#x2718;", "&#x2718;", "&#x2714;"),
+  check.names = F
+  )
+
+kable(table %>% rename_at('Step', ~'Matching<br>Step'), escape = F, align = 'lrr') %>% 
+    kable_styling(full_width = F, c("bordered", "striped"), position = "left")
+```
+
+<br>
+
+The previous two tables show that the large number of patient address records at a postcode where there isn’t a care home, were only used for the keyword search step.
+
+<br>
+
+## The Number of Patients Aged 65 or Above at an Address: Patient Count Match
+
+<br>
+
+For a patient address record to be classified as a care home using a Patient Count match, it had to meet the following criteria:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Criteria = c(1:4),
+  Description = c(
+    'The patient address record had to be at a postcode with an AB-CQC address classified as a care home.',
+    'The patient address record was not classified as care home by either an Exact Match or JW Match.',
+    'Five or more distinct patients had to have received a prescription within the same calendar month at this address record.',
+    'If an address record met the above criteria, then prescribing for all months within the year were taken as being from a care home.'
+    )
+  )
+
+my_kable(table)
+```
+
+<br>
+
+This rule was not applied to patient address records at a postcode where there was not a care home, due to many edge-case situations that would have increased the number of incorrect matches. 
+
+<br>
+
+## The Presence of Keywords within the Patient Address Record String: Keyword Match
+
+<br>
+
+Keyword inclusion terms were offset by keyword exclusion terms, to filter edge-cases that, for example, while having ‘CARE HOME’ in the name were not actually care homes. For a patient address record to be classified as a care home using keywords, it had to meet the following criteria:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Criteria = c(1:3),
+  Description = c(
+    'The patient address record had at that point had to be matched to a non-care home, either from an Exact Match, JW Match, or Patient Count. Or alternatively, the patient address record had a postcode without a care home.',
+    'In contrast to the Patient Count match, the Keyword smatch was applied to all addresses, irrespective of their postcode.',
+    'If the patient address record had a ‘keyword inclusion’ term and not a ‘keyword exclusion’ term, then the address record was classified as being a care home.'
+    )
+  )
+
+my_kable(table)
+```
+
+<br>
+
+There were eight keyword inclusion terms in total, although this can be seen as four keyword inclusion terms repeated twice. This was one set with a hyphen and one set without. The slim number of care home specific keyword inclusion terms was to preserve the overall accuracy of the process. Inclusion of more generic terms such 'ELDERLY' or 'HOUSE' significantly affected the accuracy of this step.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Number = c(1:4),
+  'Keyword Inclusion Term' = c('CARE HOME', 'NURSING HOME', 'REST HOME', 'RESIDENTIAL HOME'),
+  'Keyword Inclusion Term (with hyphen)' = c('CARE-HOME', 'NURSING-HOME', 'REST-HOME', 'RESIDENTIAL-HOME'),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+The twelve keyword exclusion terms were:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Number = c(1:12),
+  'Keyword Exclusion Term' = c(
+    'CHILDREN', 'MOBILE', 'ABOVE', 'CARAVAN', 'RESORT', 'CONVENT', 'MONASTERY',
+    'HOLIDAY', 'MARINA', 'RECOVERY', 'HOSPITAL', 'NO FIXED ABODE'
+    ),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+For example, ‘THE CHILDRENS CARE HOME HOSPITAL’ would not be classified as a care home, where as ‘THE APPLE TREE CARE HOME’ would be classified as a care home. Validation of keyword matches refined the keyword inclusion terms from a far larger list to this more focused group of four words. The keyword exclusion list was derived from the same validation exercise, manually identifying instances where just the keyword term ‘CARE HOME’ or ‘NURSING HOME’ was insufficient to reliably classify a care home.
+
+<br>
+
+## Global Keyword Exclusion Terms 
+
+<br>
+
+After applying the keyword exclusion terms within the Keyword match, it was also decided to apply a similar, albeit far smaller, set of keyword exclusion terms to the Exact matches, JW matches and Patient Count matches that were classified as a care home. These instances were mostly due to errors within AB Plus, where ‘THE GREEN PARK CARAVAN SITE’ was mistakenly classified as a care home. The only global keyword exclusion term not associated with an error in AB Plus care home classification, was ‘CHILDREN’, as the analysis was only interested in elderly prescribing. These global keyword exclusion terms were:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Number = c(1:7),
+  'Global Keyword Exclusion Term' = c(
+    'CHILDREN', 'MOBILE', 'ABOVE', 'CARAVAN', 'RESORT', 'HOLIDAY', 'NO FIXED ABODE'
+    ),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+## Non-matches
+
+<br>
+
+A non-match, categorised instances of a non-care home match. A non-care home match arose in the following two instances:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Instance = c(1:2),
+  Description = c(
+    'When a patient address record was not matched by any of the above methods.',
+    'When a patient address record was exact or JW matched to a non-care home.'
+    ),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+
+<br>
+
+## Hierarchy of Matches
+
+<br>
+
+The complete methodology can be summarised by the following flowchart:
+
+<br>
+
+```{r, echo = F}
+r = "#ef3b2c"
+g = "#238b45"
+b = "#2171b5"
+
+highchart() %>%
+  hc_chart(type = 'organization') %>%
+  hc_add_series(
+    name = '',
+    color = "red",
+    nodeWidth = 85,
+    data = list(
+      list(from = 'All Postcodes', to = 'Postcodes with a Care Home'),
+      list(from = 'All Postcodes', to = 'Postcodes without a Care Home'),
+      list(from = 'Postcodes with a Care Home', to = 'Exact Match'),
+      list(from = 'Postcodes with a Care Home', to = 'JW Match'),
+      list(from = 'Postcodes with a Care Home', to = 'Patient Count Match'),
+      list(from = 'Postcodes with a Care Home', to = 'Keyword Match'),
+      list(from = 'Postcodes with a Care Home', to = 'No Match'),
+      list(from = 'Postcodes without a Care Home', to = ' Keyword Match'),
+      list(from = 'Postcodes without a Care Home', to = ' No Match')
+    ),
+    nodes = list(
+      list(id = 'All Postcodes', offset = '-10%'),
+      list(id = 'Postcodes with a Care Home', offset = '-20%'),
+      list(id = ' No Match', column = 2, offset = '50%'),
+      list(id = ' Keyword Match', column = 2, offset = '50%'),
+      list(id = 'No Match', column = 3),
+      list(id = 'JW Match', column = 3),
+      list(id = 'Exact Match', column = 3),
+      list(id = 'Patient Count Match', column = 3),
+      list(id = 'Keyword Match', column = 3)
+    )
+  ) %>% 
+  hc_chart(inverted=T) %>% 
+  hc_colors(c(b, b, b, g, g, g, g, r, g, r)) %>% 
+  hc_title(text = "<b>Care Home Address Matching Methodology Summary</b>") %>% 
+  hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial')))) %>% 
+  hc_tooltip(enabled = F) %>% 
+  hc_credits(enabled = T) %>% 
+  hc_size(width = 470, height = 480)
+```
+
+<br>
+
+The hierarchy and ordering of matches, along with number of patient address records categorised by each step, is summarised by the following table. Percentages are presented in the context of each patient address record type, depending whether or not they were at a postcode where there was a care home:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Step Order' = c(1:5),
+  'Step Name' = c('Exact Match', 'JW Match', 'Patient Count', 'Keyword Search', 'Non-Match'),
+  'Address Records at a Postcode with a care home' = c('35k  (13.1%)', '231 k  (85.6%)', '1k  (0.2%)', '3k  (1.1%)', '0.01k  (0.0%)'),
+  'Address Records at a Postcode without a care home' = c('', '', '', '3k  (0.04%)', '7,796k  (99.96%)'),
+  check.names = F
+  )
+
+kable(table %>% rename_at('Step Name', ~'Step<br>Name'), align = c("llrr"), escape = F) %>% 
+    kable_styling(full_width = F, c("bordered", "striped"), position = "left")
+```
+
+<br>
+
+It can be seen the large volume of patient address records at a postcode without a care home only contributed to 5k additional matches on a patient address record-level. Nevertheless, this still made a meaningful contribution to the total patient address record care home classification, so was a warranted inclusion.
+
+The entire code, starting from creating a distinct list of primary and look up addresses, to implementing the `calc_match_addresses` function and then resolving joint top scoring matches, to then finally applying the additional methods to identify care home records, is described by the following code:
+
+<br>
+
+````
+```{r}`r''`
+library(dplyr)
+library(dbplyr)
+
+# Set up connection to DALP
+con <- nhsbsaR::con_nhsbsa(database = "DALP")
+
+# Check if the table exists
+exists <- DBI::dbExistsTable(
+  conn = con, 
+  name = "INT615_ADDRESS_MATCHED"
+)
+
+# Drop any existing table beforehand
+if (exists) {
+  DBI::dbRemoveTable(conn = con, name = "INT615_ADDRESS_MATCHED")
+}
+
+# Initial lazy tables from database
+
+# Create a lazy table from the item level FACT table
+fact_db <- con %>%
+  tbl(from = "INT615_FORM_LEVEL_FACT")
+
+# Create a lazy table from the AddressBase Plus and CQC care home table
+addressbase_plus_cqc_db <- con %>%
+  tbl(from = "INT615_ADDRESSBASE_PLUS_CQC")
+
+# Match patient addresses to the AddressBase Plus and CQC care home addresses
+
+# Get the distinct postcode and address combinations from the patient data along
+# with some attributes
+patient_address_db <- fact_db %>%
+  # If the address is NA we don't want to consider it
+  filter(!is.na(SINGLE_LINE_ADDRESS)) %>%
+  # Add monthly patient count
+  group_by(YEAR_MONTH, POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  mutate(
+    TOTAL_MONTHLY_PATIENTS = n_distinct(
+      ifelse(PATIENT_IDENTIFIED == "Y", NHS_NO, NA_integer_)
+    )
+  ) %>%
+  # Add yearly attributes to the addresses
+  ungroup(YEAR_MONTH) %>%
+  summarise(
+    TOTAL_FORMS = n(),
+    TOTAL_PATIENTS = n_distinct(
+      ifelse(PATIENT_IDENTIFIED == "Y", NHS_NO, NA_integer_)
+    ),
+    MONTHS_5PLUS_PATIENTS = n_distinct(
+      ifelse(TOTAL_MONTHLY_PATIENTS >= 5L, YEAR_MONTH, NA_integer_)
+    ),
+    MAX_MONTHLY_PATIENTS = max(TOTAL_MONTHLY_PATIENTS, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Match the patients address to the AddressBase Plus and CQC care home addresses
+match_db <- addressMatchR::calc_match_addresses(
+  primary_df = patient_address_db,
+  primary_postcode_col = "POSTCODE",
+  primary_address_col = "SINGLE_LINE_ADDRESS",
+  lookup_df = addressbase_plus_cqc_db,
+  lookup_postcode_col = "POSTCODE",
+  lookup_address_col = "SINGLE_LINE_ADDRESS"
+)
+
+# At this point it is possible that some of the Jaro-Winkler matches are tied, 
+# so we prioritise the best match by selecting a non care home property first 
+# (to err on the side of caution) if one exists, otherwise pick any
+match_db <- match_db %>%
+  group_by(POSTCODE, SINGLE_LINE_ADDRESS) %>%
+  slice_min(
+    order_by = CH_FLAG, 
+    with_ties = FALSE
+  ) %>%
+  ungroup()
+
+# Move SINGLE_LINE_ADDRESS_LOOKUP to after SINGLE_LINE_ADDRESS
+match_db <- match_db %>%
+  relocate(SINGLE_LINE_ADDRESS_LOOKUP, .after = SINGLE_LINE_ADDRESS)
+
+# Manually override the care home flag (and nursing / residential flags) for 
+# matched care home patient addresses that contain anything to strongly suggest 
+# the property is not a care home for the elderly
+match_db <- match_db %>%
+  mutate(
+    CH_FLAG = ifelse(
+      test = 
+        CH_FLAG == 1L & 
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") > 0L,
+      yes = 0L,
+      no = CH_FLAG
+    ),
+    NURSING_HOME_FLAG = ifelse(
+      test = CH_FLAG == 0L, 
+      yes = NA_integer_, 
+      no = NURSING_HOME_FLAG
+    ),
+    RESIDENTIAL_HOME_FLAG = ifelse(
+      test = CH_FLAG == 0L, 
+      yes = NA_integer_, 
+      no = RESIDENTIAL_HOME_FLAG
+    )
+  )
+
+# Join the matches back to the patient addresses
+patient_address_match_db <- patient_address_db %>%
+  left_join(y = match_db)
+
+# Fill the missing care home flag and match type columns
+patient_address_match_db <- patient_address_match_db %>%
+  tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
+
+# Manually override the care home flag for non care home patient addresses that 
+# contain anything to strongly suggest it is a care home for the elderly
+patient_address_match_db <- patient_address_match_db %>%
+  mutate(
+    MATCH_TYPE = ifelse(
+      test = 
+        CH_FLAG == 0L & 
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CARE HOME|CARE-HOME|NURSING HOME|NURSING-HOME|RESIDENTIAL HOME|RESIDENTIAL-HOME|REST HOME|REST-HOME") > 0L &
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0L &
+        # Slightly stricter here
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|MARINA|MONASTERY|RECOVERY") == 0L,
+      yes = "KEY WORD",
+      no = MATCH_TYPE
+    ),
+    CH_FLAG = ifelse(MATCH_TYPE == "KEY WORD", 1L, CH_FLAG)
+  )
+
+# Get postcodes where there is a care home
+care_home_postcodes_db <- addressbase_plus_cqc_db %>%
+  filter(CH_FLAG == 1L) %>%
+  distinct(POSTCODE)
+
+# Manually override the care home flag for non care home patient addresses that 
+# have 5 or more patients in a single month that are in a care home postcode
+patient_address_match_db <- patient_address_match_db %>%
+  left_join(y = care_home_postcodes_db %>% mutate(CH_POSTCODE = 1L)) %>%
+  mutate(
+    MATCH_TYPE = ifelse(
+      test = 
+        CH_FLAG == 0L & 
+        !is.na(CH_POSTCODE) &
+        MAX_MONTHLY_PATIENTS >= 5L &#, & MONTHS_5PLUS_PATIENTS >= 3
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "ABOVE|CARAVAN|CHILDREN|HOLIDAY|MOBILE|NO FIXED ABODE|RESORT") == 0L &
+        # Slightly stricter here
+        REGEXP_INSTR(SINGLE_LINE_ADDRESS, "CONVENT|HOSPITAL|MARINA|MONASTERY|RECOVERY") == 0L,
+      yes = "PATIENT COUNT",
+      no = MATCH_TYPE
+    ),
+    CH_FLAG = ifelse(MATCH_TYPE == "PATIENT COUNT", 1L, CH_FLAG)
+  ) %>%
+  select(-CH_POSTCODE)
+
+# Write the table back to DALP with indexes
+patient_address_match_db %>%
+  compute(
+    name = "INT615_ADDRESS_MATCHED",
+    indexes = list(c("POSTCODE")),
+    temporary = FALSE
+  )
+
+# Disconnect from database
+DBI::dbDisconnect(con)
+```
+````
+
+<br>
+<br>
+
+# **Final Results & Results Validation**
+
+<br>
+<br>
+
+## Overview
+
+<br>
+
+Matching was performed on a distinct patient address record-level. All the prescription forms associated with each record were then classified as being a care home prescription form or otherwise. This utilised the output from the previous code block. These prescription form IDs were re-joined to the item-level FACT to create a final results table. Note, this FACT table was for all items irrespective of postcode, meaning it described all prescriptions for patients aged 65 or over in the 2020/21 Financial Year. The same filters were applied to the item-level FACT table as described in the *Processing Patient Address Information* section towards the beginning of the report. The following code block describes how this final results table was generated:
+
+<br>
+
+````
+```{r}`''`
+library(dplyr)
+library(dbplyr)
+
+# Set up connection to DALP
+con <- nhsbsaR::con_nhsbsa(database = "DALP")
+
+# Check if the table exists
+exists <- DBI::dbExistsTable(
+  conn = con, 
+  name = "INT615_ITEM_LEVEL_BASE"
+)
+
+# Drop any existing table beforehand
+if (exists) {
+  DBI::dbRemoveTable(
+    conn = con, 
+    name = "INT615_ITEM_LEVEL_BASE"
+  )
+}
+
+# Initial lazy tables from database
+
+# Create a lazy table from the item level FACT table
+item_fact_db <- con %>%
+  tbl(from = in_schema("AML", "PX_FORM_ITEM_ELEM_COMB_FACT"))
+
+# Create a lazy table from the item level FACT table
+form_fact_db <- con %>%
+  tbl(from = "INT615_FORM_LEVEL_FACT")
+
+# Create a lazy table from the matched patient address care home table
+patient_address_match_db <- con %>%
+  tbl(from = "INT615_ADDRESS_MATCHED")
+
+# Create a lazy table from the geography lookup table (Region, STP and LA)
+postcode_db <- con %>%
+  tbl(from = "INT615_POSTCODE_LOOKUP")
+
+# Create a lazy table from the drug DIM table
+drug_db <- con %>%
+  tbl(from = in_schema("DIM", "CDR_EP_DRUG_BNF_DIM"))
+
+# Create item level FACT table
+
+# Filter to elderly patients in 2020/2021 and required columns
+item_fact_db <- item_fact_db %>%
+  filter(
+    # Elderly patients identified patients in the period
+    CALC_AGE >= 65L,
+    PATIENT_IDENTIFIED == "Y",
+    YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L,
+    # Standard exclusions
+    PAY_DA_END == "N", # excludes disallowed items
+    PAY_ND_END == "N", # excludes not dispensed items
+    PAY_RB_END == "N", # excludes referred back items
+    CD_REQ == "N", # excludes controlled drug requisitions 
+    OOHC_IND == 0L, # excludes out of hours dispensing
+    PRIVATE_IND == 0L, # excludes private dispensers
+    IGNORE_FLAG == "N" # excludes LDP dummy forms
+  ) %>%
+  select(
+    YEAR_MONTH,
+    PF_ID,
+    EPS_FLAG,
+    PART_DATE = EPS_PART_DATE,
+    EPM_ID,
+    PDS_GENDER,
+    CALC_AGE,
+    PATIENT_IDENTIFIED,
+    NHS_NO,
+    CALC_PREC_DRUG_RECORD_ID,
+    ITEM_COUNT,
+    ITEM_PAY_DR_NIC,
+    ITEM_CALC_PAY_QTY
+  )
+
+# Now we join the columns of interest back to the fact table and fill the 
+# care home flag and match type columns
+item_fact_db <- item_fact_db %>%
+  inner_join(
+    y = form_fact_db,
+    na_matches = "na" # Match NA to NA in join
+  ) %>%
+  left_join(
+    y = patient_address_match_db %>% 
+      select(-(TOTAL_FORMS:MAX_MONTHLY_PATIENTS)),
+    na_matches = "na"
+  ) %>%
+  tidyr::replace_na(list(CH_FLAG = 0L, MATCH_TYPE = "NO MATCH"))
+
+# Tidy care home flag and join the postcode info
+item_fact_db <- item_fact_db %>%
+  mutate(CH_FLAG = ifelse(CH_FLAG == 1, "Care home", "Non care home")) %>%
+  left_join(y = postcode_db,) %>%
+  relocate(PCD_REGION_CODE:IMD_QUINTILE, POSTCODE:MATCH_TYPE, .after = EPM_ID)
+
+# Add the drug information
+item_fact_db <- item_fact_db %>%
+  left_join(
+    y = drug_db %>%
+      filter(YEAR_MONTH >= 202004L & YEAR_MONTH <= 202103L) %>%
+      select(
+        YEAR_MONTH,
+        CALC_PREC_DRUG_RECORD_ID = RECORD_ID,
+        CHAPTER_DESCR,
+        SECTION_DESCR,
+        PARAGRAPH_DESCR,
+        CHEMICAL_SUBSTANCE_BNF_DESCR,
+        BNF_CHEMICAL_SUBSTANCE
+      )
+  ) %>%
+  relocate(
+    CHAPTER_DESCR:BNF_CHEMICAL_SUBSTANCE, 
+    .before = CALC_PREC_DRUG_RECORD_ID
+  ) %>%
+  select(-CALC_PREC_DRUG_RECORD_ID) 
+
+# Get a single gender and age for the period
+patient_db <- item_fact_db %>%
+  group_by(NHS_NO) %>%
+  summarise(
+    # Gender
+    MALE_COUNT = sum(
+      ifelse(PDS_GENDER == 1, 1, 0),
+      na.rm = TRUE
+    ),
+    FEMALE_COUNT = sum(
+      ifelse(PDS_GENDER == 2, 1, 0),
+      na.rm = TRUE
+    ),
+    # Take the max age
+    AGE = max(
+      CALC_AGE,
+      na.rm = TRUE
+    )
+  ) %>%
+  ungroup() %>%
+  mutate(
+    GENDER = case_when(
+      MALE_COUNT > 0 & FEMALE_COUNT == 0 ~ "Male",
+      MALE_COUNT == 0 & FEMALE_COUNT > 0 ~ "Female",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(-ends_with("_COUNT")) %>%
+  # Add an age band
+  mutate(
+    AGE_BAND = case_when(
+      AGE < 70 ~ "65-69",
+      AGE < 75 ~ "70-74",
+      AGE < 80 ~ "75-79",
+      AGE < 85 ~ "80-84",
+      AGE < 90 ~ "85-89",
+      TRUE ~ "90+"
+    )
+  )
+
+# Join fact data to patient level dimension
+item_fact_db <- item_fact_db %>%
+  left_join(y = patient_db) %>%
+  relocate(GENDER, .after = PDS_GENDER) %>%
+  relocate(AGE_BAND, AGE, .after = CALC_AGE) %>%
+  select(-c(PDS_GENDER, CALC_AGE))
+
+# Write the table back to DALP
+item_fact_db %>%
+  compute(
+    name = "INT615_ITEM_LEVEL_BASE",
+    temporary = FALSE
+  )
+
+# Disconnect from database
+DBI::dbDisconnect(con)
+```
+````
+
+<br>
+
+## Results Aggregation
+
+<br>
+
+With this final item-level results table, calculations could easily be made such as the number of monthly care home items versus the number of monthly non-care home items, for patients aged 65 or over in England in the 2020/21 Financial Year. It was sufficient for this analysis to determine whether an address was *a* care home, as opposed to a specific care home. All results aggregations were therefore only grouped by a care home or non-care home binary classification, rather than grouped at a speific care home-level. 
+
+<br>
+
+## Results Interpretation
+
+<br>
+
+The output from this analysis is on a prescription form-level. This means we are only aware of a patient address, and therefore if they were a care home resident at that moment in time, for the months in which they received prescribing. The below high-level summary shows that around 314k patients received a prescription in a care home in April 2020. Naturally, the number of care home residents may be greater than this, as they may not have received prescribing in that month. Looking at the same cohort in May 2020, it can be seen that some of that group either didn't receive prescribing, or received a non-care home prescribing in the following month. Some of these instances of moving into non-prescribing will be where a care home patient has passed away. The important thing to note, is that the output is ultimately within the context of patient address details at the time of prescribing, for the months in which they received prescribing.
+
+<br>
+
+```{r, echo = F}
+r = "#ef3b2c"
+g = "#238b45"
+b = "#2171b5"
+
+highchart() %>%
+  hc_chart(type = 'sankey') %>%
+  hc_add_series(
+    name = '',
+    color = "red",
+    data = list(
+      list(from = 'Received a CH Prescription in April 2020<br>(314 k)', to = 'Received a non-CH Prescription in May 2020<br>(6 k)', weight = 10),
+      list(from = 'Received a CH Prescription in April 2020<br>(314 k)', to = 'Received a CH Prescription in May 2020<br>(274 k)', weight = 274),
+      list(from = 'Received a CH Prescription in April 2020<br>(314 k)', to = "Didn't Received any Prescribing in May 2020<br>(34 k)", weight = 34)
+    )
+  ) %>% 
+  hc_title(text = "<b>The Context of Final Results Output</b>") %>% 
+  hc_subtitle(text = 'Care Home Prescription Status in Two Consecutive Months') %>% 
+  hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial')))) %>% 
+  hc_tooltip(enabled = F) %>% 
+  hc_credits(enabled = T) %>% 
+  hc_size(height=350,width=470)
+```
+
+<br>
+
+## Validation of Matches
+
+<br>
+
+Result validation was carried out to to gauge the accuracy of each matching step, and in turn of the whole process. This validation was carried out manually, which meant cross-referencing matched addresses against patient addresses to see if they were the same. Internet searches were used to do this. In rare cases, even after multiple internet searches, it was still difficult to discern with absolute certainty whether an address was a care home, as opposed to a elderly residential facility of some kind. The key criteria used to define whether an address was a care home, was whether it had care staff present on a 24/7 basis.
+
+When a patient address record was considered to be care home due a Keyword or Patient Count match, there was not a matched record to cross-reference the patient address record against. In such instances the patient address record alone was used as a basis for an internet search.
+
+Also, non-care home matches were not considered for validation. The accuracy of matches between non-care home address records to other non-care home address records had no bearing on the final output to the initiative. If a non-care home patient address was correctly categorised as a non-care home, this was sufficient. Trying to reduce the number of false-negatives was a goal of later steps within th methodlogy (i.e. care homes not picked up as being care homes), which the additional Keyword and Patient Count matching steps aimed to offset. In addition, Exact matches were also not validated. Being an Exact match, the building classification of the matched AB-CQC record was taken as being correct. It was therefore care home matches for the three matching types (aside from exact matches), that were considered for validation.
+
+The validation was scored on a prescription form-level, rather than address record-level. This meant the accuracy was weighted, depending on how many prescription forms were associated with an address record. This accuracy only took true-positives and false-positives into account. The below table displays the accuracy of 500 prescription forms against three dummy address records
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Patient Address' = c('Bell Views Care Home', 'King Road Nursing Home', 'Petersons Residential Home'),
+  'Matched Address' = c('Bell View Care Home', '', 'Peters Residential Centre'),
+  'Match Type' = c('JW', 'Key Word', 'JW'),
+  'Correct Match' = c("&#x2714;", "&#x2714;", "&#x2718;"),
+  'Form Count' = c(300, 195, 5),
+  check.names = F
+  )
+
+kable(table, align = c("lllrr"), escape = F) %>% 
+    kable_styling(full_width = F, c("bordered", "striped"), position = "left")
+```
+
+<br>
+
+In this example, 495/500 forms were correctly matched, which would equate to an accuracy of 99.0%.
+
+<br>
+
+## Validation of Results
+
+<br>
+
+A sample of matched address records were validated for each match type. As mentioned, these three match types were JW, Keyword and Patient Count matches. The number of records, and the number of prescription forms associated with these records, are described for each validation sample below. The details and accuracy of each validation sample are described afterwards.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Match Type' = c('JW', 'Patient Count', 'Keyword', 'Total'),
+  'Number of Records' = c(2000, 325, 400, 2725),
+  'Number of Forms' = c(222681, 176891, 20560, 420132),
+  check.names = F
+  )
+
+kable(table, format.args = list(big.mark = ",", lign = c("lrr"))) %>% 
+  kable_styling(full_width = F, c("bordered", "striped"), position = "left") %>% 
+  row_spec(row = 4,  bold = T, background = "lightblue")
+```
+
+<br>
+
+### JW Match Accuracy Validation
+
+<br>
+
+As described in the above table, 2000 JW match records were manually validated. In these instances, the patient address record was categorised as being a care home, as its best match from all addresses that shared its postcode, was an AB-CQC address categorised as a care home. Incorrect matches arose in two situations.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Instance = c(1:2),
+  Description = c(
+    'When a patient address was not a care home, even though the best scoring match was a care home',
+    'When the best scoring match categorised as a care home, was not actually a care home.'
+    ),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+Of the 2000 patient address records, 51 were incorrect. However, many of these incorrect records were from address records with few forms. All in all, this translated to a very high form-level accuracy.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Match Type' = 'JW Match',
+  'Records' = 2000,
+  'Total Forms' = 222681,
+  'Incorrect Forms' = 567,
+  'Corrrect Forms' = 222114,
+  'Accuracy' = '99.7%',
+  check.names = F
+  )
+
+kable(table, format.args = list(big.mark = ",", align = c("lrrrr"))) %>% 
+  kable_styling(full_width = F, c("bordered", "striped"), position = "left") 
+```
+
+<br>
+
+If a user plans on using the `calc_match_addresses` function for an address matching task, there are a few things things they must consider. Firstly, they must consider how to deal with joint top scoring matches. Secondly, they must decide whether or not to use a JW match score threshold to filter the results. Both of these depend upon the use case. An example of using this threshold, would be to remove any matches with a score less than 0.5. Indeed, this threshold was used in a previous non-care home NHSBSA initiative. In this instance, due to the already very high accuracy rate, a threshold was unnecessary. In addition, there was also no convenient overall match score threshold (different to the token-level JW threshold) that would retain correct matches whilst removing the bulk of incorrect matches. This relationship is displayed in the below chart.
+
+<br>
+
+```{r, echo=FALSE, warning=FALSE}
+scores = seq(from = 0.1, to = 1.0, by = 0.1)
+ch_scores = c(1, 1, 4, 26, 66, 135, 177, 433, 624, 512)
+nch_scores = c(0, 1, 2, 2, 1, 1, 6, 3, 3, 2)
+
+
+highchart() %>% 
+  hc_xAxis(categories = scores, title = list(text = "JW Match Score")) %>% 
+  hc_add_series(
+    data = ch_scores,
+    type = "column",
+    name = "Correct JW Match Scores",
+    yAxis = 0
+  ) %>% 
+  hc_add_yAxis(nid = 1L, title = list(text = "Number of Correctly <br>Matched Records"), relative = 1) %>% 
+  hc_add_series(
+    data = nch_scores,
+    type = "column",
+    name = "Inorrect JW Match Scores",
+    yAxis = 1,
+    color = "orange"
+  ) %>% 
+  hc_add_yAxis(nid = 2L, title = list(text = "Number of Incorrectly <br>Matched Records"), relative = 1, opposite = T) %>% 
+  hc_tooltip(table = T) %>% 
+  hc_plotOptions(column = list(groupPadding = 0, pointPadding = 0)) %>% 
+  hc_title(text = "<b>Distribution of Match Scores for Correctly and Incorrectly Matched JW Matches</b>") %>% 
+  hc_size(height = 450, width = 470)
+```
+
+<br> 
+
+As can be seen, many incorrect matches, despite not being correct, still had a decent match score. A lower threshold of 0.3 could be applied within future care home analyses, although this would be to sacrifice a number of correct matches, in order for minimal gains on what is already a very high form-level accuracy. Overall, this step had the highest accuracy of the three matching steps.
+
+It is *highly* recommended that future use cases of the `calc_match_addresses` function manual validate a sample of matched results. This is to see what (if any) threshold should be applied, and to explore the relationship between this threshold value and their matched record count.
+
+<br>
+
+### Patient Count Match Type Validation
+
+<br>
+
+Only 325 Patient-Count matches were performed. This equated about two thirds of the total number of Patient Count matches (483). How many prescription forms this represented and how many of those were correctly matched are described in the below table:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Match Type' = 'Patient Count',
+  'Records' = 325,
+  'Total Forms' = 176891,
+  'Incorrect Forms' = 5925,
+  'Corrrect Forms' = 170939,
+  'Accuracy' = '96.6%',
+  check.names = F
+  )
+
+kable(table, format.args = list(big.mark = ",", align = c("lrrrrr"))) %>% 
+  kable_styling(full_width = F, c("bordered", "striped"), position = "left") 
+```
+
+<br>
+
+As mentioned earlier, Patient Count matches were applied at postcodes with a care home, with five or more patients aged 65 or above receiving a prescription in a given month. Through initial exploratory analysis the threshold of five patients was seen to be effective, and considerably more accurate than four patients. Future iterations of the logic and code could of course develop this. With this five patient threshold in place, a feature was generated to describe *how many* months within the year had five or more patients aged 65 or above receiving a prescription. After validation, this parameter was changed (from the default value of one) to see if/how changes in this parameter affected the accuracy and form count. This relationship is displayed in the below chart:
+
+<br>
+
+```{r, echo=FALSE}
+accuracy_vec = c(96.64, 96.67, 96.94, 97.30, 97.26, 97.21, 97.17, 97.14, 97.19, 97.15, 97.05, 97.21)
+forms_vec = c(176891, 174168, 171148, 167602, 164623, 161688, 159906, 158147, 155166, 152631, 138756, 131187)
+
+highchart() %>%
+  hc_xAxis(categories = c(1:12), title = list(text = "Number of Months with 5 or more Patients Aged 65+")) %>% 
+  hc_yAxis_multiples(
+    list(oppposite = FALSE, title = list(text = "Accuracy (% - Blue)"), min = 88, max = 99),
+    list(opposite = TRUE, title = list(text = "Form Count (Orange)"))
+  ) %>% 
+  hc_add_series(
+    data = accuracy_vec,
+    type = "spline",
+    name = "Accuracy (%)",
+    yAxis = 0
+  ) %>% 
+  hc_add_series(
+    data = forms_vec,
+    type = "spline",
+    name = "Form Count",
+    yAxis = 1,
+    color = "orange"
+  ) %>% 
+  hc_tooltip(table = T) %>% 
+  hc_title(text = "<b>Matching Accuracy against Form Count for the Number of Months with 5 or more Patients Aged 65+ for Patient Count Matches</b>") %>% 
+  hc_size(width = 470, height = 510)
+
+```
+
+<br>
+
+After inspecting the chart, it an be inferred that the Patient Count matching logic *could* be tweaked, so that address records required five or more patients aged 65 to receive prescribing in *four or more* months (as opposed to just one). This would marginally improve accuracy, although at the cost of losing some correctly labelled care home prescription forms. However, the marginal increase in accuracy, was even more marginal in relation to overall accuracy, with Patient Count matches a small proportion of overall matches. In addition, the goal of the project was to maximise the potential number of prescription forms that could be classified as being from a care home. For these reasons the Patient Count match logic was not changed, so that address records required five or more patients aged 65 to receive prescribing in only one month of the financial year, in order to be classified as such.
+
+<br>
+
+### Keyword Match Type Validation
+
+<br>
+
+A sample of 400 keyword matches were manually validated. This was a sample of 100 address records for each of the four keyword variations. This information along with the accuracy of each keyword variations is described below:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Keyword' = c('Care Home', 'Nursing Home', 'Residential Home', 'Rest Home'),
+  'Records' = c(100,100,100,100),
+  'Total Forms' = c(6047, 5365, 4772, 4376),
+  'Incorrect Forms' = c(0, 1, 39, 124),
+  'Corrrect Forms' = c(6047, 5364, 4733, 4252),
+  'Accuracy' = c('100%', '99.9%', '99.2%', '97.2%'),
+  check.names = F
+  )
+
+kable(table, format.args = list(big.mark = ",", align = c("lrrrrr"))) %>% 
+  kable_styling(full_width = F, c("bordered", "striped"), position = "left") 
+```
+
+<br>
+
+The overall accuracy for the Keyword match was calculated using the above accuracies, weighted by the number of matches per keyword type. 
+
+<br>
+
+```{r, echo=FALSE, warning=FALSE}
+ch_forms = 229236
+ch_accuracy = 1
+ch_calc = ch_forms * ch_accuracy
+
+nh_forms = 156701
+nh_accuracy = 0.999
+nh_calc = nh_forms * nh_accuracy
+
+rh_forms = 16805
+rh_accuracy = 0.992
+rh_calc = rh_forms * rh_accuracy
+
+rd_forms = 46059
+rd_accuracy = 0.972
+rd_calc = rd_forms * rd_accuracy
+
+calc_total = ch_calc + nh_calc + rh_calc + rd_calc
+form_total = ch_forms + nh_forms + rh_forms + rd_forms
+accuracy = round(calc_total / form_total, 3) * 100
+
+table <- data.frame(
+  'Keyword' = c('Care Home', 'Nursing Home', 'Residential Home', 'Rest Home', 'Total'),
+  'Total Forms' = c(ch_forms, nh_forms, rd_forms, rh_forms, form_total),
+  'Accuracy (%)' = c('100', '99.9', '99.2', '97.2', accuracy),
+  check.names = F
+  )
+
+kable(table, format.args = list(big.mark = ",", align = c("lrrrrr"))) %>% 
+  kable_styling(full_width = F, c("bordered", "striped"), position = "left") %>% 
+  row_spec(row = 5,  bold = T, background = "lightblue")
+```
+
+<br>
+
+The accuracy of each keyword type and the overall accuracy is also displayed in the below chart. The slim and focused set of keywords enabled this step to have a high level of accuracy.
+
+<br>
+
+```{r, echo=FALSE}
+data = data.frame(
+  `Keyword Type` = c('Care Home', 'Nursing Home', 'Residential Home', 'Rest Home', 'Overall'),
+  `Form Accuracy (%)` = c(100, 99.9, 99.2, 97.2, 99.6),
+  col = c("#7cb5ec", "#7cb5ec", "#7cb5ec", "#7cb5ec", "#f7a35c"),
+  check.names = F
+)
+
+hchart(data, "column", hcaes(`Keyword Type`, `Form Accuracy (%)`, color = col), name = 'Keyword Type Accuracy (%)') %>% 
+  hc_yAxis(max = 100, min = 90) %>% 
+  hc_title(text = "<b>Form Accuracy by Keyword Type for Keyword Matches</b>", margin = 50) %>% 
+  hc_size(width = 370, height = 350) %>% 
+  hc_plotOptions(
+    column = list(
+      groupPadding = 0
+    )
+  )
+```
+
+<br>
+
+## Overall Accuracy
+
+<br>
+
+Using the above estimated accuracies, a final accuracy could be calculated. This was taking into account the number of forms identified by each match type. As mentioned earlier, exact matches were taken as being correct, as they shared the exact details of a AB-CQC address classified as a care home. As a result, the accuracy of these matches was taken as 100%.
+
+<br>
+
+```{r, echo=FALSE, warning=FALSE}
+jw_forms = 11467705
+jw_accuracy = 0.997
+jw_calc = jw_forms * jw_accuracy
+
+exact_forms = 3851851
+exact_accuracy = 1
+exact_calc = exact_forms * exact_accuracy
+
+kw_forms = 448801
+kw_accuracy = 0.996
+kw_calc = kw_forms * kw_accuracy
+
+pc_forms = 263256
+pc_accuracy = 0.966
+pc_calc = pc_forms * pc_accuracy
+
+calc_total = jw_calc + exact_calc + kw_calc + pc_calc
+form_total = jw_forms + exact_forms + kw_forms + pc_forms
+accuracy = round(calc_total / form_total, 4) * 100
+
+table <- data.frame(
+  'Match Type' = c('Exact', 'JW', 'Patient Count', 'Keyword', 'Overall'),
+  'Total Forms (million)' = c(3.9, 11.5, 0.3, 0.4, 16.0),
+  'Percentage of Total Forms' = c(24.0, 71.5, 1.7, 2.8, 100),
+  'Accuracy (%)' = c('100', '99.7', '96.6', '99.6', accuracy),
+  check.names = F
+  )
+
+kable(table, format.args = list(big.mark = ",", align = c("lrr"))) %>% 
+  kable_styling(full_width = F, c("bordered", "striped"), position = "left") %>% 
+  row_spec(row = 5,  bold = T, background = "lightblue")
+```
+
+<br>
+
+The high proportion and high accuracy of the JW Matches, calculated using the `calc_match_addresses` function, was supplemented with a large volume of exact matches. These two match types had a significant impact upon the high overall accuracy. As well as having the lowest accuracy, the Patient Count match type also accounted for lowest number of prescription forms. The proportion of care home prescription forms matched by each type can be better seen in the below chart. 
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Type' = c("Exact", "JW", "Patient Count", "Keyword"),
+  'Forms' = c(240, 715, 17, 28),
+  'Label' = c("24.0%", "71.5%", "1.7%", "2.8%"),
+  check.names = F
+)
+
+hchart(table, "item", hcaes(name = Type, y = Forms),
+       name = "Proportion of Forms",
+       marker = list(symbol = "square"),
+       showInLegend = T,
+       dataLabels = list(enabled = T, format = "{point.Type")
+       ) %>% 
+  hc_size(width = 470, height = 440) %>% 
+  hc_tooltip(
+    pointFormat = 
+      "<b>Match Type:</b> {point.Type}<br><b>Proprtion of Forms:</b> {point.Label}",
+    headerFormat = ""
+    ) %>% 
+  hc_legend(
+    labelFormat = '{name} <span style="opacity: 0.4">{Label}</span>'
+  ) %>% 
+  hc_title(text = "<b>Proportion of Matched Care Home Forms by Match Type</b>")
+```
+
+<br>
+
+## Validation Summary
+
+<br>
+
+For future use cases, an important takeaway from the above validation is that the relationship between JW match scores and manually validated correct/incorrect results should be explored. This can then inform what, if any, JW match score threshold should be applied.
+
+In this analysis an ensemble approach was taken, where the JW match performed by the `calc_match_addresses` function was supplemented by custom steps specific to this particular use case. These were the Patient Count and Keyword match steps. It is also recommended that manual validation is performed on any custom steps used within an analysis, likewise used to supplement the matches found using the `calc_match_addresses` function.
+
+<br>
+<br>
+
+# **Further Information & Next Steps**
+
+<br>
+<br>
+
+## Code
+
+<br>
+
+The code used within this project can be accessed several way. Firstly, code chunks can be copied directly from this notebook. Alternatively, all of the individual scripts that contributed to this notebook can be found at the NHSBSA github page: https://github.com/nhsbsa-data-analytics/careHomePrescribingScrollytellR
+
+The code for the functions specific to address matching can be found at the following NHSBSA GitHub page: https://github.com/nhsbsa-data-analytics/addressMatchR/tree/master/R
+
+The code for the generic functions within the notebook that have many potential uses beyond just address matching can be found at the following NHSBSA GitHub page: https://github.com/nhsbsa-data-analytics/nhsbsaR/tree/main/R
+
+Both of the `{addressMatchR}` and `{nhsbsaR}` packages can be installed using the following code:
+
+<br>
+
+````
+```{r}`r''`
+#install.packages("devtools")
+devtools::install_github("nhsbsa-data-analytics/addressMatchR")
+devtools::install_github("nhsbsa-data-analytics/nhsbsaR")
+```
+````
+
+<br>
+
+Although mentioned earlier, an important point to remember is that the code and helper functions were created for use with an Oracle database. This means some code will require tweaking or rewriting if used within a different database.
+
+<br>
+
+## Output Analysis
+
+<br>
+
+As stated at the beginning of this notebook, this is the first time a years worth of prescription forms have been labelled as being from a care home or otherwise. Using this labelled data, care home demographics and prescribing can be better understood. A publicly available analysis, that utilises this output to better understand care home demographics and prescribing, has been created by the NHSBSA. This is in the form of an interactive scrolly-telling analysis, which can be found here: https://miteam.shinyapps.io/carehome_test/
+
+With this labelled dataset, the NHSBSA will continue to mine insights about care home demographics and prescribing, that previously would not have been possible. It is expected there will be various use cases for how this data could be utilised, both internally and externally. With the workflow to generate this output now in place, the generation of future datasets can also be productionised. The labelling of prescription forms as being from a care home or otherwise will be productionised either on an annual or monthly-level. This information can then be incorporated into various regular reporting. If you are viewing this notebook externally and would like to discuss access to a cut or regular feed of this data, please get in touch through by following email address: nhsbsa.datalab@nhs.net
+
+Unfortunately, due to the lower levels of ETP prescribing in the past, the workflow cannot be applied to datasets prioir to the 2020/21 Financial Year. The extent of ETP prescribing determines the proportion of paper prescription forms that need to have their address derived through the method described in Section Two: 'Processing Patient Address Information'. With the accuracy of patient address details being critical to the whole process, it has been decided that any time periods prior to the 2020/21 Financial Year would have too great a proportion of non-ETP prescribing.
+
+<br>
+
+## Future Workflow Iterations
+
+<br>
+
+As the workflow is productionised, it will naturally in time be iterated and improved. Potential ways in which the workflow could be iterated in the future are described below:
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  Iteration = c(1:4),
+  Description = c('The Keyword match, being more accurate, could be performed before the Patient Count match.',
+           'Either the AB or CQC lookup data could be processed or stacked differently.',
+           'Any of the threshold values could be tweaked, such as the 0.8 minimum token-level score within the JW match.',
+           'A new rule could be added altogether, such as a drug-level rule, that looks at address-level prescribing patterns.')
+  )
+
+my_kable(table)
+```
+
+<br>
+
+The last of the above points is particularly interesting. This would in effect be using the output from this analysis to inform future matching methodologies, now that an extensive prescription form-level dataset was available that had a reliable care home classification.
+
+<br>
+
+## Contact Details
+
+<br>
+
+For any queries relating to this notebook and it's contents, please contact: nhsbsa.datalab@nhs.net
+
+<br>
