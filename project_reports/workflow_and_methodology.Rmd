@@ -3618,11 +3618,12 @@ As the workflow is productionised, it will naturally in time be iterated and imp
 
 ```{r, echo=FALSE}
 table <- data.frame(
-  Iteration = c(1:4),
+  Iteration = c(1:5),
   Description = c('The Keyword match, being more accurate, could be performed before the Patient Count match.',
            'Either the AB or CQC lookup data could be processed or stacked differently.',
            'Any of the threshold values could be tweaked, such as the 0.8 minimum token-level score within the JW match.',
-           'A new rule could be added altogether, such as a drug-level rule, that looks at address-level prescribing patterns.')
+           'A new rule could be added altogether, such as a drug-level rule, that looks at address-level prescribing patterns.',
+           'Being the least accurate rule and accounting for only 1.7% of matched care home forms, the Patient Count rule could be replaced entirely by a more effective and accurate drug-level rule.')
   )
 
 my_kable(table)
