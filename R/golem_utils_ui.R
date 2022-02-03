@@ -244,9 +244,9 @@ rep_br <- function(times = 1) {
 #' @importFrom shiny tags
 enurl <- function(url, text) {
   tags$a(
-    href = url, 
-    text, 
-    target = "_blank", 
+    href = url,
+    text,
+    target = "_blank",
     style = "text-decoration: underline"
   )
 }
@@ -393,25 +393,25 @@ tooltip_text <- list(
     tags$strong("Older patients"), "are patients aged 65+ at the time of prescribing."
   ),
   # Care home vs non-care home
-  care_home =  tags$div(
+  care_home = tags$div(
     class = "nhsuk-u-font-size-14",
     tags$strong("Older care home patients"), "are patients aged 65+ who ",
     "received their prescription whilst living in a care home at the time of ",
     "prescribing.",
   ),
-  non_care_home =  tags$div(
+  non_care_home = tags$div(
     class = "nhsuk-u-font-size-14",
     tags$strong("Older non-care home patients"), "are patients aged 65+ who ",
     "received their prescription whilst not living in a care home at the time ",
     "of prescribing.",
   ),
   # Residential vs nursing
-  residential_home =  tags$div(
+  residential_home = tags$div(
     class = "nhsuk-u-font-size-14",
     "A", tags$strong("residential home"), "is a care home where a qualified ",
     "nurse is not provided.",
   ),
-  nursing_home =  tags$div(
+  nursing_home = tags$div(
     class = "nhsuk-u-font-size-14",
     "A", tags$strong("nursing home"), "is a care home where a qualified nurse ",
     "is provided to ensure that the full needs of the person using the ",
@@ -420,7 +420,7 @@ tooltip_text <- list(
   # Metrics
   items = tags$div(
     class = "nhsuk-u-font-size-14",
-    "Calculated as the average", tags$strong("number of prescription items"), 
+    "Calculated as the average", tags$strong("number of prescription items"),
     "per patient month. A count of the number of times a product, such as a ",
     "drug or appliance, appears on a prescription form. It does not account ",
     "for dosage or quantity prescribed. For example, a patient could receive ",
@@ -429,7 +429,7 @@ tooltip_text <- list(
   ),
   cost = tags$div(
     class = "nhsuk-u-font-size-14",
-    "Calculated as the average", 
+    "Calculated as the average",
     tags$b("total price reimbursed for dispensed drugs"),
     "per patient month. It relates solely to the cost of the drugs, in the ",
     "quantity prescribed on a prescription form. It does not include any ",
@@ -448,7 +448,7 @@ tooltip_text <- list(
   ),
   ten_or_more_unique_medicines = tags$div(
     class = "nhsuk-u-font-size-14",
-    "Calculated as the average", 
+    "Calculated as the average",
     tags$strong(
       "percentage of patients prescribed ten or more unique medicines"
     ), "per month. A unique medicine is defined as a medicine prescribed with ",

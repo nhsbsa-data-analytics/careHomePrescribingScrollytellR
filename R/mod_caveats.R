@@ -24,19 +24,19 @@ mod_caveats_ui <- function(id) {
         htmlOutput(outputId = ns("prescription"))
       ),
       tabPanel(
-        title = "Patient data", 
+        title = "Patient data",
         htmlOutput(outputId = ns("patient"))
       ),
       tabPanel(
-        title = "Lookup address", 
+        title = "Lookup address",
         htmlOutput(outputId = ns("address"))
       ),
       tabPanel(
-        title = "Address matching", 
+        title = "Address matching",
         htmlOutput(outputId = ns("matching"))
       ),
       tabPanel(
-        title = "Metrics & Charts", 
+        title = "Metrics & Charts",
         htmlOutput(outputId = ns("metric"))
       )
     )

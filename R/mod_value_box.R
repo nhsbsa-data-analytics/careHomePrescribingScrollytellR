@@ -12,7 +12,7 @@ mod_value_box_ui <- function(id,
                              icon_name,
                              group) {
   ns <- NS(id)
-  
+
   color <- switch(group,
     "care_home" = "#005EB8",
     "non_care_home" = "#768692",

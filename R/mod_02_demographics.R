@@ -67,7 +67,7 @@ mod_02_demographics_ui <- function(id) {
     p(
       "Our estimated monthly average of",
       tags$b("286 thousand older care home patients"), "receiving ",
-      "prescriptions, represents around", tags$b("5% of patients age 65+"), 
+      "prescriptions, represents around", tags$b("5% of patients age 65+"),
       "years receiving prescription items each month."
     ),
     p(
@@ -276,17 +276,17 @@ mod_02_demographics_server <- function(id, export_data) {
     max_value <- reactive({
       req(input$geography)
       req(input$sub_geography)
-      
+
       patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
         dplyr::summarise(max(SDC_TOTAL_PATIENTS, na.rm = TRUE)) %>%
         dplyr::pull()
     })
-    
+
     # Pull the total
     total <- reactive({
       req(input$geography)
       req(input$sub_geography)
-      
+
       patients_by_geography_and_gender_and_age_band_sub_geography_df() %>%
         dplyr::summarise(TOTAL_PATIENTS = sum(TOTAL_PATIENTS, na.rm = TRUE)) %>%
         dplyr::mutate(
@@ -452,7 +452,7 @@ mod_02_demographics_server <- function(id, export_data) {
         # Process annotation
         text <- paste(
           ifelse(input$sub_geography == "Overall", "", "In"),
-          input$sub_geography, "there are an estimated", tags$b(total()), 
+          input$sub_geography, "there are an estimated", tags$b(total()),
           "care home patients in 2020/21, of which",
           tags$b(paste0(percentage_female_patients(), "%")), "are females and",
           tags$b(paste0(percentage_elderly_female_patients(), "%")), "were",

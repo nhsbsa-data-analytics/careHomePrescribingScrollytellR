@@ -47,7 +47,6 @@ app_ui <- function(request) {
                   # Add breaks to prevent graying out
                   br(),
                   br()
-                  
                 ),
                 br(),
                 scrollytell::scrolly_section(
@@ -72,8 +71,8 @@ app_ui <- function(request) {
           ),
           tabPanel(
             title = tags$a(
-              "Methodology", 
-              href = "https://rpubs.com/nhsbsa-data-analytics/859448", 
+              "Methodology",
+              href = "https://rpubs.com/nhsbsa-data-analytics/859448",
               target = "_blank"
             )
           )

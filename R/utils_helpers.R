@@ -31,7 +31,7 @@ theme_nhsbsa <- function(hc, palette = NA, stack = "normal") {
     minColor = nhsbsaR::palette_nhsbsa(palette = "gradient")[1],
     maxColor = nhsbsaR::palette_nhsbsa(palette = "gradient")[2]
   )
-  
+
   # Style based on the NHS frontend toolkit
   theme_nhsbsa_hc$xAxis$className <- "nhsuk-body-s"
   theme_nhsbsa_hc$yAxis$className <- "nhsuk-body-s"

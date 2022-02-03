@@ -16,7 +16,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
       "significantly to older non-care home patients."
     ),
     p(
-      "Care home patients are more likely to receive", 
+      "Care home patients are more likely to receive",
       tags$b("drugs for pain relief"), "than non-care home patients, in terms ",
       "of number of prescription items and patients receiving them. Whilst",
       tags$b("nutrition products"), "account for a greater percentage of drug ",
@@ -212,20 +212,20 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           )
         )
     })
-    
+
     # Create dynamic text paragraph - top 2 care home and top 1 non-care home
     output$text <- shiny::renderUI({
       req(input$bnf)
       req(input$metric)
-      
+
       top_care_home_df <- metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::arrange(desc(SDC_PCT_CH)) %>%
         head(2)
-      
+
       top_non_care_home_df <- metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::arrange(desc(SDC_PCT_NON_CH)) %>%
         head(1)
-        
+
       col_12(
         class = "highcharts-caption",
         style = "margin-left: 1%; margin-right: 1%; text-align: left;",
@@ -233,24 +233,22 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), "are the most ",
         "commonly prescribed BNF", paste0(input$bnf, "s"), " by percentage of ",
         switch(input$metric,
-               "COST" = "drug cost ",
-               "ITEMS" = "prescription items",
-               "PATIENTS" = "patients prescribed"
+          "COST" = "drug cost ",
+          "ITEMS" = "prescription items",
+          "PATIENTS" = "patients prescribed"
         ),
         " in 2020/21, accounting for ",
         paste0(top_care_home_df[1, "SDC_PCT_CH"], "%"), " and ",
         paste0(top_care_home_df[1, "SDC_PCT_NON_CH"], "%"), " of all ",
         switch(input$metric,
-               "COST" = "drug cost to",
-               "ITEMS" = "prescription items to"
+          "COST" = "drug cost to",
+          "ITEMS" = "prescription items to"
         ),
         " older care home patients. For non-care home patients it is",
         tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME),
         paste0("(", top_non_care_home_df$SDC_PCT_NON_CH, "%).")
       )
-      
     })
-    
   })
 }
 
