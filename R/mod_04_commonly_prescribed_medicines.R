@@ -11,13 +11,12 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h4("Commonly prescribed medicines"),
-    br(),
     h6(
       "The range of medicines prescribed to older care home patients differs ",
       "significantly to older non-care home patients."
     ),
     p(
-      "Care home patients are more likely to receive", 
+      "Care home patients are more likely to receive",
       tags$b("drugs for pain relief"), "than non-care home patients, in terms ",
       "of number of prescription items and patients receiving them. Whilst",
       tags$b("nutrition products"), "account for a greater percentage of drug ",
@@ -43,15 +42,15 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         "home patients in England (2020/21)"
       ),
       col_4(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("bnf"),
           label = "BNF Level",
           choices = names(careHomePrescribingScrollytellR::bnfs),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       col_4(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
@@ -59,18 +58,18 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
             "Number of prescription items" = "ITEMS",
             "Number of patients" = "PATIENTS"
           ),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       col_4(
-        selectInput(
+        nhs_selectInput(
           inputId = ns("sort"),
           label = "Sort by",
           choices = c(
             "Care home" = "PCT_CH",
             "Non-care home" = "PCT_NON_CH"
           ),
-          width = "100%"
+          full_width = TRUE
         )
       ),
       shiny::uiOutput(outputId = ns("text")),
@@ -79,7 +78,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         height = "400px"
       )
     ),
-    mod_download_ui(
+    mod_nhs_download_ui(
       id = ns("download_metrics_by_bnf_and_ch_flag_chart")
     )
   )
@@ -130,7 +129,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
     })
 
     # Add a download button
-    mod_download_server(
+    mod_nhs_download_server(
       id = "download_metrics_by_bnf_and_ch_flag_chart",
       filename = "metrics_by_bnf_and_ch_flag_df.csv",
       export_data = metrics_by_bnf_and_ch_flag_download_df()
@@ -213,20 +212,20 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           )
         )
     })
-    
+
     # Create dynamic text paragraph - top 2 care home and top 1 non-care home
     output$text <- shiny::renderUI({
       req(input$bnf)
       req(input$metric)
-      
+
       top_care_home_df <- metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::arrange(desc(SDC_PCT_CH)) %>%
         head(2)
-      
+
       top_non_care_home_df <- metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::arrange(desc(SDC_PCT_NON_CH)) %>%
         head(1)
-        
+
       col_12(
         class = "highcharts-caption",
         style = "margin-left: 1%; margin-right: 1%; text-align: left;",
@@ -234,24 +233,22 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), "are the most ",
         "commonly prescribed BNF", paste0(input$bnf, "s"), " by percentage of ",
         switch(input$metric,
-               "COST" = "drug cost ",
-               "ITEMS" = "prescription items",
-               "PATIENTS" = "patients prescribed"
+          "COST" = "drug cost ",
+          "ITEMS" = "prescription items",
+          "PATIENTS" = "patients prescribed"
         ),
         " in 2020/21, accounting for ",
         paste0(top_care_home_df[1, "SDC_PCT_CH"], "%"), " and ",
         paste0(top_care_home_df[1, "SDC_PCT_NON_CH"], "%"), " of all ",
         switch(input$metric,
-               "COST" = "drug cost to",
-               "ITEMS" = "prescription items to"
+          "COST" = "drug cost to",
+          "ITEMS" = "prescription items to"
         ),
         " older care home patients. For non-care home patients it is",
         tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME),
         paste0("(", top_non_care_home_df$SDC_PCT_NON_CH, "%).")
       )
-      
     })
-    
   })
 }
 

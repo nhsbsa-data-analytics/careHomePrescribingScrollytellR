@@ -242,8 +242,13 @@ rep_br <- function(times = 1) {
 #' @examples
 #' enurl("https://www.thinkr.fr", "ThinkR")
 #' @importFrom shiny tags
-enurl <- function(text, url) {
-  tags$a(text, href = url, target = "_blank")
+enurl <- function(url, text) {
+  tags$a(
+    href = url,
+    text,
+    target = "_blank",
+    style = "text-decoration: underline"
+  )
 }
 
 #' Columns wrappers
@@ -274,8 +279,18 @@ col_8 <- function(...) {
 }
 
 #' @importFrom shiny column
+col_7 <- function(...) {
+  column(7, ...)
+}
+
+#' @importFrom shiny column
 col_6 <- function(...) {
   column(6, ...)
+}
+
+#' @importFrom shiny column
+col_5 <- function(...) {
+  column(5, ...)
 }
 
 #' @importFrom shiny column
@@ -366,6 +381,94 @@ make_action_button <- function(tag, inputId = NULL) {
   # return tag
   tag
 }
+
+
+#' Define tooltip text
+#'
+#' @noRd
+tooltip_text <- list(
+  # Older
+  older = tags$div(
+    class = "nhsuk-u-font-size-14",
+    tags$strong("Older patients"), "are patients aged 65+ at the time of prescribing."
+  ),
+  # Care home vs non-care home
+  care_home = tags$div(
+    class = "nhsuk-u-font-size-14",
+    tags$strong("Older care home patients"), "are patients aged 65+ who ",
+    "received their prescription whilst living in a care home at the time of ",
+    "prescribing.",
+  ),
+  non_care_home = tags$div(
+    class = "nhsuk-u-font-size-14",
+    tags$strong("Older non-care home patients"), "are patients aged 65+ who ",
+    "received their prescription whilst not living in a care home at the time ",
+    "of prescribing.",
+  ),
+  # Residential vs nursing
+  residential_home = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "A", tags$strong("residential home"), "is a care home where a qualified ",
+    "nurse is not provided.",
+  ),
+  nursing_home = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "A", tags$strong("nursing home"), "is a care home where a qualified nurse ",
+    "is provided to ensure that the full needs of the person using the ",
+    "service are met.",
+  ),
+  # Metrics
+  items = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "Calculated as the average", tags$strong("number of prescription items"),
+    "per patient month. A count of the number of times a product, such as a ",
+    "drug or appliance, appears on a prescription form. It does not account ",
+    "for dosage or quantity prescribed. For example, a patient could receive ",
+    "100 x 50mg tablets as an item and another could receive 7 x 5 mg ",
+    "tablets as an item. Both would be counted as 1 item"
+  ),
+  cost = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "Calculated as the average",
+    tags$b("total price reimbursed for dispensed drugs"),
+    "per patient month. It relates solely to the cost of the drugs, in the ",
+    "quantity prescribed on a prescription form. It does not include any ",
+    "additional fees or discounts that were paid to the dispensing ",
+    "contractors."
+  ),
+  unique_medicines = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "Calculated as the average", tags$b("number of unique medicines"), "per ",
+    "patient per month. A unique medicine is defined as a medicine prescribed ",
+    "with the same chemical substance descriptor in BNF Sections 1 to 4 and 6 ",
+    "to 10 whether it be different formulations (presentations) or different ",
+    "strengths. Medicines with the same chemical substance descriptor would ",
+    "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and 5mg ",
+    "tablets."
+  ),
+  ten_or_more_unique_medicines = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "Calculated as the average",
+    tags$strong(
+      "percentage of patients prescribed ten or more unique medicines"
+    ), "per month. A unique medicine is defined as a medicine prescribed with ",
+    "the same chemical substance descriptor in BNF Sections 1 to 4 and 6 to ",
+    "10 whether it be different formulations (presentations) or different ",
+    "strengths. Medicines with the same chemical substance descriptor would ",
+    "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and 5mg ",
+    "tablets."
+  ),
+  bnf_code = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "A", tags$strong("BNF code"), "is a fifteen character hierarchical code ",
+    "used to identify medicines based on the ",
+    enurl(
+      text = "British National Formulary (BNF)",
+      url = "https://www.bnf.org/products/bnf-online/"
+    ),
+    " classifications."
+  )
+)
 
 
 # UNCOMMENT AND USE
