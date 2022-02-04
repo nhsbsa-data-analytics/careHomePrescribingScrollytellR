@@ -72,7 +72,7 @@ app_ui <- function(request) {
           tabPanel(
             title = tags$a(
               "Methodology",
-              href = "https://rpubs.com/nhsbsa-data-analytics/859448",
+              href = "https://rpubs.com/nhsbsa-data-analytics/862168",
               target = "_blank"
             )
           )
