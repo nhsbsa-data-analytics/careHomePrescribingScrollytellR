@@ -3181,6 +3181,31 @@ highchart() %>%
 
 <br>
 
+## Match Types by Lookup Address Type
+
+<br>
+
+The analysis used both AB and CQC address lookup data. AB data was essential in order to identify records that were *not* a care home, in addition to identifying records that were a care home. CQC data was used to supplement the care home address information found in AB. This was to provide additional SLA for care homes within AB, and to provide entirely new SLA for care homes outside AB. There were many instances where the care home address information in AB and CQC were identical. The below table shows the proportion of exact matches made by AB addresses, CQC addresses, and addresses that appeared in both AB and CQC. Around 70% of the prescription forms exact matched to a care home address used a CQC address. Around 60% of the prescription forms JW matched to a care home address used a CQC address.
+
+<br>
+
+```{r, echo=FALSE}
+table <- data.frame(
+  'Address Type' = c('Both', 'AB', 'CQC'),
+  'Exact Match Prescription Forms (%)' = c(0.3, 29.8, 69.9),
+  'JW Match Prescription Forms (%)' = c(1.7, 39.7, 58.6),
+  check.names = F
+  )
+
+my_kable(table)
+```
+
+<br>
+
+Supplementing AB with CQC care home address information proved to be effective. It enabled exact matches not possible otherwise, and offered more possibilities of providing the best match for JW matches.
+
+<br>
+
 ## Validation of Matches
 
 <br>
