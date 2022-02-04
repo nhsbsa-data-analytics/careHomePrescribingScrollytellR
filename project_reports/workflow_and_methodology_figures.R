@@ -9,23 +9,45 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
-# Results item table
+# Address matches table
+address_matched_db <- con %>%
+  tbl(from = in_schema("ADAIV", "INT615_ADDRESS_MATCHED"))
+
+# Create a lazy table from the geography lookup table (Region, STP and LA)
+postcode_db <- con %>%
+  tbl(from = in_schema("ADAIV", "INT615_POSTCODE_LOOKUP")) %>%
+  select(POSTCODE)
+
+# CQC table
+cqc_db <- con %>%
+  tbl(from = in_schema("ADAIV", "INT615_CQC"))
+
+# AddressBase Plus table
 ab_db <- con %>%
   tbl(from = in_schema("DALL_REF", "ADDRESSBASE_PLUS"))
 
-# Postcodes with a CH to enable later aggregations
-ch_pcd <- ab_db %>% 
+# Filter AddressBase Plus to English properties at the end of 2021 FY
+ab_db <- ab_db %>% 
   filter(
     COUNTRY == "E",
-    RELEASE_DATE == "15-MAR-21",
-    CLASS == 'RI01'
-  ) %>% 
-  select(POSTCODE = POSTCODE_LOCATOR) %>% 
-  distinct() %>% 
-  mutate(
-    POSTCODE = REPLACE(POSTCODE, " ", ""),
-    CH_PCD = 1
-  )
+    substr(CLASS, 1, 1) != "L", # Land
+    substr(CLASS, 1, 1) != "O", # Other (Ordnance Survey only)
+    substr(CLASS, 1, 2) != "PS", # Street Record
+    substr(CLASS, 1, 2) != "RC", # Car Park Space
+    substr(CLASS, 1, 2) != "RG", # Lock-Up / Garage / Garage Court
+    substr(CLASS, 1, 1) != "Z", # Object of interest
+    RELEASE_DATE == TO_DATE("2021-03-15", "YYYY-MM-DD")
+  ) %>%
+  # Take POSTCODE_LOCATOR as the postcode as it is equal to POSTCODE (whenever
+  # one exists) but more complete and tidy it
+  mutate(POSTCODE = POSTCODE_LOCATOR) %>%
+  addressMatchR::tidy_postcode(col = POSTCODE)
+
+# Postcodes with a CH to enable later aggregations
+ch_pcd <- ab_db %>% 
+  filter(CLASS == 'RI01') %>% 
+  distinct(POSTCODE) %>% 
+  mutate(CH_PCD = 1L)
 
 # Workflow Part 2.2. Electronic Prescriptions - 89% for 65+ age group
 fact_db %>% 
@@ -47,10 +69,6 @@ fact_db %>%
 
 # Workflow Part 3.1. Total AB Addresses for Used Release Date - 32M
 ab_db %>% 
-  filter(
-    COUNTRY == "E",
-    RELEASE_DATE == "15-MAR-21"
-  ) %>% 
   tally()
 
 # Workflow Part 4.2. Proportion of CH-Address CH Exact Matches - 9%
@@ -160,6 +178,109 @@ fact_db %>%
     TOTAL = sum(FORM_COUNT),
     PROP = FORM_COUNT / TOTAL
   )
+
+# CQC vs AB matches
+
+# CQC
+
+# Convert registration and deregistration columns to dates and filter to 2020/21
+cqc_db <- cqc_db %>%
+  mutate(
+    REGISTRATION_DATE = ifelse(
+      test = is.na(REGISTRATION_DATE),
+      yes = NA,
+      no = TO_DATE(REGISTRATION_DATE, "YYYY-MM-DD")
+    ),
+    DEREGISTRATION_DATE = ifelse(
+      test = is.na(DEREGISTRATION_DATE),
+      yes = NA,
+      no = TO_DATE(DEREGISTRATION_DATE, "YYYY-MM-DD")
+    )
+  ) %>%
+  filter(
+    REGISTRATION_DATE <= TO_DATE("2021-03-31", "YYYY-MM-DD"),
+    is.na(DEREGISTRATION_DATE) |
+      DEREGISTRATION_DATE >= TO_DATE("2020-04-01", "YYYY-MM-DD")
+  )
+
+# Create a tidy distinct single line address and postcode
+cqc_db <- cqc_db %>%
+  mutate(
+    SINGLE_LINE_ADDRESS = paste(
+      NAME,
+      POSTAL_ADDRESS_LINE_1,
+      POSTAL_ADDRESS_LINE_2,
+      POSTAL_ADDRESS_TOWN_CITY,
+      POSTAL_ADDRESS_COUNTY
+    )
+  ) %>%
+  addressMatchR::tidy_single_line_address(col = SINGLE_LINE_ADDRESS) %>%
+  addressMatchR::tidy_postcode(col = POSTAL_CODE) %>%
+  distinct(
+    POSTCODE = POSTAL_CODE, 
+    SINGLE_LINE_ADDRESS_LOOKUP = SINGLE_LINE_ADDRESS
+  )
+
+# AB
+
+# Create and tidy the DPA and GEO single line addresses
+ab_db <- ab_db %>%
+  addressMatchR::calc_addressbase_plus_dpa_single_line_address() %>%
+  addressMatchR::calc_addressbase_plus_geo_single_line_address() %>%
+  addressMatchR::tidy_single_line_address(col = DPA_SINGLE_LINE_ADDRESS) %>%
+  addressMatchR::tidy_single_line_address(col = GEO_SINGLE_LINE_ADDRESS) %>%
+  select(
+    UPRN,
+    POSTCODE,
+    DPA_SINGLE_LINE_ADDRESS,
+    GEO_SINGLE_LINE_ADDRESS
+  )
+
+# When DPA != GEO then add a CORE single line address
+ab_db <-
+  union_all(
+    x = ab_db %>%
+      filter(
+        is.na(DPA_SINGLE_LINE_ADDRESS) |
+          is.na(GEO_SINGLE_LINE_ADDRESS) |
+          DPA_SINGLE_LINE_ADDRESS == GEO_SINGLE_LINE_ADDRESS
+      ),
+    y = ab_db %>%
+      filter(
+        !is.na(DPA_SINGLE_LINE_ADDRESS),
+        !is.na(GEO_SINGLE_LINE_ADDRESS),
+        DPA_SINGLE_LINE_ADDRESS != GEO_SINGLE_LINE_ADDRESS
+      ) %>%
+      nhsbsaR::oracle_merge_strings(
+        first_col = "DPA_SINGLE_LINE_ADDRESS",
+        second_col = "GEO_SINGLE_LINE_ADDRESS",
+        merge_col = "CORE_SINGLE_LINE_ADDRESS"
+      )
+  )
+
+# Convert to a long table of distinct stacked single line addresses
+ab_db <- ab_db %>%
+  tidyr::pivot_longer(
+    cols = ends_with("SINGLE_LINE_ADDRESS"),
+    names_to = "ADDRESS_TYPE",
+    values_to = "SINGLE_LINE_ADDRESS"
+  ) %>%
+  filter(!is.na(SINGLE_LINE_ADDRESS)) %>%
+  distinct(POSTCODE, SINGLE_LINE_ADDRESS_LOOKUP = SINGLE_LINE_ADDRESS)
+
+# Results
+
+address_matched_db %>%
+  filter(CH_FLAG == 1L) %>%
+  inner_join(y = postcode_db) %>%
+  left_join(y = addressbase_plus_db %>% mutate(AB = 1L)) %>%
+  left_join(y = cqc_db %>% mutate(CQC = 1L)) %>%
+  group_by(AB, CQC, MATCH_TYPE) %>%
+  summarise(
+    TOTAL_FORMS = sum(TOTAL_FORMS),
+    TOTAL_PATIENTS = sum(TOTAL_PATIENTS)
+  ) %>% 
+  collect()
 
 # Disconnect
 DBI::dbDisconnect(con)
