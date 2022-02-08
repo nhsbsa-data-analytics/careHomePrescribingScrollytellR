@@ -267,6 +267,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       ),
       tags$text(
         class = "highcharts-caption",
+        style = "font-size: 9pt",
         "Where the number of patients is less than 5 the data has been redacted."
       ),
       mod_nhs_download_ui(
@@ -441,6 +442,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         ),
         tags$text(
           class = "highcharts-caption",
+          style = "font-size: 9pt",
           switch(input$breakdown,
                  "Demographical - Gender" = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
                  "Where the number of patients is less than 5 the data has been redacted."
@@ -598,6 +600,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         ),
         tags$text(
           class = "highcharts-caption",
+          style = "font-size: 9pt",
           "This excludes 3% of care home patients in both a nursing and ",
           "residential home and 11% of care home patients who we were ",
           "unable to link to the CQC dataset. The mean average has been ",
