@@ -778,8 +778,7 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           ) %>%
           highcharter::hc_caption(
-            text = "This excludes << 1% of patients with an unknown gender.",
-            align = "right"
+            text = "This excludes << 1% of patients with an unknown gender."
           )
       })
 
