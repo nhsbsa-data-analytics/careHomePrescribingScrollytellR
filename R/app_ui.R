@@ -62,7 +62,8 @@ app_ui <- function(request) {
             title = tags$a(
               "Methodology",
               href = "https://rpubs.com/nhsbsa-data-analytics/862168",
-              target = "_blank"
+              target = "_blank",
+              title = "Methodology"
             )
           )
         )
