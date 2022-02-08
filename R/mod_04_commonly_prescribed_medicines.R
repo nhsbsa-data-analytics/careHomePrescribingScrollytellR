@@ -10,10 +10,12 @@
 mod_04_commonly_prescribed_medicines_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4("Commonly prescribed medicines"),
-    h6(
-      "The range of medicines prescribed to older care home patients differs ",
-      "significantly to older non-care home patients."
+    h2("Commonly prescribed medicines"),
+    p(
+      tags$b(
+        "The range of medicines prescribed to older care home patients ",
+        "differs significantly to older non-care home patients."
+      )
     ),
     p(
       "Care home patients are more likely to receive",
@@ -37,9 +39,11 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
     fluidRow(
       style = "background-color: #FFFFFF;",
       align = "center",
-      h6(
-        "Most common medicines prescribed to older care home and non-care ",
-        "home patients in England (2020/21)"
+      p(
+        tags$b(
+          "Most common medicines prescribed to older care home and non-care ",
+          "home patients in England (2020/21)"
+        )
       ),
       col_4(
         nhs_selectInput(

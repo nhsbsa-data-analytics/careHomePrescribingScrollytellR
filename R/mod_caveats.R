@@ -10,7 +10,7 @@
 mod_caveats_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4("Caveats"),
+    h1("Caveats"),
     p(
       "The caveats are grouped into three categories, those concerning the ",
       "underlying prescriptions data, the linking methodology, and the ",

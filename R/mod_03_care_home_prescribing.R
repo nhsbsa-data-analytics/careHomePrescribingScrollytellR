@@ -10,7 +10,7 @@
 mod_03_care_home_prescribing_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4(
+    h2(
       "Estimated prescribing patterns for",
       tippy(
         text = "older care home patients",
@@ -26,10 +26,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "This represents 7% of the total primary care drug spend for older ",
       "patients during 2020/21."
     ),
-    h6(
-      "The estimated average monthly drug cost for older care home patients ",
-      "is around twice that for older non-care home patients who received ",
-      "prescriptions."
+    p(
+      tags$b(
+        "The estimated average monthly drug cost for older care home patients ",
+        "is around twice that for older non-care home patients who received ",
+        "prescriptions."
+      )
     ),
     p(
       "We estimate that older care home patients receive around 1.6 times ",
@@ -40,11 +42,13 @@ mod_03_care_home_prescribing_ui <- function(id) {
     ),
     fluidRow(
       style = "background-color: #FFFFFF;",
-      h6(
+      p(
         style = "text-align: center;",
-        "Estimated average prescribing metrics per patient month for older ",
-        "care home and non-care home patients in England by geography, age ",
-        "band or gender (2020/21)"
+        tags$b(
+          "Estimated average prescribing metrics per patient month for older ",
+          "care home and non-care home patients in England by geography, age ",
+          "band or gender (2020/21)"
+        )
       ),
       col_6(
         nhs_selectInput(
@@ -111,10 +115,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
     ),
     fluidRow(
       style = "background-color: #FFFFFF;",
-      h6(
+      p(
         style = "text-align: center;",
-        "Estimated average prescribing metrics per patient month for older ",
-        "nursing home and residential home patients in England (2020/21)"
+        tags$b(
+          "Estimated average prescribing metrics per patient month for older ",
+          "nursing home and residential home patients in England (2020/21)"
+        )
       ),
       col_6(
         style = "text-indent: 15px;",
@@ -171,10 +177,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      h6(
-        "Estimated average prescribing metrics per patient month for older ",
-        "care home and non-care home patients in England by age band and ",
-        "gender (2020/21)"
+      p(
+        tags$b(
+          "Estimated average prescribing metrics per patient month for older ",
+          "care home and non-care home patients in England by age band and ",
+          "gender (2020/21)"
+        )
       ),
       nhs_selectInput(
         inputId = ns("gender_and_age_band_and_ch_flag_metric"),
@@ -208,18 +216,15 @@ mod_03_care_home_prescribing_ui <- function(id) {
     p("Analysis indicates that it may be a combination of factors including:"),
     tags$ul(
       tags$li(
-        style = "font-size: 16pt;",
         "Younger age groups have a much wider spread of costs per month and ",
         "include more outliers."
       ),
       tags$li(
-        style = "font-size: 16pt;",
         "Younger care home patients seem to have more prescribing of ",
         "appliances and a larger spend on nutrition products and less ",
         "prescribing of cardiovascular products."
       ),
       tags$li(
-        style = "font-size: 16pt;",
         "Younger care home patients typically get a larger quantity than ",
         "older care home patients when prescribed comparable drugs/products."
       )
@@ -227,9 +232,11 @@ mod_03_care_home_prescribing_ui <- function(id) {
     fluidRow(
       align = "center",
       style = "background-color: #FFFFFF;",
-      h6(
-        "Distribution of the estimated average drug cost per patient month",
-        "for older care home patients in England (2020/21)"
+      p(
+        tags$b(
+          "Distribution of the estimated average drug cost per patient month",
+          "for older care home patients in England (2020/21)"
+        )
       ),
       highcharter::highchartOutput(
         outputId = ns("cost_per_patient_by_age_band_chart"),
@@ -238,10 +245,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
     ),
     br(),
     br(),
-    h6("Geography"),
-    h6(
-      "The London region has the highest estimated average prescribing costs ",
-      "and volumes per patient month."
+    p(tags$b("Geography")),
+    p(
+      tags$b(
+        "The London region has the highest estimated average prescribing ",
+        "costs and volumes per patient month."
+      )
     ),
     p(
       "The London region features the highest average rate per patient month ",
@@ -256,10 +265,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
     ),
     fluidRow(
       style = "background-color: #FFFFFF;",
-      h6(
+      p(
         style = "text-align: center;",
-        "Estimated average prescribing metrics per patient month for older ",
-        "care home patients in England by geography (2020/21)"
+        tags$b(
+          "Estimated average prescribing metrics per patient month for older ",
+          "care home patients in England by geography (2020/21)"
+        )
       ),
       col_6(
         style = "margin-bottom: 0;",

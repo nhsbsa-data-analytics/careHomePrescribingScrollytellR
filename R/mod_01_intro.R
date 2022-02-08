@@ -10,7 +10,7 @@
 mod_01_intro_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4(
+    h1(
       "Estimated primary care prescribing patterns for ",
       tippy(
         text = "older care home patients",
