@@ -102,16 +102,18 @@ mod_02_demographics_ui <- function(id) {
       )
     ),
     br(),
-    h6(
-      "Similar proportions of older care home patients live in ",
-      tippy(
-        text = "residential homes",
-        tooltip = tooltip_text$residential_home
-      ),
-      " and ",
-      tippy(
-        text = "nursing homes",
-        tooltip = tooltip_text$nursing_home
+    p(
+      tags$b(
+        "Similar proportions of older care home patients live in ",
+        tippy(
+          text = "residential homes",
+          tooltip = tooltip_text$residential_home
+        ),
+        " and ",
+        tippy(
+          text = "nursing homes",
+          tooltip = tooltip_text$nursing_home
+        )
       )
     ),
     p(
