@@ -63,7 +63,8 @@ app_ui <- function(request) {
               "Methodology",
               href = "https://rpubs.com/nhsbsa-data-analytics/862168",
               target = "_blank",
-              title = "Methodology"
+              title = "Methodology",
+              `aria-label` = "Methodology"
             )
           )
         )
