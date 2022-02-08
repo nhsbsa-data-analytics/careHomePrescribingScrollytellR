@@ -66,7 +66,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
         h4("Metric"),
         nhs_grid_2_col(
           h4(
-            style ="text-align: center;",
+            style = "text-align: center;",
             "Care home"
           ),
           h4(
@@ -443,8 +443,8 @@ mod_03_care_home_prescribing_server <- function(id) {
           class = "highcharts-caption",
           style = "font-size: 9pt",
           switch(input$breakdown,
-                 "Demographical - Gender" = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
-                 "Where the number of patients is less than 5 the data has been redacted."
+            "Demographical - Gender" = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
+            "Where the number of patients is less than 5 the data has been redacted."
           ),
           "The mean average has been used to calculate per patient month ",
           "metrics. It should be noted that the distributions are ",

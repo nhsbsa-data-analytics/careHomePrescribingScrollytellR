@@ -4,7 +4,6 @@
 #'
 #' @importFrom shiny tagList
 nhs_grid_2_col <- function(col_1, col_2) {
-
   tagList(
     div(
       class = "nhsuk-grid-row",
@@ -27,7 +26,6 @@ nhs_grid_2_col <- function(col_1, col_2) {
 #'
 #' @importFrom shiny tagList
 nhs_grid_3_col <- function(col_1, col_2, col_3) {
-  
   tagList(
     div(
       class = "nhsuk-grid-row",

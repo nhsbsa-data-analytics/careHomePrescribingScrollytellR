@@ -4,7 +4,6 @@
 #'
 #' @importFrom shiny tagList
 nhs_card <- function(heading, ...) {
-
   tagList(
     div(
       class = "nhsuk-card",
@@ -22,4 +21,3 @@ nhs_card <- function(heading, ...) {
     )
   )
 }
-
