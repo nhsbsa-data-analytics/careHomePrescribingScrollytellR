@@ -13,7 +13,15 @@ nhs_value_box <- function(value, icon_name, group) {
     "nursing_home" = "#004281",
     "residential_home" = "#4D8ECD"
   )
-
+  
+  # Remove aria-label for accessibility (don't know exactly why we need to do 
+  # this?)
+  icon_ <- icon(
+    name = icon_name, 
+    class = "fa-2x"
+  )
+  icon_$attribs$`aria-label` <- NULL
+  
   tagList(
     div(
       class = "nhsuk-card",
@@ -24,7 +32,7 @@ nhs_value_box <- function(value, icon_name, group) {
         div(
           class = "nhsuk-grid-column-one-third",
           style = "color: #FFFFFF;",
-          icon(icon_name, "fa-2x"),
+          icon_
         ),
         div(
           class = "nhsuk-grid-column-two-thirds nhsuk-heading-m",
