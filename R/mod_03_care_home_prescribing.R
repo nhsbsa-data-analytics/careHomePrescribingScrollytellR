@@ -40,17 +40,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "twice the drug cost. These prescribing metrics vary by age, gender and ",
       "geography. The chart below allows you to explore them."
     ),
-    fluidRow(
-      style = "background-color: #FFFFFF;",
-      p(
-        style = "text-align: center;",
-        tags$b(
-          "Estimated average prescribing metrics per patient month for older ",
-          "care home and non-care home patients in England by geography, age ",
-          "band or gender (2020/21)"
-        )
-      ),
-      col_6(
+    nhs_card(
+      heading = "Estimated average prescribing metrics per patient month for older care home and non-care home patients in England by geography, age band or gender (2020/21)",
+      nhs_grid_2_col(
         nhs_selectInput(
           inputId = ns("breakdown"),
           label = "Breakdown",
@@ -62,9 +54,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
               )
             ),
           full_width = TRUE
-        )
-      ),
-      col_6(
+        ),
         nhs_selectInput(
           inputId = ns("sub_breakdown"),
           label = "Sub Breakdown",
@@ -72,27 +62,28 @@ mod_03_care_home_prescribing_ui <- function(id) {
           full_width = TRUE
         )
       ),
-      fluidRow(
-        col_6(
-          style = "text-indent: 15px;",
-          h6("Metric")
-        ),
-        col_3(
-          style = "text-align: center;",
-          h6("Care home")
-        ),
-        col_3(
-          style = "text-align: center;",
-          h6("Non-care home")
+      nhs_grid_2_col(
+        h4("Metric"),
+        nhs_grid_2_col(
+          h4(
+            style ="text-align: center;",
+            "Care home"
+          ),
+          h4(
+            style = "text-align: center;",
+            "Non-care home"
+          )
         )
       ),
       uiOutput(ns("care_home_vs_non_care_home_table"))
     ),
     br(),
     br(),
-    h6(
-      "The estimated average monthly drug cost for nursing home patients is ",
-      "around 1.5 times more than for residential home patients"
+    p(
+      tags$b(
+        "The estimated average monthly drug cost for nursing home patients is ",
+        "around 1.5 times more than for residential home patients"
+      )
     ),
     p(
       "Despite being prescribed a",
@@ -113,26 +104,20 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "prescribing metrics than residential home patients; a qualified nurse is ",
       "provided at nursing homes to cater for patients with more complex needs."
     ),
-    fluidRow(
-      style = "background-color: #FFFFFF;",
-      p(
-        style = "text-align: center;",
-        tags$b(
-          "Estimated average prescribing metrics per patient month for older ",
-          "nursing home and residential home patients in England (2020/21)"
+    nhs_card(
+      heading = "Estimated average prescribing metrics per patient month for older nursing home and residential home patients in England (2020/21)",
+      nhs_grid_2_col(
+        h4("Metric"),
+        nhs_grid_2_col(
+          h4(
+            style = "text-align: center;",
+            "Nursing home"
+          ),
+          h4(
+            style = "text-align: center;",
+            "Residential home"
+          )
         )
-      ),
-      col_6(
-        style = "text-indent: 15px;",
-        h6("Metric")
-      ),
-      col_3(
-        style = "text-align: center;",
-        h6("Nursing home")
-      ),
-      col_3(
-        style = "text-align: center;",
-        h6("Residential home")
       ),
       uiOutput(ns("nursing_vs_residential_table"))
     ),
@@ -174,16 +159,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "metrics, with females being lower than males."
     ),
     p("These patterns can be seen in the charts below."),
-    fluidRow(
-      align = "center",
-      style = "background-color: #FFFFFF;",
-      p(
-        tags$b(
-          "Estimated average prescribing metrics per patient month for older ",
-          "care home and non-care home patients in England by age band and ",
-          "gender (2020/21)"
-        )
-      ),
+    nhs_card(
+      heading = "Estimated average prescribing metrics per patient month for older care home and non-care home patients in England by age band and gender (2020/21)",
       nhs_selectInput(
         inputId = ns("gender_and_age_band_and_ch_flag_metric"),
         label = "Metric",
@@ -200,10 +177,10 @@ mod_03_care_home_prescribing_ui <- function(id) {
       highcharter::highchartOutput(
         outputId = ns("metrics_by_gender_and_age_band_and_ch_flag_chart"),
         height = "350px"
+      ),
+      mod_nhs_download_ui(
+        id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
       )
-    ),
-    mod_nhs_download_ui(
-      id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
     ),
     br(),
     br(),
@@ -229,15 +206,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "older care home patients when prescribed comparable drugs/products."
       )
     ),
-    fluidRow(
-      align = "center",
-      style = "background-color: #FFFFFF;",
-      p(
-        tags$b(
-          "Distribution of the estimated average drug cost per patient month",
-          "for older care home patients in England (2020/21)"
-        )
-      ),
+    nhs_card(
+      heading = "Distribution of the estimated average drug cost per patient month for older care home patients in England (2020/21)",
       highcharter::highchartOutput(
         outputId = ns("cost_per_patient_by_age_band_chart"),
         height = "300px"
@@ -263,26 +233,15 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "Each of the metrics can be explored in the chart and table below by ",
       "region, local authority and STP."
     ),
-    fluidRow(
-      style = "background-color: #FFFFFF;",
-      p(
-        style = "text-align: center;",
-        tags$b(
-          "Estimated average prescribing metrics per patient month for older ",
-          "care home patients in England by geography (2020/21)"
-        )
-      ),
-      col_6(
-        style = "margin-bottom: 0;",
+    nhs_card(
+      heading = "Estimated average prescribing metrics per patient month for older care home patients in England by geography (2020/21)",
+      nhs_grid_2_col(
         nhs_selectInput(
           inputId = ns("geography"),
           label = "Geography",
           choices = c("Region", "STP", "Local Authority"),
           full_width = TRUE
-        )
-      ),
-      col_6(
-        style = "margin-bottom: 0;",
+        ),
         nhs_selectInput(
           inputId = ns("metric"),
           label = "Metric",
@@ -297,19 +256,22 @@ mod_03_care_home_prescribing_ui <- function(id) {
           full_width = TRUE
         )
       ),
-      col_7(
-        align = "center",
+      nhs_grid_2_col(
         highcharter::highchartOutput(
           outputId = ns("map_chart"),
-          height = "700px"
+          height = "500px"
+        ),
+        DT::DTOutput(
+          outputId = ns("map_table")
         )
       ),
-      col_5(
-        DT::DTOutput(outputId = ns("map_table"))
+      tags$text(
+        class = "highcharts-caption",
+        "Where the number of patients is less than 5 the data has been redacted."
+      ),
+      mod_nhs_download_ui(
+        id = ns("download_map_chart")
       )
-    ),
-    mod_nhs_download_ui(
-      id = ns("download_map_chart")
     )
   )
 }
@@ -381,29 +343,22 @@ mod_03_care_home_prescribing_server <- function(id) {
 
       # Create table
       tagList(
-        fluidRow(
-          col_6(
-            style = "text-indent: 15px;",
-            p(
-              tippy(
-                text = "Drug cost",
-                tooltip = tooltip_text$cost
-              )
+        nhs_grid_2_col(
+          p(
+            tippy(
+              text = "Drug cost",
+              tooltip = tooltip_text$cost
             )
           ),
-          col_3(
-            mod_value_box_ui(
-              id = "3",
+          nhs_grid_2_col(
+            nhs_value_box(
               group = "care_home",
               value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_COST_PER_PATIENT_MONTH),
               icon = "coins"
-            )
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "4",
+            ),
+            nhs_value_box(
               group = "non_care_home",
               value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
@@ -412,29 +367,22 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        fluidRow(
-          col_6(
-            style = "text-indent: 15px;",
-            p(
-              tippy(
-                text = "Number of prescription items",
-                tooltip = tooltip_text$items
-              )
+        nhs_grid_2_col(
+          p(
+            tippy(
+              text = "Number of prescription items",
+              tooltip = tooltip_text$items
             )
           ),
-          col_3(
-            mod_value_box_ui(
-              id = "1",
+          nhs_grid_2_col(
+            nhs_value_box(
               group = "care_home",
               value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_ITEMS_PER_PATIENT_MONTH),
               icon = "prescription"
             ),
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "2",
+            nhs_value_box(
               group = "non_care_home",
               value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Non care home") %>%
@@ -443,82 +391,64 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        fluidRow(
-          col_6(
-            style = "text-indent: 15px;",
-            p(
-              tippy(
-                text = "Number of unique medicines",
-                tooltip = tooltip_text$unique_medicines
-              )
+        nhs_grid_2_col(
+          p(
+            tippy(
+              text = "Number of unique medicines",
+              tooltip = tooltip_text$unique_medicines
             )
           ),
-          col_3(
-            mod_value_box_ui(
-              id = "5",
+          nhs_grid_2_col(
+            nhs_value_box(
               group = "care_home",
               value = care_home_vs_non_care_home_sub_breakdown_df() %>%
                 dplyr::filter(CH_FLAG == "Care home") %>%
                 dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
               icon = "pills"
-            )
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "6",
-              group = "non_care_home",
-              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
-                dplyr::filter(CH_FLAG == "Non care home") %>%
-                dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
-              icon = "pills"
-            )
-          )
-        ),
-        fluidRow(
-          col_6(
-            style = "text-indent: 15px;",
-            p(
-              tippy(
-                text = "Patients on ten or more unique medicines",
-                tooltip = tooltip_text$ten_or_more_unique_medicines
-              )
-            )
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "7",
-              group = "care_home",
-              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
-                dplyr::filter(CH_FLAG == "Care home") %>%
-                dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
-              icon = "pills"
-            )
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "8",
-              group = "non_care_home",
-              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
-                dplyr::filter(CH_FLAG == "Non care home") %>%
-                dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
-              icon = "pills"
-            )
-          )
-        ),
-        fluidRow(
-          col_12(
-            class = "highcharts-caption",
-            style = "margin-left: 1%; margin-right: 1%;",
-            switch(input$breakdown,
-              "Demographical - Gender" = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
-              "Where the number of patients is less than 5 the data has been redacted."
             ),
-            "The mean average has been used to calculate per patient month ",
-            "metrics. It should be noted that the distributions are ",
-            "positively skewed due to extreme high values for some patients, ",
-            "and median values are lower than the mean.",
-            br()
+            nhs_value_box(
+              group = "non_care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
+                dplyr::filter(CH_FLAG == "Non care home") %>%
+                dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
+              icon = "pills"
+            )
           )
+        ),
+        nhs_grid_2_col(
+          p(
+            tippy(
+              text = "Patients on ten or more unique medicines",
+              tooltip = tooltip_text$ten_or_more_unique_medicines
+            )
+          ),
+          nhs_grid_2_col(
+            nhs_value_box(
+              group = "care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
+                dplyr::filter(CH_FLAG == "Care home") %>%
+                dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
+              icon = "pills"
+            ),
+            nhs_value_box(
+              group = "non_care_home",
+              value = care_home_vs_non_care_home_sub_breakdown_df() %>%
+                dplyr::filter(CH_FLAG == "Non care home") %>%
+                dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
+              icon = "pills"
+            )
+          )
+        ),
+        tags$text(
+          class = "highcharts-caption",
+          switch(input$breakdown,
+                 "Demographical - Gender" = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
+                 "Where the number of patients is less than 5 the data has been redacted."
+          ),
+          "The mean average has been used to calculate per patient month ",
+          "metrics. It should be noted that the distributions are ",
+          "positively skewed due to extreme high values for some patients, ",
+          "and median values are lower than the mean.",
         )
       )
     })
@@ -546,19 +476,15 @@ mod_03_care_home_prescribing_server <- function(id) {
 
       # Create table
       tagList(
-        fluidRow(
-          col_6(
-            style = "text-indent: 15px;",
-            p(
-              tippy(
-                text = "Drug cost",
-                tooltip = tooltip_text$cost
-              )
+        nhs_grid_2_col(
+          p(
+            tippy(
+              text = "Drug cost",
+              tooltip = tooltip_text$cost
             )
           ),
-          col_3(
-            mod_value_box_ui(
-              id = "3",
+          nhs_grid_2_col(
+            nhs_value_box(
               group = "nursing_home",
               value = nursing_vs_residential_df %>%
                 dplyr::filter(
@@ -567,11 +493,8 @@ mod_03_care_home_prescribing_server <- function(id) {
                 ) %>%
                 dplyr::pull(SDC_COST_PER_PATIENT_MONTH),
               icon = "coins"
-            )
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "4",
+            ),
+            nhs_value_box(
               group = "residential_home",
               value = nursing_vs_residential_df %>%
                 dplyr::filter(
@@ -583,19 +506,15 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        fluidRow(
-          col_6(
-            style = "text-indent: 15px;",
-            p(
-              tippy(
-                text = "Number of prescription items",
-                tooltip = tooltip_text$items
-              )
+        nhs_grid_2_col(
+          p(
+            tippy(
+              text = "Number of prescription items",
+              tooltip = tooltip_text$items
             )
           ),
-          col_3(
-            mod_value_box_ui(
-              id = "1",
+          nhs_grid_2_col(
+            nhs_value_box(
               group = "nursing_home",
               value = nursing_vs_residential_df %>%
                 dplyr::filter(
@@ -605,10 +524,7 @@ mod_03_care_home_prescribing_server <- function(id) {
                 dplyr::pull(SDC_ITEMS_PER_PATIENT_MONTH),
               icon = "prescription"
             ),
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "2",
+            nhs_value_box(
               group = "residential_home",
               value = nursing_vs_residential_df %>%
                 dplyr::filter(
@@ -620,19 +536,15 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        fluidRow(
-          col_6(
-            style = "text-indent: 15px;",
-            p(
-              tippy(
-                text = "Number of unique medicines",
-                tooltip = tooltip_text$unique_medicines
-              )
+        nhs_grid_2_col(
+          p(
+            tippy(
+              text = "Number of unique medicines",
+              tooltip = tooltip_text$unique_medicines
             )
           ),
-          col_3(
-            mod_value_box_ui(
-              id = "5",
+          nhs_grid_2_col(
+            nhs_value_box(
               group = "nursing_home",
               value = nursing_vs_residential_df %>%
                 dplyr::filter(
@@ -641,11 +553,8 @@ mod_03_care_home_prescribing_server <- function(id) {
                 ) %>%
                 dplyr::pull(SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH),
               icon = "pills"
-            )
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "6",
+            ),
+            nhs_value_box(
               group = "residential_home",
               value = nursing_vs_residential_df %>%
                 dplyr::filter(
@@ -657,19 +566,15 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        fluidRow(
-          col_6(
-            style = "text-indent: 15px;",
-            p(
-              tippy(
-                text = "Patients on ten or more unique medicines",
-                tooltip = tooltip_text$ten_or_more_unique_medicines
-              )
+        nhs_grid_2_col(
+          p(
+            tippy(
+              text = "Patients on ten or more unique medicines",
+              tooltip = tooltip_text$ten_or_more_unique_medicines
             )
           ),
-          col_3(
-            mod_value_box_ui(
-              id = "7",
+          nhs_grid_2_col(
+            nhs_value_box(
               group = "nursing_home",
               value = nursing_vs_residential_df %>%
                 dplyr::filter(
@@ -678,11 +583,8 @@ mod_03_care_home_prescribing_server <- function(id) {
                 ) %>%
                 dplyr::pull(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH),
               icon = "pills"
-            )
-          ),
-          col_3(
-            mod_value_box_ui(
-              id = "8",
+            ),
+            nhs_value_box(
               group = "residential_home",
               value = nursing_vs_residential_df %>%
                 dplyr::filter(
@@ -694,19 +596,15 @@ mod_03_care_home_prescribing_server <- function(id) {
             )
           )
         ),
-        fluidRow(
-          col_12(
-            class = "highcharts-caption",
-            style = "margin-left: 1%; margin-right: 1%;",
-            "This excludes 3% of care home patients in both a nursing and ",
-            "residential home and 11% of care home patients who we were ",
-            "unable to link to the CQC dataset. The mean average has been ",
-            "used to calculate per patient month metrics. It should be noted ",
-            "that the distributions are positively skewed due to extreme high ",
-            "values for some patients, and median values are lower than the ",
-            "mean.",
-            br()
-          )
+        tags$text(
+          class = "highcharts-caption",
+          "This excludes 3% of care home patients in both a nursing and ",
+          "residential home and 11% of care home patients who we were ",
+          "unable to link to the CQC dataset. The mean average has been ",
+          "used to calculate per patient month metrics. It should be noted ",
+          "that the distributions are positively skewed due to extreme high ",
+          "values for some patients, and median values are lower than the ",
+          "mean."
         )
       )
     })
@@ -988,8 +886,9 @@ mod_03_care_home_prescribing_server <- function(id) {
               dom = "t",
               scrollCollapse = TRUE,
               paging = FALSE,
-              scrollY = "500px"
+              scrollY = "350px"
             ),
+            height = "400px",
             filter = "none"
           ) %>%
           DT::formatStyle(columns = 0:2, `font-size` = "14px")
@@ -1060,9 +959,6 @@ mod_03_care_home_prescribing_server <- function(id) {
           )
         ) %>%
         theme_nhsbsa() %>%
-        highcharter::hc_caption(
-          text = "Where the number of patients is less than 5 the data has been redacted."
-        ) %>%
         highcharter::hc_mapNavigation(
           enabled = TRUE,
           enableMouseWheelZoom = TRUE,

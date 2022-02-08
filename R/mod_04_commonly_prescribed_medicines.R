@@ -36,24 +36,15 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         tooltip = tooltip_text$bnf_code
       )
     ),
-    fluidRow(
-      style = "background-color: #FFFFFF;",
-      align = "center",
-      p(
-        tags$b(
-          "Most common medicines prescribed to older care home and non-care ",
-          "home patients in England (2020/21)"
-        )
-      ),
-      col_4(
+    nhs_card(
+      heading = "Most common medicines prescribed to older care home and non-care home patients in England (2020/21)",
+      nhs_grid_3_col(
         nhs_selectInput(
           inputId = ns("bnf"),
           label = "BNF Level",
           choices = names(careHomePrescribingScrollytellR::bnfs),
           full_width = TRUE
-        )
-      ),
-      col_4(
+        ),
         nhs_selectInput(
           inputId = ns("metric"),
           label = "Metric",
@@ -63,9 +54,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
             "Number of patients" = "PATIENTS"
           ),
           full_width = TRUE
-        )
-      ),
-      col_4(
+        ),
         nhs_selectInput(
           inputId = ns("sort"),
           label = "Sort by",
@@ -80,10 +69,10 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
       highcharter::highchartOutput(
         outputId = ns("metrics_by_bnf_and_ch_flag_chart"),
         height = "400px"
+      ),
+      mod_nhs_download_ui(
+        id = ns("download_metrics_by_bnf_and_ch_flag_chart")
       )
-    ),
-    mod_nhs_download_ui(
-      id = ns("download_metrics_by_bnf_and_ch_flag_chart")
     )
   )
 }
@@ -230,9 +219,8 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         dplyr::arrange(desc(SDC_PCT_NON_CH)) %>%
         head(1)
 
-      col_12(
+      tags$text(
         class = "highcharts-caption",
-        style = "margin-left: 1%; margin-right: 1%; text-align: left;",
         tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), "and",
         tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), "are the most ",
         "commonly prescribed BNF", paste0(input$bnf, "s"), " by percentage of ",
