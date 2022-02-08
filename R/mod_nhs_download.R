@@ -49,13 +49,14 @@ mod_nhs_download_ui <- function(id) {
 mod_nhs_download_server <- function(id, filename, export_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     output$download <- downloadHandler(
       filename = filename,
       content = function(file) {
-        if(filename == "patients_by_prescribing_status_chart.csv" | filename=="patients_by_imd_chart.csv"){
+        if (filename == "patients_by_prescribing_status_chart.csv" |
+          filename == "patients_by_imd_chart.csv") {
           write.csv(export_data, file, row.names = FALSE)
-        } else{
+        } else {
           write.csv(export_data(), file, row.names = FALSE)
         }
       }
