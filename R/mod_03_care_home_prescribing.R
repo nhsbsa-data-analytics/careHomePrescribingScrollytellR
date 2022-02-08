@@ -122,7 +122,6 @@ mod_03_care_home_prescribing_ui <- function(id) {
       uiOutput(ns("nursing_vs_residential_table"))
     ),
     br(),
-    br(),
     h6("Age and gender"),
     h6(
       "The estimated average drug cost per patient month is highest for ",
@@ -183,7 +182,6 @@ mod_03_care_home_prescribing_ui <- function(id) {
       )
     ),
     br(),
-    br(),
     p(
       "Exploratory analysis looked at possible reasons why the average drug ",
       "cost per patient month is higher for younger care home patients, but ",
@@ -213,7 +211,6 @@ mod_03_care_home_prescribing_ui <- function(id) {
         height = "300px"
       )
     ),
-    br(),
     br(),
     p(tags$b("Geography")),
     p(
