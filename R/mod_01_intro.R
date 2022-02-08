@@ -11,12 +11,11 @@ mod_01_intro_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h1(
-      "Estimated primary care prescribing patterns for ",
+      "Estimated prescribing patterns for ",
       tippy(
         text = "older care home patients",
         tooltip = tooltip_text$care_home
-      ),
-      " in England in 2020/21"
+      )
     ),
     p(
       "In this article we provide unique insight into primary care ",
