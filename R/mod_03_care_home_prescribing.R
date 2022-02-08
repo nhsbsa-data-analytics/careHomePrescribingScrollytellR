@@ -898,16 +898,15 @@ mod_03_care_home_prescribing_server <- function(id) {
           "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" =
             "Patients on ten or more unique medicines (%)"
         )
-
+        
         # Format the table
-        plot_map_df() %>%
+        plot_map_df_ <- plot_map_df() %>%
           dplyr::arrange(desc(.data[[input$metric]])) %>%
-          dplyr::select(SUB_GEOGRAPHY_NAME, .data[[input$metric]]) %>%
-          dplyr::rename(
+          dplyr::select(
             "<span class='nhsuk-body-s'>{input$geography}</span>" :=
-              SUB_GEOGRAPHY_NAME,
+              SUB_GEOGRAPHY_NAME, 
             "<span class='nhsuk-body-s'>{nice_metric_name}</span>" :=
-              .data[[input$metric]]
+            .data[[input$metric]]
           ) %>%
           DT::datatable(
             escape = FALSE,
@@ -920,7 +919,11 @@ mod_03_care_home_prescribing_server <- function(id) {
             height = "400px",
             filter = "none"
           ) %>%
-          DT::formatStyle(columns = 0:2, `font-size` = "14px")
+          DT::formatStyle(columns = 0:2, `font-size` = "14px") %>%
+          DT::formatRound(
+            columns = 2, 
+            digits = ifelse(input$metric != "SDC_COST_PER_PATIENT_MONTH", 1, 0)
+          )
       }
     )
 
