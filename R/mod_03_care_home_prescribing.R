@@ -122,10 +122,12 @@ mod_03_care_home_prescribing_ui <- function(id) {
       uiOutput(ns("nursing_vs_residential_table"))
     ),
     br(),
-    h6("Age and gender"),
-    h6(
-      "The estimated average drug cost per patient month is highest for ",
-      "care home patients aged 65 to 69 years."
+    p(tags$b("Age and gender")),
+    p(
+      tags$b(
+        "The estimated average drug cost per patient month is highest for ",
+        "care home patients aged 65 to 69 years."
+      )
     ),
     p(
       "Average drug costs and volumes per patient month are higher for care ",
