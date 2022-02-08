@@ -33,7 +33,7 @@ mod_01_intro_ui <- function(id) {
       "used in NHSBSA information systems in the future and we can develop ",
       "additional analyses."
     ),
-    br(),
+    hr(),
     p(
       "We estimate that there was a monthly average of",
       tags$b("286 thousand care home patients"), "receiving prescriptions ",
@@ -66,7 +66,7 @@ mod_01_intro_ui <- function(id) {
       "Average monthly prescribing costs and volumes per care home patient ",
       "vary by age, gender, care home type and geography."
     ),
-    br(),
+    hr(),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
       "includes linking primary care prescription address data to care home ",
