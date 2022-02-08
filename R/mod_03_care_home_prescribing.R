@@ -293,12 +293,26 @@ mod_03_care_home_prescribing_server <- function(id) {
         BREAKDOWN != "Additional - Care home type"
       )
 
-    # Format cost and percentage cols
+    # Format cols
     care_home_vs_non_care_home_df <- care_home_vs_non_care_home_df %>%
       dplyr::mutate(
         SDC_COST_PER_PATIENT_MONTH = paste0("£", SDC_COST_PER_PATIENT_MONTH),
+        SDC_ITEMS_PER_PATIENT_MONTH = format(
+          x = SDC_ITEMS_PER_PATIENT_MONTH, 
+          nsmall = 1
+        ),
+        SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH = format(
+          x = SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH,
+          nsmall = 1
+        ),
         SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
-          paste0(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH, "%")
+          paste0(
+            format(
+              x = SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH,
+              nsmall = 1
+            ),
+            "%"
+          )
       )
 
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
@@ -464,12 +478,26 @@ mod_03_care_home_prescribing_server <- function(id) {
         CH_FLAG == "Care home"
       )
 
-    # Format cost and percentage cols
+    # Format cols
     nursing_vs_residential_df <- nursing_vs_residential_df %>%
       dplyr::mutate(
         SDC_COST_PER_PATIENT_MONTH = paste0("£", SDC_COST_PER_PATIENT_MONTH),
+        SDC_ITEMS_PER_PATIENT_MONTH = format(
+          x = SDC_ITEMS_PER_PATIENT_MONTH, 
+          nsmall = 1
+        ),
+        SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH = format(
+          x = SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH,
+          nsmall = 1
+        ),
         SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH =
-          paste0(SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH, "%")
+          paste0(
+            format(
+              x = SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH,
+              nsmall = 1
+            ),
+            "%"
+          )
       )
 
     # Create the table
