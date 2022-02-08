@@ -57,15 +57,6 @@ app_ui <- function(request) {
           tabPanel(
             title = "Caveats",
             mod_caveats_ui("caveats_ui_1")
-          ),
-          tabPanel(
-            title = tags$a(
-              "Methodology",
-              href = "https://rpubs.com/nhsbsa-data-analytics/862168",
-              target = "_blank",
-              title = "Methodology",
-              `aria-label` = "Methodology"
-            )
           )
         )
       )

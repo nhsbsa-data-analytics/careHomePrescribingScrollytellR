@@ -79,9 +79,15 @@ mod_01_intro_ui <- function(id) {
       "to create a prescribing dataset. The address matching method has been ",
       "available as an ",
       enurl(
-        text = "R package.",
+        text = "R package",
         url = "https://github.com/nhsbsa-data-analytics/addressMatchR"
-      )
+      ),
+      " and the ",
+      enurl(
+        text = "methodology",
+        url = "https://rpubs.com/nhsbsa-data-analytics/862168"
+      ),
+      " is published online."
     ),
     p(
       "These estimates address a key gap in knowledge and give valuable ",
