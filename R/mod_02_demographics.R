@@ -10,7 +10,7 @@
 mod_02_demographics_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4(
+    h2(
       "Demographic estimates for",
       tippy(
         text = "older care home patients",
@@ -18,7 +18,7 @@ mod_02_demographics_ui <- function(id) {
       ),
       "receiving prescriptions"
     ),
-    h6("The older care home population fluctuates"),
+    p(tags$b("The older care home population fluctuates")),
     p(
       "We estimate", tags$b("472 thousand patients"), "aged 65+ years ",
       "received at least one prescription item in a care home during 2020/21 ",
@@ -44,25 +44,22 @@ mod_02_demographics_ui <- function(id) {
       "patients by month during 2020/21. Around 3 in 10 (31%) received ",
       "prescriptions in a care home in all 12 months."
     ),
-    fluidRow(
-      align = "center",
-      style = "background-color: #FFFFFF;",
-      h6(
-        "Monthly prescribing status of patients aged 65+ in England who ",
-        "received at least one prescription item in a care home (2020/21)"
-      ),
+    nhs_card(
+      heading = "Monthly prescribing status of patients aged 65+ in England who received at least one prescription item in a care home (2020/21)",
       highcharter::highchartOutput(
         outputId = ns("patients_by_prescribing_status_chart"),
         height = "350px"
+      ),
+      mod_nhs_download_ui(
+        id = ns("download_patients_by_prescribing_status_chart")
       )
     ),
-    mod_nhs_download_ui(
-      id = ns("download_patients_by_prescribing_status_chart")
-    ),
     br(),
-    h6(
-      "We estimate two thirds of older care home patients are female and 6 in ",
-      "10 are aged 85+ years"
+    p(
+      tags$b(
+        "We estimate two thirds of older care home patients are female and 6 ",
+        "in 10 are aged 85+ years"
+      )
     ),
     p(
       "Our estimated monthly average of",
@@ -80,22 +77,15 @@ mod_02_demographics_ui <- function(id) {
       "explored by region, local authority and STP (Sustainability and ",
       "Transformation Plan area)."
     ),
-    fluidRow(
-      align = "center",
-      style = "background-color: #FFFFFF;",
-      h6(
-        "Age band and gender of estimated older care home patients in England ",
-        "(2020/21)"
-      ),
-      col_6(
+    nhs_card(
+      heading = "Age band and gender of estimated older care home patients in England (2020/21)",
+      nhs_grid_2_col(
         nhs_selectInput(
           inputId = ns("geography"),
           label = "Geography",
           choices = names(careHomePrescribingScrollytellR::geographys),
           full_width = TRUE
-        )
-      ),
-      col_6(
+        ),
         nhs_selectInput(
           inputId = ns("sub_geography"),
           label = "Sub Geography",
@@ -106,22 +96,24 @@ mod_02_demographics_ui <- function(id) {
       highcharter::highchartOutput(
         outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
         height = "350px"
+      ),
+      mod_nhs_download_ui(
+        id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
       )
     ),
-    mod_nhs_download_ui(
-      id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
-    ),
     br(),
-    h6(
-      "Similar proportions of older care home patients live in ",
-      tippy(
-        text = "residential homes",
-        tooltip = tooltip_text$residential_home
-      ),
-      " and ",
-      tippy(
-        text = "nursing homes",
-        tooltip = tooltip_text$nursing_home
+    p(
+      tags$b(
+        "Similar proportions of older care home patients live in ",
+        tippy(
+          text = "residential homes",
+          tooltip = tooltip_text$residential_home
+        ),
+        " and ",
+        tippy(
+          text = "nursing homes",
+          tooltip = tooltip_text$nursing_home
+        )
       )
     ),
     p(
@@ -144,9 +136,11 @@ mod_02_demographics_ui <- function(id) {
       ),
       " due to incomplete address information in order to attribute this flag."
     ),
-    h6(
-      "There is little variation in numbers of older care home patients by ",
-      "deprivation"
+    p(
+      tags$b(
+        "There is little variation in numbers of older care home patients by ",
+        "deprivation"
+      )
     ),
     p(
       "Care home patient's prescriptions were allocated an ",
@@ -159,20 +153,15 @@ mod_02_demographics_ui <- function(id) {
       tags$b("IMD quintile,"),
       " which suggests equal distribution and little variation."
     ),
-    fluidRow(
-      align = "center",
-      style = "background-color: #FFFFFF;",
-      h6(
-        style = "margin-bottom: 0;",
-        "Deprivation quintile of older care home patients in England (2020/21)"
-      ),
+    nhs_card(
+      heading = "Deprivation quintile of older care home patients in England (2020/21)",
       highcharter::highchartOutput(
         outputId = ns("patients_by_imd_chart"),
         height = "250px"
+      ),
+      mod_nhs_download_ui(
+        id = ns("download_patients_by_imd_chart")
       )
-    ),
-    mod_nhs_download_ui(
-      id = ns("download_patients_by_imd_chart")
     )
   )
 }
@@ -486,8 +475,8 @@ mod_02_demographics_server <- function(id, export_data) {
                   ),
                   text = text,
                   style = list(
-                    width = 200,
-                    fontSize = "10pt"
+                    width = 150,
+                    fontSize = "9pt"
                   )
                 )
               ),

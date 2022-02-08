@@ -8,11 +8,10 @@ app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
-    tags$html(class = "no-js", lang = "en"),
-    # For some reason now need this
+    # Need this for accessibility
+    tags$html(lang = "en"),
+    # Need this for shiny bootstrap dependencies
     bootstrapLib(),
-    fontawesome::fa_html_dependency(),
-    # HTML('<label for="play-range" style = "visibility: hidden;">year-range</label>'),
     # First level UI elements
     nhs_header(),
     br(),
@@ -33,27 +32,17 @@ app_ui <- function(request) {
               scrollytell::scrolly_graph(),
               scrollytell::scrolly_sections(
                 scrollytell::scrolly_section(
-                  id = "dummy"
-                ),
-                br(),
-                scrollytell::scrolly_section(
                   id = "02_demographics",
                   mod_02_demographics_ui("02_demographics_ui_1")
                 ),
-                br(),
                 scrollytell::scrolly_section(
                   id = "03_care_home_prescribing",
-                  mod_03_care_home_prescribing_ui("03_care_home_prescribing_ui_1"),
-                  # Add breaks to prevent graying out
-                  br(),
-                  br()
+                  mod_03_care_home_prescribing_ui("03_care_home_prescribing_ui_1")
                 ),
-                br(),
                 scrollytell::scrolly_section(
                   id = "04_commonly_prescribed_medicines",
                   mod_04_commonly_prescribed_medicines_ui("04_commonly_prescribed_medicines_ui_1")
                 ),
-                br(),
                 scrollytell::scrolly_section(
                   id = "05_final_thoughts",
                   mod_05_final_thoughts_ui("05_final_thoughts_ui_1")
@@ -68,13 +57,6 @@ app_ui <- function(request) {
           tabPanel(
             title = "Caveats",
             mod_caveats_ui("caveats_ui_1")
-          ),
-          tabPanel(
-            title = tags$a(
-              "Methodology",
-              href = "https://rpubs.com/nhsbsa-data-analytics/862168",
-              target = "_blank"
-            )
           )
         )
       )

@@ -10,27 +10,27 @@
 mod_definitions_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h4("Definitions"),
-    h6("Older patients"),
+    h1("Definitions"),
+    p(tags$b("Older patients")),
     p("Patients aged 65+ at the time of prescribing."),
-    h6("Older care home patients"),
+    p(tags$b("Older care home patients")),
     p(
       "Patients aged 65+ who received their prescription whilst living in a ",
       "care home at the time of prescribing."
     ),
-    h6("Older non-care home patients"),
+    p(tags$b("Older non-care home patients")),
     p(
       "Patients aged 65+ who received their prescription whilst not living in ",
       "a care home at the time of prescribing."
     ),
-    h6("Nursing home"),
+    p(tags$b("Nursing home")),
     p(
       "A nursing home is a care home where a qualified nurse is provided to ",
       "ensure that the full needs of the person using the service are met."
     ),
-    h6("Residential home"),
+    p(tags$b("Residential home")),
     p("A residential is a care home where a qualified nurse is not provided."),
-    h6("Drug cost"),
+    p(tags$b("Drug cost")),
     p(
       "Calculated as the average total price reimbursed for dispensed drugs ",
       "per patient month. It relates solely to the cost of the drugs, in the ",
@@ -38,7 +38,7 @@ mod_definitions_ui <- function(id) {
       "additional fees or discounts that were paid to the dispensing ",
       "contractors."
     ),
-    h6("Number of prescription items"),
+    p(tags$b("Number of prescription items")),
     p(
       "Calculated as the average number of prescription items per patient ",
       "month. A count of the number of times a product, such as a drug or ",
@@ -47,7 +47,7 @@ mod_definitions_ui <- function(id) {
       "100 x 50mg tablets as an item and another could receive 7 x 5 mg ",
       "tablets as an item. Both would be counted as 1 item"
     ),
-    h6("Number of unique medicines"),
+    p(tags$b("Number of unique medicines")),
     p(
       "Calculated as the average number of unique medicines per patient ",
       "month. A unique medicine is defined as a medicine prescribed with the ",
@@ -57,7 +57,7 @@ mod_definitions_ui <- function(id) {
       "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and ",
       "5mg tablets."
     ),
-    h6("Patients on ten or more unique medicines"),
+    p(tags$b("Patients on ten or more unique medicines")),
     p(
       "Calculated as the average percentage of patients prescribed ten or ",
       "more unique medicines per month. A unique medicine is defined as a ",
@@ -67,7 +67,7 @@ mod_definitions_ui <- function(id) {
       "chemical substance descriptor would be counted as one (single) unique ",
       "product e.g. Warfarin 1mg, 3mg and 5mg tablets."
     ),
-    h6("BNF code"),
+    p(tags$b("BNF code")),
     p(
       "A BNF code is a fifteen character hierarchical code used to identify ",
       "medicines based on the ",

@@ -10,7 +10,7 @@
 mod_05_final_thoughts_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h6(
+    h2(
       "Final thoughts"
     ),
     p(
