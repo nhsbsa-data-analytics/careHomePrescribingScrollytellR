@@ -132,7 +132,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
     mod_nhs_download_server(
       id = "download_metrics_by_bnf_and_ch_flag_chart",
       filename = "metrics_by_bnf_and_ch_flag_df.csv",
-      export_data = metrics_by_bnf_and_ch_flag_download_df()
+      export_data = metrics_by_bnf_and_ch_flag_download_df
     )
 
     # Create the chart

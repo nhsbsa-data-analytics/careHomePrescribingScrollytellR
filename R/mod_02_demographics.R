@@ -440,7 +440,7 @@ mod_02_demographics_server <- function(id, export_data) {
     mod_nhs_download_server(
       id = "download_patients_by_geography_and_gender_and_age_band_chart",
       filename = "patients_by_geography_and_gender_and_age_band_chart.csv",
-      export_data = patients_by_geography_and_gender_and_age_band_download_df()
+      export_data = patients_by_geography_and_gender_and_age_band_download_df
     )
 
     # Pyramid plot for age band and gender
