@@ -739,7 +739,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     mod_nhs_download_server(
       id = "download_metrics_by_gender_and_age_band_and_ch_flag_chart",
       filename = "metrics_by_gender_and_age_band_and_ch_flag_chart.csv",
-      export_data = metrics_by_gender_and_age_band_and_ch_flag_download_df()
+      export_data = metrics_by_gender_and_age_band_and_ch_flag_download_df
     )
 
     # Manually define the icons
@@ -1006,7 +1006,7 @@ mod_03_care_home_prescribing_server <- function(id) {
     mod_nhs_download_server(
       id = "download_map_chart",
       filename = "map_chart.csv",
-      export_data = download_map_df()
+      export_data = download_map_df
     )
 
     # Filter the map data based on the breakdown and format for the plot
