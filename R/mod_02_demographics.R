@@ -473,8 +473,8 @@ mod_02_demographics_server <- function(id, export_data) {
                   ),
                   text = text,
                   style = list(
-                    width = 200,
-                    fontSize = "10pt"
+                    width = 150,
+                    fontSize = "9pt"
                   )
                 )
               ),
