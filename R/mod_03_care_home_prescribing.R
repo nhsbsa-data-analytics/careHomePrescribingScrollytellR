@@ -801,6 +801,14 @@ mod_03_care_home_prescribing_server <- function(id) {
           ) %>%
           highcharter::hc_tooltip(
             shared = TRUE,
+            useHTML = TRUE,
+            valueDecimals = switch(input$gender_and_age_band_and_ch_flag_metric,
+                                   "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" = 1,
+                                   "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" = 1,
+                                   "SDC_ITEMS_PER_PATIENT_MONTH" = 1
+                                   
+            ),
+            # valueDecimals = 1
             headerFormat = "<b> {point.value:.1f} </b>",
             valueSuffix = switch(input$gender_and_age_band_and_ch_flag_metric,
               "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" = "%"
