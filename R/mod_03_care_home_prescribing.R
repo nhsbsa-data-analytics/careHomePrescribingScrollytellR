@@ -833,7 +833,10 @@ mod_03_care_home_prescribing_server <- function(id) {
           min = 0,
           title = list(text = "Drug cost (£)")
         ) %>%
-        highcharter::hc_plotOptions(series = list(showInLegend = FALSE))
+        highcharter::hc_plotOptions(series = list(showInLegend = FALSE)) %>%
+        highcharter::hc_tooltip(
+          valueDecimals = 1
+        )
     })
 
     # Map

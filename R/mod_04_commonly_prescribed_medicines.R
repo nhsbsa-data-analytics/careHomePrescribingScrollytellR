@@ -197,8 +197,8 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
 
               outHTML =
                 '<b>' + this.point.SUB_BNF_LEVEL_NAME + '</b> <br>' +
-                'Older care home patients: ' + '<b>' + this.point.high + '%' + '</b> <br>' +
-                'Older non-care home patients: ' + '<b>' + this.point.low + '%' + '</b>'
+                'Older care home patients: ' + '<b>' + Highcharts.numberFormat(this.point.high,1) + '%' + '</b> <br>' +
+                'Older non-care home patients: ' + '<b>' + Highcharts.numberFormat(this.point.low,1) + '%' + '</b>'
 
               return(outHTML)
 
