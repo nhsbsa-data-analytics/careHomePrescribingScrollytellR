@@ -97,6 +97,11 @@ mod_02_demographics_ui <- function(id) {
         outputId = ns("patients_by_geography_and_gender_and_age_band_chart"),
         height = "350px"
       ),
+      tags$text(
+        class = "highcharts-caption",
+        style = "font-size: 9pt;",
+        "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted."
+      ),
       mod_nhs_download_ui(
         id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
       )
@@ -459,9 +464,6 @@ mod_02_demographics_server <- function(id, export_data) {
             )
           ) %>%
           theme_nhsbsa(palette = "gender") %>%
-          highcharter::hc_caption(
-            text = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted."
-          ) %>%
           highcharter::hc_annotations(
             list(
               labels = list(
@@ -526,7 +528,7 @@ mod_02_demographics_server <- function(id, export_data) {
                   '<b>Gender: </b>' + this.series.name + '<br>' +
                   '<b>Age band: </b>' + this.point.category + '<br/>' +
                   '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0) + '<br>' +
-                  '<b>Percentage of patients: </b>' + Math.abs(this.point.SDC_PCT_PATIENTS) + '%'
+                  '<b>Percentage of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.SDC_PCT_PATIENTS), 1) + '%'
 
                 return outHTML
 
@@ -596,7 +598,7 @@ mod_02_demographics_server <- function(id, export_data) {
               outHTML =
                 '<b>Quintile: </b>' + parseInt(this.point.category) + '<br>' +
                 '<b>Number of patients: </b>' + Highcharts.numberFormat(this.point.y, 0) + '<br>' +
-                '<b>Percentage of patients: </b>' + this.point.SDC_PCT_PATIENTS + '%'
+                '<b>Percentage of patients: </b>' + Highcharts.numberFormat(this.point.SDC_PCT_PATIENTS, 1) + '%'
 
               return outHTML
 
