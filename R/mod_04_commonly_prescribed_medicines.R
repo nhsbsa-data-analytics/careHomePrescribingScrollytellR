@@ -70,6 +70,11 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         outputId = ns("metrics_by_bnf_and_ch_flag_chart"),
         height = "400px"
       ),
+      tags$text(
+        class = "highcharts-caption",
+        style = "font-size: 9pt",
+        "Figures are calculated as a percentage of the care home or non-care home group and where the number of patients is less than 5 the data has been redacted."
+      ),
       mod_nhs_download_ui(
         id = ns("download_metrics_by_bnf_and_ch_flag_chart")
       )
@@ -161,9 +166,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         ) %>%
         highcharter::hc_scrollbar(enabled = TRUE) %>%
         theme_nhsbsa() %>%
-        highcharter::hc_caption(
-          text = "Figures are calculated as a percentage of the care home or non-care home group and where the number of patients is less than 5 the data has been redacted."
-        ) %>%
         highcharter::hc_xAxis(
           categories = unique(metrics_by_bnf_and_ch_flag_df()$SUB_BNF_LEVEL_NAME),
           style = list(

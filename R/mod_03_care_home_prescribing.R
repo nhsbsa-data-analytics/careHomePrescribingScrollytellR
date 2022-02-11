@@ -179,6 +179,11 @@ mod_03_care_home_prescribing_ui <- function(id) {
         outputId = ns("metrics_by_gender_and_age_band_and_ch_flag_chart"),
         height = "350px"
       ),
+      tags$text(
+        class = "highcharts-caption",
+        style = "font-size: 9pt",
+        "This excludes << 1% of patients with an unknown gender."
+      ),
       mod_nhs_download_ui(
         id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
       )
@@ -803,9 +808,6 @@ mod_03_care_home_prescribing_server <- function(id) {
             valuePrefix = switch(input$gender_and_age_band_and_ch_flag_metric,
               "SDC_COST_PER_PATIENT_MONTH" = "£"
             )
-          ) %>%
-          highcharter::hc_caption(
-            text = "This excludes << 1% of patients with an unknown gender."
           )
       })
 
