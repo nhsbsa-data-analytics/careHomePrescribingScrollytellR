@@ -528,7 +528,7 @@ mod_02_demographics_server <- function(id, export_data) {
                   '<b>Gender: </b>' + this.series.name + '<br>' +
                   '<b>Age band: </b>' + this.point.category + '<br/>' +
                   '<b>Number of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.y), 0) + '<br>' +
-                  '<b>Percentage of patients: </b>' + Math.abs(this.point.SDC_PCT_PATIENTS) + '%'
+                  '<b>Percentage of patients: </b>' + Highcharts.numberFormat(Math.abs(this.point.SDC_PCT_PATIENTS), 1) + '%'
 
                 return outHTML
 
