@@ -598,7 +598,7 @@ mod_02_demographics_server <- function(id, export_data) {
               outHTML =
                 '<b>Quintile: </b>' + parseInt(this.point.category) + '<br>' +
                 '<b>Number of patients: </b>' + Highcharts.numberFormat(this.point.y, 0) + '<br>' +
-                '<b>Percentage of patients: </b>' + this.point.SDC_PCT_PATIENTS + '%'
+                '<b>Percentage of patients: </b>' + Highcharts.numberFormat(this.point.SDC_PCT_PATIENTS, 1) + '%'
 
               return outHTML
 
