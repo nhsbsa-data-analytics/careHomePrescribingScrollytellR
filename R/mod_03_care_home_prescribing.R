@@ -801,7 +801,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           ) %>%
           highcharter::hc_tooltip(
             shared = TRUE,
-            headerFormat = "<b> {point.value} </b>",
+            headerFormat = "<b> {point.value:.1f} </b>",
             valueSuffix = switch(input$gender_and_age_band_and_ch_flag_metric,
               "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" = "%"
             ),
@@ -983,11 +983,11 @@ mod_03_care_home_prescribing_server <- function(id) {
                 "SDC_COST_PER_PATIENT_MONTH" =
                   "Drug cost:</b> £{point.value}",
                 "SDC_ITEMS_PER_PATIENT_MONTH" =
-                  "Number of prescription items:</b> {point.value}",
+                  "Number of prescription items:</b> {point.value:.1f}",
                 "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" =
-                  "Number of unique medicines:</b> {point.value}",
+                  "Number of unique medicines:</b> {point.value:.1f}",
                 "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" =
-                  "Patients on ten or more unique medicines:</b> {point.value}%"
+                  "Patients on ten or more unique medicines:</b> {point.value:.1f}%"
               )
             )
           )
