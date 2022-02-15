@@ -363,6 +363,13 @@ mod_caveats_server <- function(id) {
           "being a care home patient for that month."
         ),
         tags$li(
+          "Some patients received a care home prescription after their DOD. ",
+          "In these instances, the prescription status was categorised as ",
+          "being in a care home receiving a prescription. A patient ",
+          "prescription status was categorised as being deceased only for the ",
+          "months after their DOD where they did not receive a prescription."
+        ),
+        tags$li(
           "When SLA could not be exact matched, ",
           "they were matched using the individual words (tokens) ",
           "in the patient and lookup addresses. It was possible the same ",
