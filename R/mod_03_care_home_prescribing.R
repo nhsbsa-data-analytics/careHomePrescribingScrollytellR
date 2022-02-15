@@ -179,6 +179,11 @@ mod_03_care_home_prescribing_ui <- function(id) {
         outputId = ns("metrics_by_gender_and_age_band_and_ch_flag_chart"),
         height = "350px"
       ),
+      tags$text(
+        class = "highcharts-caption",
+        style = "font-size: 9pt",
+        "This excludes << 1% of patients with an unknown gender."
+      ),
       mod_nhs_download_ui(
         id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
       )
@@ -796,16 +801,20 @@ mod_03_care_home_prescribing_server <- function(id) {
           ) %>%
           highcharter::hc_tooltip(
             shared = TRUE,
-            headerFormat = "<b> {point.value} </b>",
+            useHTML = TRUE,
+            valueDecimals = switch(input$gender_and_age_band_and_ch_flag_metric,
+              "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" = 1,
+              "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" = 1,
+              "SDC_ITEMS_PER_PATIENT_MONTH" = 1
+            ),
+            # valueDecimals = 1
+            headerFormat = "<b> {point.value:.1f} </b>",
             valueSuffix = switch(input$gender_and_age_band_and_ch_flag_metric,
               "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" = "%"
             ),
             valuePrefix = switch(input$gender_and_age_band_and_ch_flag_metric,
               "SDC_COST_PER_PATIENT_MONTH" = "£"
             )
-          ) %>%
-          highcharter::hc_caption(
-            text = "This excludes << 1% of patients with an unknown gender."
           )
       })
 
@@ -824,7 +833,10 @@ mod_03_care_home_prescribing_server <- function(id) {
           min = 0,
           title = list(text = "Drug cost (£)")
         ) %>%
-        highcharter::hc_plotOptions(series = list(showInLegend = FALSE))
+        highcharter::hc_plotOptions(series = list(showInLegend = FALSE)) %>%
+        highcharter::hc_tooltip(
+          valueDecimals = 1
+        )
     })
 
     # Map
@@ -981,11 +993,11 @@ mod_03_care_home_prescribing_server <- function(id) {
                 "SDC_COST_PER_PATIENT_MONTH" =
                   "Drug cost:</b> £{point.value}",
                 "SDC_ITEMS_PER_PATIENT_MONTH" =
-                  "Number of prescription items:</b> {point.value}",
+                  "Number of prescription items:</b> {point.value:.1f}",
                 "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" =
-                  "Number of unique medicines:</b> {point.value}",
+                  "Number of unique medicines:</b> {point.value:.1f}",
                 "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" =
-                  "Patients on ten or more unique medicines:</b> {point.value}%"
+                  "Patients on ten or more unique medicines:</b> {point.value:.1f}%"
               )
             )
           )
