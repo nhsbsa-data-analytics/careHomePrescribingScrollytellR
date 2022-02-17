@@ -22,7 +22,7 @@ mod_02_demographics_ui <- function(id) {
     p(
       "We estimate", tags$b("472 thousand patients"), "aged 65+ years ",
       "received at least one prescription item in a care home during 2020/21 ",
-      "and an average of", tags$b("286 thousand"), "in any given month. This ",
+      "and an average of", tags$b("289 thousand"), "in any given month. This ",
       "difference in numbers is explained by two key factors:"
     ),
     tags$ul(
@@ -64,7 +64,7 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "Our estimated monthly average of",
-      tags$b("286 thousand older care home patients"), "receiving ",
+      tags$b("289 thousand older care home patients"), "receiving ",
       "prescriptions, represents around", tags$b("5% of patients age 65+"),
       "years receiving prescription items each month."
     ),
