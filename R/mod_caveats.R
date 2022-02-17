@@ -286,11 +286,11 @@ mod_caveats_server <- function(id) {
         ),
         tags$li(
           "A Single Line Address (SLA) data field was required for the ",
-          "first two matching stages, siilar to that found in AB Core. ",
+          "first two matching stages, similar to that found in AB Core. ",
           "The ", tags$code("oracle_merge_strings"),
           "function from the nhsbsaR package aimed to generate a ",
           "Single Line Address (SLA), by combining address components. ",
-          "This generated SLA is similar, although not identical, ",
+          "This generated SLA similar, although not identical, ",
           "to that found in AB Core."
         ),
         tags$li(
@@ -343,39 +343,23 @@ mod_caveats_server <- function(id) {
       tags$ul(
         br(),
         tags$li(
-          "The patient prescribing status required Date of Death (DOD) ",
-          "information sourced from PDS data. These data are based on either ",
-          "formal and informal death statuses, although within the data ",
-          "available to NHSBSA it is not possible to identify if the date of ",
-          "death is informal, as initially reported by a healthcare ",
-          "organisation, or formal following confirmation via the ",
-          "General Registry Office. PDS data is the national electronic ",
-          "database of NHS patient details such as name address, gender, ",
-          "date of birth and NHS Number, which is maintained by NHS Digital."
+          "A single prescribing status per patient per month was required for ",
+          "the ‘Monthly prescribing status of patients aged 65+ who received ",
+          "at least one prescription item in a care home during 2020/21’ chart.",
+          "There were three types of prescription status. Patients that ",
+          "received care home prescribing within a month, those that received ",
+          "non-care home prescribing within a month, and those that received ",
+          "no prescribing within a month. If a patient received both care home ",
+          "and non-care home prescribing within the same month, their status ",
+          "was categorised as receiving care home prescribing for that month."
         ),
         tags$li(
-          "A single prescribing status (care home or non-care home) ",
-          "per patient per month was required for the ‘Monthly prescribing ",
-          "status of patients aged 65+ who received at least one prescription ",
-          "item in a care home during 2020/21’ chart. When a patient had a ",
-          "mixed prescribing status within a month, with at least one care ",
-          "home classified prescription form, their status was taken as ",
-          "being a care home patient for that month."
-        ),
-        tags$li(
-          "Some patients received a care home prescription after their DOD. ",
-          "In these instances, the prescription status was categorised as ",
-          "being in a care home receiving a prescription. A patient ",
-          "prescription status was categorised as being deceased only for the ",
-          "months after their DOD where they did not receive a prescription."
-        ),
-        tags$li(
-          "When SLA could not be exact matched, ",
-          "they were matched using the individual words (tokens) ",
-          "in the patient and lookup addresses. It was possible the same ",
-          "lookup token could be matched multiple times against different ",
-          "patient address tokens. In some instances, this may have ",
-          "exaggerated the similarity between two address strings."
+          "The monthly increase in the number of for patients who received no ",
+          "prescribing within a month, was due to patients becoming deceased, ",
+          "or receiving no prescribing whilst still alive. Deceased patients ",
+          "were not exclusive to this single prescription status. It was ",
+          "possible for patients to have both care home and non-care home ",
+          "prescribing recorded against their name after their date of death."
         ),
         tags$li(
           "A single gender was attributed to each patient, ",
