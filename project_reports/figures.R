@@ -9,7 +9,7 @@ con <- nhsbsaR::con_nhsbsa(database = "DALP")
 fact_db <- con %>%
   tbl(from = in_schema("DALL_REF", "INT615_ITEM_LEVEL_BASE"))
 
-# 286k monthly average
+# 289k monthly average
 careHomePrescribingScrollytellR::patients_by_prescribing_status_df %>%
   ungroup() %>%
   filter(PRESCRIBING_STATUS == "Received care home prescribing") %>%

@@ -22,7 +22,7 @@ mod_02_demographics_ui <- function(id) {
     p(
       "We estimate", tags$b("472 thousand patients"), "aged 65+ years ",
       "received at least one prescription item in a care home during 2020/21 ",
-      "and an average of", tags$b("286 thousand"), "in any given month. This ",
+      "and an average of", tags$b("289 thousand"), "in any given month. This ",
       "difference in numbers is explained by two key factors:"
     ),
     tags$ul(
@@ -32,7 +32,7 @@ mod_02_demographics_ui <- function(id) {
       ),
       tags$li(
         "Not all care home patients receive a prescription in every month ",
-        "they are in a care home - we estimate around 7 in 10 do."
+        "they are in a care home."
       )
     ),
     p(
@@ -63,7 +63,7 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "Our estimated monthly average of",
-      tags$b("286 thousand older care home patients"), "receiving ",
+      tags$b("289 thousand older care home patients"), "receiving ",
       "prescriptions, represents around", tags$b("5% of patients age 65+"),
       "years receiving prescription items each month."
     ),
@@ -227,9 +227,7 @@ mod_02_demographics_server <- function(id, export_data) {
     # Filter to relevant data for this chart
     patients_by_geography_and_gender_and_age_band_df <-
       careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-      dplyr::filter(
-        dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME, GENDER), not_na)
-      )
+      dplyr::filter(not_na(GENDER))
 
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 

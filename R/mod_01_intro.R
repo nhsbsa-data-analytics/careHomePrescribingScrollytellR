@@ -35,7 +35,7 @@ mod_01_intro_ui <- function(id) {
     hr(),
     p(
       "We estimate that there was a monthly average of",
-      tags$b("286 thousand care home patients"), "receiving prescriptions ",
+      tags$b("289 thousand care home patients"), "receiving prescriptions ",
       "each month in 2020/21. They received an estimated", tags$b("35 million"),
       "prescription items", tags$b("at a cost of £324 million"), "during ",
       "2020/21."

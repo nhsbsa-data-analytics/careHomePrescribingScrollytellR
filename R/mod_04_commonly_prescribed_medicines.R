@@ -162,16 +162,12 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         ) %>%
         highcharter::hc_chart(
           inverted = TRUE,
-          marginLeft = 350
+          marginLeft = 200
         ) %>%
         highcharter::hc_scrollbar(enabled = TRUE) %>%
         theme_nhsbsa() %>%
         highcharter::hc_xAxis(
           categories = unique(metrics_by_bnf_and_ch_flag_df()$SUB_BNF_LEVEL_NAME),
-          style = list(
-            fontSize = 15
-          ),
-          title = list(text = paste("BNF", input$bnf)),
           max = 14 # it shows n + 1 = 15
         ) %>%
         highcharter::hc_yAxis(
