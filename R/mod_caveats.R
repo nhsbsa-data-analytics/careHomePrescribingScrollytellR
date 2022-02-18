@@ -352,7 +352,7 @@ mod_caveats_server <- function(id) {
           "was categorised as receiving care home prescribing for that month."
         ),
         tags$li(
-          "The monthly increase in the number of for patients who received no ",
+          "The monthly increase in the number of patients who received no ",
           "prescribing within a month, was due to patients becoming deceased, ",
           "or receiving no prescribing whilst still alive. Deceased patients ",
           "were not exclusive to this single prescription status. It was ",
