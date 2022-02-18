@@ -50,6 +50,14 @@ mod_02_demographics_ui <- function(id) {
         outputId = ns("patients_by_prescribing_status_chart"),
         height = "350px"
       ),
+      tags$text(
+        class = "highcharts-caption",
+        style = "font-size: 9pt;",
+        '"The "Received no prescribing" group primarily contains deceased ',
+        "patients but also includes some patients who do not recieve ",
+        "prescriptions every month (e.g patients on bimonthly prescribing ",
+        "regimes)."
+      ),
       mod_nhs_download_ui(
         id = ns("download_patients_by_prescribing_status_chart")
       )

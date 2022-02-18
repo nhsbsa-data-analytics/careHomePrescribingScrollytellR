@@ -12,10 +12,8 @@ mod_caveats_ui <- function(id) {
   tagList(
     h1("Caveats"),
     p(
-      "The caveats are grouped into three categories, those concerning the ",
-      "underlying prescriptions data, the linking methodology, and the ",
-      "interactive analysis itself. Each group of caveats are described ",
-      "within their corresponding tab below."
+      "The caveats are grouped into five categories. Each group of caveats is ",
+      "described within corresponding tab below."
     ),
     tabsetPanel(
       type = "tabs",
@@ -354,7 +352,7 @@ mod_caveats_server <- function(id) {
           "was categorised as receiving care home prescribing for that month."
         ),
         tags$li(
-          "The monthly increase in the number of for patients who received no ",
+          "The monthly increase in the number of patients who received no ",
           "prescribing within a month, was due to patients becoming deceased, ",
           "or receiving no prescribing whilst still alive. Deceased patients ",
           "were not exclusive to this single prescription status. It was ",
