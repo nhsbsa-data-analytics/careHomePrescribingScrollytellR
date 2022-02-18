@@ -227,9 +227,7 @@ mod_02_demographics_server <- function(id, export_data) {
     # Filter to relevant data for this chart
     patients_by_geography_and_gender_and_age_band_df <-
       careHomePrescribingScrollytellR::patients_by_geography_and_gender_and_age_band_df %>%
-      dplyr::filter(
-        dplyr::across(c(GEOGRAPHY, SUB_GEOGRAPHY_NAME, GENDER), not_na)
-      )
+      dplyr::filter(not_na(GENDER))
 
     # Handy resource: https://mastering-shiny.org/action-dynamic.html
 
