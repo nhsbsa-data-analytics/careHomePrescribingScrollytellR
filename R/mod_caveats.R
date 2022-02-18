@@ -12,10 +12,8 @@ mod_caveats_ui <- function(id) {
   tagList(
     h1("Caveats"),
     p(
-      "The caveats are grouped into three categories, those concerning the ",
-      "underlying prescriptions data, the linking methodology, and the ",
-      "interactive analysis itself. Each group of caveats are described ",
-      "within their corresponding tab below."
+      "The caveats are grouped into five categories. Each group of caveats is ",
+      "described within corresponding tab below."
     ),
     tabsetPanel(
       type = "tabs",
