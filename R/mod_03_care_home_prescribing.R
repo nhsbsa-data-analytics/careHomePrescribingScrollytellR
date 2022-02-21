@@ -914,7 +914,10 @@ mod_03_care_home_prescribing_server <- function(id) {
         # Format the table
         plot_map_df_ <- plot_map_df() %>%
           dplyr::arrange(desc(.data[[input$metric]])) %>%
+          dplyr::mutate(RANK = dplyr::row_number()) %>% 
           dplyr::select(
+            "<span class='nhsuk-body-s'>Rank</span>" :=
+              RANK,
             "<span class='nhsuk-body-s'>{input$geography}</span>" :=
               SUB_GEOGRAPHY_NAME,
             "<span class='nhsuk-body-s'>{nice_metric_name}</span>" :=
@@ -922,6 +925,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           ) %>%
           DT::datatable(
             escape = FALSE,
+            rownames = FALSE,
             options = list(
               dom = "t",
               scrollCollapse = TRUE,
@@ -931,9 +935,9 @@ mod_03_care_home_prescribing_server <- function(id) {
             height = "400px",
             filter = "none"
           ) %>%
-          DT::formatStyle(columns = 0:2, `font-size` = "14px") %>%
+          DT::formatStyle(columns = 0:3, `font-size` = "14px") %>%
           DT::formatRound(
-            columns = 2,
+            columns = 3,
             digits = ifelse(input$metric != "SDC_COST_PER_PATIENT_MONTH", 1, 0)
           )
       }
