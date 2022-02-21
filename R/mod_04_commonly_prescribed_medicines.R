@@ -147,8 +147,8 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             low = SDC_PCT_NON_CH,
             high = SDC_PCT_CH
           ),
-          lowColor = "#768692",
-          color = "#768692",
+          lowColor = "#425563",
+          color = "#425563",
           marker = list(fillColor = "#005EB8")
         ) %>%
         highcharter::hc_subtitle(
@@ -156,7 +156,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           text =
             "
             <span style = 'color:#005EB8; font-size: 20px'> &bull; </span> <b> <span style = font-size: 35px'> Care home </span> </b>
-            <span style = 'color:#768692; font-size: 20px'> &bull; </span> <b> <span style = font-size: 35px'> Non-care home </span>
+            <span style = 'color:#425563; font-size: 20px'> &bull; </span> <b> <span style = font-size: 35px'> Non-care home </span>
             ",
           align = "center"
         ) %>%
