@@ -20,11 +20,14 @@ and prevent them fading in / out) */
 .tippy-content{
 	background: #f0f4f5 none repeat scroll 0% 0%;
 	text-align: left;
+	font-size: 12pt;
 }
 
 .tippy-tooltip{
     color: #212b32;
     background-color: #f0f4f5 !important;
+    border: 1px solid #425563;
+    border-radius: 0;
 }
 
 .tippy-backdrop {

@@ -930,7 +930,9 @@ mod_03_care_home_prescribing_server <- function(id) {
               dom = "t",
               scrollCollapse = TRUE,
               paging = FALSE,
-              scrollY = "350px"
+              scrollY = "350px",
+              overflow = "scroll",
+              tabindex = "0"
             ),
             height = "400px",
             filter = "none"
