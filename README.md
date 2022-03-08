@@ -1,6 +1,6 @@
 # Care home prescribing scrollytell
 
-This R package has been developed by NHS Business Services Authority Data Analytics Learning Lab to use a combination of analytics and user research to explore prescribing in care homes in England. 
+This R package has been developed by the NHS Business Services Authority Data Science team to use a combination of analytics and user research to explore prescribing in care homes in England. 
 
 ## Features
 
