@@ -364,7 +364,7 @@ mod_caveats_server <- function(id) {
           "to enable gender-level aggregations in ‘Age band and gender of ",
           "estimated older care home patients in England (2020/21)’ chart. ",
           "If a patient gender was either consistently recorded as being ",
-          "Male or Female, they were categorised as such. ",
+          "male or female, they were categorised as such. ",
           "Patients whose gender was recorded differently across ",
           "prescription forms were categorised as having an unknown gender."
         ),
@@ -387,13 +387,17 @@ mod_caveats_server <- function(id) {
           "months in which patients did not receive prescribing."
         ),
         tags$li(
-          "The per Patient per Month metrics were calculated by first ",
-          "calculating the cost/items/number of unique medicines for each ",
-          "month in which a patient received prescribing, and then taking ",
-          "the mean of these values. This was calculated monthly, as a ",
-          "patient can be in a care home anywhere between one and twelve ",
-          "months of a year. This may overstate prescribing for patients ",
-          "who receive multiple months prescribing within a single month."
+          "The Per Patient Month metrics were calculated by summing ",
+          "the total cost, number of items, and number of unique medicines ",
+          "for each patient across the period. This total was then divided by ",
+          "the number of months in the period where the patient was attributed ",
+          "prescribing. The mean of these values is then taken across all ",
+          "patients to give each per patient month metric. This may overstate ",
+          "prescribing for patients who receive multiple months prescribing ",
+          "within a single month. For example, if a patient receives 1 prescribing ",
+          "item in April, May and June, then their number of items per patient ",
+          "month metric is calculated as total number of items:3 / number of ",
+          "observations(months):3 = 1"
         ),
         tags$li(
           "Both the Number of Unique Medicines Per Patient Month and ",

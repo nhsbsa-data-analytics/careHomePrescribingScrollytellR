@@ -32,10 +32,11 @@ mod_01_intro_ui <- function(id) {
       "used in NHSBSA information systems in the future and we can develop ",
       "additional analyses."
     ),
-    hr(),
+    # hr(),
+    h2("Key Findings"),
     p(
-      "We estimate that there was a monthly average of",
-      tags$b("289 thousand care home patients"), "receiving prescriptions ",
+      "We estimate that there was an average of",
+      tags$b("289 thousand care home patients aged 65+ years"), "receiving prescriptions ",
       "each month in 2020/21. They received an estimated", tags$b("35 million"),
       "prescription items", tags$b("at a cost of £324 million"), "during ",
       "2020/21."
@@ -58,14 +59,18 @@ mod_01_intro_ui <- function(id) {
       "As might be expected,",
       tags$b("care home patients receive more prescribing"), "than non-care ",
       "home patients receiving prescriptions. They also receive a different ",
-      "range of medicines, and are somewhat more likely to receive ",
+      "range of medicines, and are more likely to receive ",
       "prescribing for pain relief."
     ),
     p(
       "Average monthly prescribing costs and volumes per care home patient ",
       "vary by age, gender, care home type and geography."
     ),
-    hr(),
+    # hr(),
+    h2(enurl(
+      text = "Methodology",
+      url = "https://rpubs.com/nhsbsa-data-analytics/862168")
+      ),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
       "includes linking primary care prescription address data to care home ",

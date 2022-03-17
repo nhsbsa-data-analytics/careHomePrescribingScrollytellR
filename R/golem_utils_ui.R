@@ -430,17 +430,17 @@ tooltip_text <- list(
   cost = tags$div(
     class = "nhsuk-u-font-size-14",
     "Calculated as the average",
-    tags$b("total price reimbursed for dispensed drugs"),
-    "per patient month. It relates solely to the cost of the drugs, in the ",
-    "quantity prescribed on a prescription form. It does not include any ",
+    tags$b("amount paid for dispensed drugs"),
+    "per patient month. It relates solely to the basic price of the drugs, 
+    in the quantity prescribed on a prescription form. It does not include any ",
     "additional fees or discounts that were paid to the dispensing ",
-    "contractors."
+    "contractors. Also known asNet Ingredient Cost (NIC)."
   ),
   unique_medicines = tags$div(
     class = "nhsuk-u-font-size-14",
     "Calculated as the average", tags$b("number of unique medicines"), "per ",
     "patient per month. A unique medicine is defined as a medicine prescribed ",
-    "with the same chemical substance descriptor in BNF Sections 1 to 4 and 6 ",
+    "with the same chemical substance descriptor in BNF Chapters 1 to 4 and 6 ",
     "to 10 whether it be different formulations (presentations) or different ",
     "strengths. Medicines with the same chemical substance descriptor would ",
     "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and 5mg ",
@@ -452,7 +452,7 @@ tooltip_text <- list(
     tags$strong(
       "percentage of patients prescribed ten or more unique medicines"
     ), "per month. A unique medicine is defined as a medicine prescribed with ",
-    "the same chemical substance descriptor in BNF Sections 1 to 4 and 6 to ",
+    "the same chemical substance descriptor in BNF Chapters 1 to 4 and 6 to ",
     "10 whether it be different formulations (presentations) or different ",
     "strengths. Medicines with the same chemical substance descriptor would ",
     "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and 5mg ",
