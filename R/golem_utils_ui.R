@@ -431,7 +431,7 @@ tooltip_text <- list(
     class = "nhsuk-u-font-size-14",
     "Calculated as the average",
     tags$b("amount paid for dispensed drugs"),
-    "per patient month. It relates solely to the basic price of the drugs, 
+    "per patient month. It relates solely to the basic price of the drugs,
     in the quantity prescribed on a prescription form. It does not include any ",
     "additional fees or discounts that were paid to the dispensing ",
     "contractors. Also known asNet Ingredient Cost (NIC)."
@@ -467,6 +467,18 @@ tooltip_text <- list(
       url = "https://www.bnf.org/products/bnf-online/"
     ),
     " classifications."
+  ),
+  ppm = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "The",
+    tags$strong(
+      "Per Patient Month"
+    ),
+    "metrics were calculated by summing the total cost, number of items, and ",
+    "number of unique medicines for each patient across the period. This total ",
+    "was then divided by the number of months in the period where the patient ",
+    "was attributed prescribing. The mean of these values is then taken across ",
+    "all patients to give each per patient month metric."
   )
 )
 

@@ -57,7 +57,7 @@ breakdowns <- list(
     SUB_BREAKDOWN_CODE = "PCD_REGION_CODE",
     SUB_BREAKDOWN_NAME = "PCD_REGION_NAME"
   ),
-  "Geographical - STP" = c(
+  "Geographical - STP/ICS" = c(
     SUB_BREAKDOWN_CODE = "PCD_STP_CODE",
     SUB_BREAKDOWN_NAME = "PCD_STP_NAME"
   ),

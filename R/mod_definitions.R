@@ -30,15 +30,18 @@ mod_definitions_ui <- function(id) {
     ),
     p(tags$b("Residential home")),
     p("A residential is a care home where a qualified nurse is not provided."),
-    p(tags$b("Per Patient Month")),
+    p(tags$b("Per Patient Month (PPM)")),
     p(
-      "The Per Patient Month metrics were calculated by summing the total cost ,",
-      "number of itmes, and number of unique medicines for each patient across ",
+      "The Per Patient Month metrics were calculated by summing the total cost, ",
+      "number of items, and number of unique medicines for each patient across ",
       "the period. This total was then divided by the number of months in the ",
-      "period where the patient was attributed prescribing. The mean of these ",
-      "values is then taken across all patients to give each per patient month ",
-      "metric."
-      ),
+      "period where the patient was attributed prescribing. For example, ",
+      "if a patient receives 2 prescription items in April, 3 in May, and 4 in ",
+      "June, then their number of items per patient month metric is ",
+      "calculated as total number of items:9 / number of observations (months):3",
+      " = 3. The mean of these values is then taken across all patients to ",
+      "give each per patient month metric."
+    ),
     p(tags$b("Drug cost")),
     p(
       "Calculated as the average amount paid for dispensed drugs ",

@@ -34,10 +34,10 @@ mod_03_care_home_prescribing_ui <- function(id) {
       )
     ),
     p(
-      "We estimate that older care home patients receive around 1.6 times ",
-      "more prescription items and unique medicines per patient month than ",
-      "older non-care home patients who received prescriptions. At around ",
-      "twice the drug cost. These prescribing metrics vary by age, gender and ",
+      "We estimate that older care home patients receive around 60% ",
+      "more prescription items and unique medicines per patient month at around ",
+      "twice the cost than older non-care home patients who received ",
+      "prescriptions. These prescribing metrics vary by age, gender and ",
       "geography. The chart below allows you to explore them."
     ),
     nhs_card(
@@ -182,7 +182,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       tags$text(
         class = "highcharts-caption",
         style = "font-size: 9pt",
-        "This excludes << 1% of patients with an unknown gender."
+        "This excludes less than 1% of patients where the gender was unknown."
       ),
       mod_nhs_download_ui(
         id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
@@ -199,7 +199,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
     tags$ul(
       tags$li(
         "Younger age groups have a much wider spread of costs per month and ",
-        "include more outliers."
+        "include more outliers than older patients."
       ),
       tags$li(
         "Younger care home patients seem to have more prescribing of ",
@@ -210,6 +210,10 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "Younger care home patients typically get a larger quantity than ",
         "older care home patients when prescribed comparable drugs/products."
       )
+    ),
+    p(
+      "The chart shows that whilst the median drug cost decreases with age, median ",
+      "and range decreases as the age band increases."
     ),
     nhs_card(
       heading = "Distribution of the estimated average drug cost per patient month for older care home patients in England (2020/21)",
@@ -462,7 +466,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           class = "highcharts-caption",
           style = "font-size: 9pt",
           switch(input$breakdown,
-            "Demographical - Gender" = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
+            "Demographical - Gender" = "This excludes less than 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
             "Where the number of patients is less than 5 the data has been redacted."
           ),
           "The mean average has been used to calculate per patient month ",
@@ -914,7 +918,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         # Format the table
         plot_map_df_ <- plot_map_df() %>%
           dplyr::arrange(desc(.data[[input$metric]])) %>%
-          dplyr::mutate(RANK = dplyr::row_number()) %>% 
+          dplyr::mutate(RANK = dplyr::row_number()) %>%
           dplyr::select(
             "<span class='nhsuk-body-s'>Rank</span>" :=
               RANK,
