@@ -11,25 +11,13 @@ mod_definitions_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h1("Definitions"),
-    p(tags$b("Older patients")),
-    p("Patients aged 65+ at the time of prescribing."),
-    p(tags$b("Older care home patients")),
-    p(
-      "Patients aged 65+ who received their prescription whilst living in a ",
-      "care home at the time of prescribing."
-    ),
-    p(tags$b("Older non-care home patients")),
-    p(
-      "Patients aged 65+ who received their prescription whilst not living in ",
-      "a care home at the time of prescribing."
-    ),
-    p(tags$b("Nursing home")),
-    p(
-      "A nursing home is a care home where a qualified nurse is provided to ",
-      "ensure that the full needs of the person using the service are met."
-    ),
-    p(tags$b("Residential home")),
-    p("A residential is a care home where a qualified nurse is not provided."),
+    # p(tags$b("Nursing home")),
+    # p(
+    #   "A nursing home is a care home where a qualified nurse is provided to ",
+    #   "ensure that the full needs of the person using the service are met."
+    # ),
+    # p(tags$b("Residential home")),
+    # p("A residential is a care home where a qualified nurse is not provided."),
     p(tags$b("Per Patient Month (PPM)")),
     p(
       "The Per Patient Month metrics were calculated by summing the total cost, ",
@@ -38,7 +26,7 @@ mod_definitions_ui <- function(id) {
       "period where the patient was attributed prescribing. For example, ",
       "if a patient receives 2 prescription items in April, 3 in May, and 4 in ",
       "June, then their number of items per patient month metric is ",
-      "calculated as total number of items:9 / number of observations (months):3",
+      "calculated as total number of items: 9 / number of observations (months): 3",
       " = 3. The mean of these values is then taken across all patients to ",
       "give each per patient month metric."
     ),

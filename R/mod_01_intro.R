@@ -10,20 +10,10 @@
 mod_01_intro_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    h1(
-      "Estimated prescribing patterns for ",
-      tippy(
-        text = "older care home patients",
-        tooltip = tooltip_text$care_home
-      )
-    ),
+    h1("Estimated prescribing patterns for care home patients aged 65 years or over"),
     p(
       "In this article we provide unique insight into primary care ",
-      "prescribing patterns for ",
-      tippy(
-        text = "older care home patients",
-        tooltip = tooltip_text$care_home
-      ),
+      "prescribing patterns for care home patients aged 65 years or over",
       " in England during 2020/21."
     ),
     p(
@@ -35,24 +25,24 @@ mod_01_intro_ui <- function(id) {
     h2("Key Findings"),
     p(
       "We estimate that there was an average of",
-      tags$b("289 thousand care home patients aged 65 and over years"),
+      tags$b("289 thousand care home patients aged 65 years or over"),
       "receiving prescriptions each month in 2020/21. ",
       "They received an estimated", tags$b("35 million"),
       "prescription items", tags$b("at a cost of £324 million"), "during ",
       "2020/21."
     ),
     p(
-      "This accounts for around", tags$b("5%"), "of ",
-      tippy(
-        text = "older patients",
-        tooltip = tooltip_text$older
-      ),
+      "This accounts for around", tags$b("5%"), "of aged 65 years or over patients",
+      # tippy(
+      #   text = "older patients",
+      #   tooltip = tooltip_text$older
+      # ),
       "receiving prescription items each month and", tags$b("7%"), "of the ",
-      "total primary care drug spend for ",
-      tippy(
-        text = "older patients",
-        tooltip = tooltip_text$older
-      ),
+      "total primary care drug spend for aged 65 years or over patients",
+      # tippy(
+      #   text = "older patients",
+      #   tooltip = tooltip_text$older
+      # ),
       "during 2020/21."
     ),
     p(
@@ -103,11 +93,11 @@ mod_01_intro_ui <- function(id) {
       )
     ),
     p(
-      "It is also important to note that these are estimates of older care home ",
-      "residents",
+      "It is also important to note that these are estimates of ",
+      "care home residents aged 65 years or over ",
       tags$b("receiving prescriptions, "),
       "and are referred to as care home patients. As such the estimates are ",
-      "lower than for older care home residents in general."
+      "lower than for aged 65 years or over care home residents in general."
     )
   )
 }

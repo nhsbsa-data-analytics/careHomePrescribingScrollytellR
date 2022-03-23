@@ -15,19 +15,27 @@ mod_05_final_thoughts_ui <- function(id) {
     ),
     p(
       "This article provides estimates of primary care prescribing patterns ",
-      "for ",
-      tippy(
-        text = "older care home patients",
-        tooltip = tooltip_text$care_home
-      ),
-      " in England during 2020/21."
+      "for care home patients aged 65 years or over ",
+      "in England during 2020/21, based on experimental data linkage work."
     ),
     p(
-      "It is based on experimental data linkage work. We believe this could ",
-      "have important utility in terms of informing decisions and improving ",
-      "outcomes in future. We welcome your views and input on the ",
-      "methodology, if and how the insight can be used and how it can be ",
-      "developed further."
+      "These estimates address a key gap in knowledge and give valuable insights ",
+      "which could inform the use and management of medicines in care homes to help ",
+      "improve health outcomes, the quality of care and ensure value."
+    ),
+    p(
+      "We welcome your views and input on the ",
+      enurl(
+        text = "methodology ",
+        url = "https://rpubs.com/nhsbsa-data-analytics/862168"
+      ),
+      "and ",
+      enurl(
+        text = "code,",
+        url = "https://github.com/nhsbsa-data-analytics/careHomePrescribingScrollytellR"
+      ),
+      " if and how the insight can be used and how our work can be developed ",
+      "further. You can contact us and using the link at the end of this article."
     )
   )
 }

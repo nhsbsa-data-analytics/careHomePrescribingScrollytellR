@@ -11,16 +11,16 @@ mod_02_demographics_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h2(
-      "Demographic estimates for",
-      tippy(
-        text = "older care home patients",
-        tooltip = tooltip_text$care_home
-      ),
+      "Demographic estimates for aged 65 years or over care home patients",
+      # tippy(
+      #   text = "older care home patients",
+      #   tooltip = tooltip_text$care_home
+      # ),
       "receiving prescriptions"
     ),
-    p(tags$b("The older care home population receiving prescriptions fluctuates")),
+    p(tags$b("Care home patients aged 65 years or over population receiving prescriptions fluctuates")),
     p(
-      "We estimate", tags$b("472 thousand patients"), "aged 65+ years ",
+      "We estimate", tags$b("472 thousand patients"), "aged 65 years or over ",
       "received at least one prescription item in a care home during 2020/21 ",
       "and an average of", tags$b("289 thousand"), "in any given month. This ",
       "difference in numbers is explained by two key factors:"
@@ -51,14 +51,15 @@ mod_02_demographics_ui <- function(id) {
       "care home prescribing in all 12 months."
     ),
     p(
-      "The chart also shows that the older care home population declines over ",
+      "The chart also shows that the care home patients aged 65 years or over ",
+      "population declines over ",
       "the year, likely due to the COVID-19 pandemic, starting at 314 thousand ",
       "in April 2020 and ending with 218 thousand patients in March 2021. ",
       "It is anticipated that the number of care home patients will increase ",
       "back up to April 2020 levels post pandemic."
     ),
     nhs_card(
-      heading = "Monthly prescribing status of patients aged 65+ in England who received at least one prescription item in a care home (2020/21)",
+      heading = "Monthly prescribing status of patients aged 65 years or over in England who received at least one prescription item in a care home (2020/21)",
       highcharter::highchartOutput(
         outputId = ns("patients_by_prescribing_status_chart"),
         height = "350px"
@@ -78,20 +79,20 @@ mod_02_demographics_ui <- function(id) {
     br(),
     p(
       tags$b(
-        "We estimate two thirds of older care home patients are female and 6 ",
-        "in 10 are aged 85+ years"
+        "We estimate two thirds of care home patients aged 65 years or over ",
+        "are female and 6 in 10 are aged 85 years or over."
       )
     ),
     p(
       "Our estimated monthly average of",
-      tags$b("289 thousand older care home patients"), "receiving ",
-      "prescriptions, represents around", tags$b("5% of patients age 65 and over"),
+      tags$b("289 thousand aged 65 years or over care home patients"), "receiving ",
+      "prescriptions, represents around", tags$b("5% of patients aged 65 years or over"),
       "years receiving prescription items each month."
     ),
     p(
       "Overall, there are an estimated ", tags$b("472 thousand"), "care home ",
       "patients in 2020/21, of which ", tags$b("66%"), " are females and ",
-      tags$b("43%"), " were females aged 85 or over."
+      tags$b("43%"), " were females aged 85 years or over."
     ),
     p(
       "The age and gender profile is broadly comparable to",
@@ -104,7 +105,7 @@ mod_02_demographics_ui <- function(id) {
       "Transformation Partnership area (STP)/ Integrated Care System (ICS)."
     ),
     nhs_card(
-      heading = "Age band and gender of estimated older care home patients in England (2020/21)",
+      heading = "Age band and gender of estimated care home patients aged 65 years or over in England (2020/21)",
       nhs_grid_2_col(
         nhs_selectInput(
           inputId = ns("geography"),
@@ -135,13 +136,13 @@ mod_02_demographics_ui <- function(id) {
     br(),
     p(
       tags$b(
-        "Similar proportions of older care home patients live in residential homes",
-        " and nursing homes"
+        "Similar proportions of aged 65 years or over care home patients live in ",
+        "residential homes and nursing homes."
       )
     ),
     p(
       "On average each month, we estimate similar proportions of care home ",
-      "patients aged 65 and over living in residential homes (41%) and ",
+      "patients aged 65 years or over living in residential homes (41%) and ",
       "nursing homes (45%). A small percentage (3%) appear in ",
       "both settings and there are 11% who we were unable to link to the ",
       enurl(
@@ -159,8 +160,8 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       tags$b(
-        "There is little variation in numbers of older care home patients by ",
-        "deprivation"
+        "There is little variation in numbers of care home patients aged ",
+        "65 years or over by deprivation."
       )
     ),
     p(
@@ -175,7 +176,7 @@ mod_02_demographics_ui <- function(id) {
       " which suggests equal distribution and little variation."
     ),
     nhs_card(
-      heading = "Deprivation quintile of older care home patients in England (2020/21)",
+      heading = "Deprivation quintile of care home patients aged 65 years or over in England (2020/21)",
       highcharter::highchartOutput(
         outputId = ns("patients_by_imd_chart"),
         height = "250px"

@@ -66,8 +66,12 @@ mod_caveats_server <- function(id) {
         tags$li(
           style = "margin-left: 35px; list-style-type: circle ;",
           "prescriptions that were not submitted to the NHSBSA for processing ",
-          "and reimbursement prescriptions issued and dispensed in prisons, ",
-          "hospitals and private prescriptions"
+          "and reimbursement."
+        ),
+        tags$li(
+          style = "margin-left: 35px; list-style-type: circle ;",
+          "prescriptions issued and dispensed in prisons, ",
+          "hospitals and private prescriptions."
         ),
         tags$li(
           style = "margin-left: 35px; list-style-type: circle ;",
@@ -137,7 +141,11 @@ mod_caveats_server <- function(id) {
           "aged 65 years or above at the time of prescribing. ",
           "Patient age was determined using a mixture of patient ",
           "information from prescription forms and ",
-          "Patient Demographic Service (PDS). Further details on ",
+          enurl(
+            text = "Personal Demographic Service (PDS)",
+            url = "https://digital.nhs.uk/services/demographics "
+          ),
+          " Further details on ",
           "the process of patient age determination can be found ",
           enurl(
             text = "here.",
@@ -152,7 +160,11 @@ mod_caveats_server <- function(id) {
           "categorised as being from a care home."
         ),
         tags$li(
-          "AB is a product that is in a continual state of refinement. ",
+          enurl(
+            text = "Ordnance Survey AddressBase (AB) ",
+            url = "https://www.ordnancesurvey.co.uk/business-government/products/addressbase"
+          ),
+          "is a product that is in a continual state of refinement. ",
           "While the epoch of AB used within the analysis was the closest ",
           "to the end of the analysis time period, there would still be ",
           "instances where the information in AB did not mirror actual patient ",
@@ -165,8 +177,8 @@ mod_caveats_server <- function(id) {
           "occurred through not excluding other building classification types."
         ),
         tags$li(
-          "Only patients with a PDS verified NHS ",
-          "number were included in the analysis results."
+          "The analysis only includes patients with an NHS number ",
+          "and date of birth verified by PDS."
         ),
         tags$li(
           "NHS numbers are captured for 100% electronic prescription ",
@@ -217,7 +229,11 @@ mod_caveats_server <- function(id) {
       tags$ul(
         br(),
         tags$li(
-          "Ordnance Survey AddressBase (AB) was the foundation of the ",
+          enurl(
+            text = "Ordnance Survey AddressBase (AB) ",
+            url = "https://www.ordnancesurvey.co.uk/business-government/products/addressbase"
+          ),
+          "was the foundation of the ",
           "lookup address data, which was matched against patient ",
           "address information."
         ),
@@ -228,7 +244,11 @@ mod_caveats_server <- function(id) {
           "to the end of the analysis time period."
         ),
         tags$li(
-          "AB building classifications were critical to matching a ",
+          enurl(
+            text = "AB building classifications ",
+            url = "https://www.ordnancesurvey.co.uk/documents/product-support/tech-spec/addressbase-technical-specification.pdf"
+          ),
+          "were critical to matching a ",
           "patient record to an address classified as being a care home. ",
           "These classifications are maintained by Ordnance Survey based on ",
           "information supplied by external agencies ",
@@ -242,20 +262,32 @@ mod_caveats_server <- function(id) {
           "classification types that could also be excluded."
         ),
         tags$li(
-          "Care Quality Commission (CQC) data was used to supplement ",
+          enurl(
+            text = "Care Quality Commission (CQC)",
+            url = "https://www.cqc.org.uk/"
+          ),
+          " data was used to supplement ",
           "the AB address information. This increased the number of ",
           "care home addresses within the lookup data and enabled a ",
           "greater number of prescription forms to be labelled as being ",
           "from a care home."
         ),
         tags$li(
-          "CQC information was sourced through the cqcr R-package, ",
-          "which in turn acted as a wrapper around the CQC API. ",
+          "CQC information was sourced through the ",
+          enurl(
+            text = "cqcr R-package, ",
+            url = "https://github.com/evanodell/cqcr"
+          ),
+          " which in turn acted as a wrapper around the CQC API. ",
           "It was assumed the data collected through the package was ",
           "robust and accurate."
         ),
         tags$li(
-          "As with AB, CQC data is also in a state of continual refinement, ",
+          "As with AB, CQC data is also in a ",
+          enurl(
+            text = "state of continual refinement, ",
+            url = "https://www.cqc.org.uk/what-we-do/how-we-use-information/how-we-use-information"
+          ),
           "due to the changing nature of property details, and as with AB, ",
           "a snapshot of the CQC data taken at a point in time was used ",
           "for the matching process."
@@ -387,17 +419,19 @@ mod_caveats_server <- function(id) {
           "months in which patients did not receive prescribing."
         ),
         tags$li(
-          "The Per Patient Month metrics were calculated by summing ",
+          "The Per Patient Month (PPM) metrics were calculated by summing ",
           "the total cost, number of items, and number of unique medicines ",
           "for each patient across the period. This total was then divided by ",
           "the number of months in the period where the patient was attributed ",
-          "prescribing. The mean of these values is then taken across all ",
-          "patients to give each per patient month metric. This may overstate ",
-          "prescribing for patients who receive multiple months prescribing ",
-          "within a single month. For example, if a patient receives 1 prescribing ",
-          "item in April, May and June, then their number of items per patient ",
-          "month metric is calculated as total number of items:3 / number of ",
-          "observations(months):3 = 1"
+          "prescribing. For example, if a patient receives 2 prescription ",
+          "items in April, 3 in May, and 4 in June, then their number of ",
+          "items per patient month metric is calculated as total ",
+          "number of items:9 / number of observations(months):3 = 3 ",
+          "The mean of these values is then taken across all patients to give ",
+          "each per patient month metric. PPM metrics were calculated ",
+          "separately for care home and non-care home prescribing. This may ",
+          "overstate prescribing for patients who receive multiple months ",
+          "prescribing within a single month."
         ),
         tags$li(
           "Both the Number of Unique Medicines Per Patient Month and ",
@@ -413,9 +447,13 @@ mod_caveats_server <- function(id) {
           "median values are lower than the mean."
         ),
         tags$li(
-          "In line with the NHSBSA’s Statistical Disclosure Control Policy, ",
-          "patient counts less than five, or item and cost information where ",
-          "a patient count of less than five can be inferred, has been redacted ",
+          "In line with the ",
+          enurl(
+            text = "NHSBSA’s Statistical Disclosure Control Policy ",
+            url = "https://www.nhsbsa.nhs.uk/sites/default/files/2020-09/NHSBSA%20-%20Statistical%20Disclosure%20Control%20Protocol.pdf#:~:text=This%20document%20sets%20out%20the%20NHS%20Business%20Services,determined%20on%20a%20case%20by%20case%20risk%20basis."
+          ),
+          "patient counts between one and four, or item and cost information where ",
+          "a patient count between one and four can be inferred, has been redacted ",
           "with “c”. Patient counts have also been omitted from geographical ",
           "breakdowns below national level due to the level of redaction ",
           "that would be applied."

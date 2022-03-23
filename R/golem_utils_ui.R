@@ -387,24 +387,24 @@ make_action_button <- function(tag, inputId = NULL) {
 #'
 #' @noRd
 tooltip_text <- list(
-  # Older
-  older = tags$div(
-    class = "nhsuk-u-font-size-14",
-    tags$strong("Older patients"), "are patients aged 65+ at the time of prescribing."
-  ),
-  # Care home vs non-care home
-  care_home = tags$div(
-    class = "nhsuk-u-font-size-14",
-    tags$strong("Older care home patients"), "are patients aged 65+ who ",
-    "received their prescription whilst living in a care home at the time of ",
-    "prescribing.",
-  ),
-  non_care_home = tags$div(
-    class = "nhsuk-u-font-size-14",
-    tags$strong("Older non-care home patients"), "are patients aged 65+ who ",
-    "received their prescription whilst not living in a care home at the time ",
-    "of prescribing.",
-  ),
+  # # Older
+  # older = tags$div(
+  #   class = "nhsuk-u-font-size-14",
+  #   tags$strong("Older patients"), "are patients aged 65+ at the time of prescribing."
+  # ),
+  # # Care home vs non-care home
+  # care_home = tags$div(
+  #   class = "nhsuk-u-font-size-14",
+  #   tags$strong("Older care home patients"), "are patients aged 65+ who ",
+  #   "received their prescription whilst living in a care home at the time of ",
+  #   "prescribing.",
+  # ),
+  # non_care_home = tags$div(
+  #   class = "nhsuk-u-font-size-14",
+  #   tags$strong("Older non-care home patients"), "are patients aged 65+ who ",
+  #   "received their prescription whilst not living in a care home at the time ",
+  #   "of prescribing.",
+  # ),
   # Residential vs nursing
   residential_home = tags$div(
     class = "nhsuk-u-font-size-14",
@@ -434,7 +434,7 @@ tooltip_text <- list(
     "per patient month. It relates solely to the basic price of the drugs,
     in the quantity prescribed on a prescription form. It does not include any ",
     "additional fees or discounts that were paid to the dispensing ",
-    "contractors. Also known asNet Ingredient Cost (NIC)."
+    "contractors. Also known as Net Ingredient Cost (NIC)."
   ),
   unique_medicines = tags$div(
     class = "nhsuk-u-font-size-14",
