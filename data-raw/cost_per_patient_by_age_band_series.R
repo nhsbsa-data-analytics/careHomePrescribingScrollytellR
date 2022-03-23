@@ -17,9 +17,15 @@ fact_db <- fact_db %>%
 cost_per_patient_by_age_band_db <- fact_db %>%
   # Year month level
   group_by(YEAR_MONTH, AGE_BAND, NHS_NO) %>%
-  summarise(TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01)) %>%
+  summarise(TOTAL_COST = sum(ITEM_PAY_DR_NIC * 0.01, na.rm = TRUE) / n_distinct(NHS_NO)) %>%
   ungroup() %>%
-  select(-c(YEAR_MONTH, NHS_NO))
+  # PPM level
+  group_by(NHS_NO, AGE_BAND) %>%
+  summarise(COST_PER_PATIENT = round(mean(TOTAL_COST), 2)) %>%
+  ungroup() %>%
+  select(-NHS_NO)
+
+
 
 # Collect and change factor-levels
 cost_per_patient_by_age_band_df <- cost_per_patient_by_age_band_db %>%
@@ -36,7 +42,7 @@ cost_per_patient_by_age_band_df <- cost_per_patient_by_age_band_db %>%
 cost_per_patient_by_age_band_series <- highcharter::data_to_boxplot(
   data = cost_per_patient_by_age_band_df,
   group_var = AGE_BAND,
-  variable = TOTAL_COST,
+  variable = COST_PER_PATIENT,
   add_outliers = FALSE,
   name = "Cost per patient"
 )

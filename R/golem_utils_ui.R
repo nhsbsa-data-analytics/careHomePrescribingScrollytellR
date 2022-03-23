@@ -387,24 +387,24 @@ make_action_button <- function(tag, inputId = NULL) {
 #'
 #' @noRd
 tooltip_text <- list(
-  # Older
-  older = tags$div(
-    class = "nhsuk-u-font-size-14",
-    tags$strong("Older patients"), "are patients aged 65+ at the time of prescribing."
-  ),
-  # Care home vs non-care home
-  care_home = tags$div(
-    class = "nhsuk-u-font-size-14",
-    tags$strong("Older care home patients"), "are patients aged 65+ who ",
-    "received their prescription whilst living in a care home at the time of ",
-    "prescribing.",
-  ),
-  non_care_home = tags$div(
-    class = "nhsuk-u-font-size-14",
-    tags$strong("Older non-care home patients"), "are patients aged 65+ who ",
-    "received their prescription whilst not living in a care home at the time ",
-    "of prescribing.",
-  ),
+  # # Older
+  # older = tags$div(
+  #   class = "nhsuk-u-font-size-14",
+  #   tags$strong("Older patients"), "are patients aged 65+ at the time of prescribing."
+  # ),
+  # # Care home vs non-care home
+  # care_home = tags$div(
+  #   class = "nhsuk-u-font-size-14",
+  #   tags$strong("Older care home patients"), "are patients aged 65+ who ",
+  #   "received their prescription whilst living in a care home at the time of ",
+  #   "prescribing.",
+  # ),
+  # non_care_home = tags$div(
+  #   class = "nhsuk-u-font-size-14",
+  #   tags$strong("Older non-care home patients"), "are patients aged 65+ who ",
+  #   "received their prescription whilst not living in a care home at the time ",
+  #   "of prescribing.",
+  # ),
   # Residential vs nursing
   residential_home = tags$div(
     class = "nhsuk-u-font-size-14",
@@ -430,17 +430,17 @@ tooltip_text <- list(
   cost = tags$div(
     class = "nhsuk-u-font-size-14",
     "Calculated as the average",
-    tags$b("total price reimbursed for dispensed drugs"),
-    "per patient month. It relates solely to the cost of the drugs, in the ",
-    "quantity prescribed on a prescription form. It does not include any ",
+    tags$b("amount paid for dispensed drugs"),
+    "per patient month. It relates solely to the basic price of the drugs,
+    in the quantity prescribed on a prescription form. It does not include any ",
     "additional fees or discounts that were paid to the dispensing ",
-    "contractors."
+    "contractors. Also known as Net Ingredient Cost (NIC)."
   ),
   unique_medicines = tags$div(
     class = "nhsuk-u-font-size-14",
     "Calculated as the average", tags$b("number of unique medicines"), "per ",
     "patient per month. A unique medicine is defined as a medicine prescribed ",
-    "with the same chemical substance descriptor in BNF Sections 1 to 4 and 6 ",
+    "with the same chemical substance descriptor in BNF Chapters 1 to 4 and 6 ",
     "to 10 whether it be different formulations (presentations) or different ",
     "strengths. Medicines with the same chemical substance descriptor would ",
     "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and 5mg ",
@@ -452,7 +452,7 @@ tooltip_text <- list(
     tags$strong(
       "percentage of patients prescribed ten or more unique medicines"
     ), "per month. A unique medicine is defined as a medicine prescribed with ",
-    "the same chemical substance descriptor in BNF Sections 1 to 4 and 6 to ",
+    "the same chemical substance descriptor in BNF Chapters 1 to 4 and 6 to ",
     "10 whether it be different formulations (presentations) or different ",
     "strengths. Medicines with the same chemical substance descriptor would ",
     "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and 5mg ",
@@ -467,6 +467,18 @@ tooltip_text <- list(
       url = "https://www.bnf.org/products/bnf-online/"
     ),
     " classifications."
+  ),
+  ppm = tags$div(
+    class = "nhsuk-u-font-size-14",
+    "The",
+    tags$strong(
+      "Per Patient Month"
+    ),
+    "metrics were calculated by summing the total cost, number of items, and ",
+    "number of unique medicines for each patient across the period. This total ",
+    "was then divided by the number of months in the period where the patient ",
+    "was attributed prescribing. The mean of these values is then taken across ",
+    "all patients to give each per patient month metric."
   )
 )
 

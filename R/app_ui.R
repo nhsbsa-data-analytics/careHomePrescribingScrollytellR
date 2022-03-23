@@ -55,6 +55,10 @@ app_ui <- function(request) {
             mod_definitions_ui("definitions_ui_1")
           ),
           tabPanel(
+            title = "Methodology",
+            mod_methodology_ui("methodology_ui_1")
+          ),
+          tabPanel(
             title = "Caveats",
             mod_caveats_ui("caveats_ui_1")
           )

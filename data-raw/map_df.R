@@ -15,7 +15,7 @@ map_df <- bind_rows(
 
   # STP
   sf::read_sf("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Sustainability_and_Transformation_Partnerships_April_2021_EN_BUC_v2/FeatureServer/0/query?where=1%3D1&outFields=STP21CD,STP21NM&outSR=27700&f=json") %>%
-    mutate(GEOGRAPHY = "STP") %>%
+    mutate(GEOGRAPHY = "STP/ICS") %>%
     select(
       GEOGRAPHY,
       SUB_GEOGRAPHY_CODE = STP21CD,

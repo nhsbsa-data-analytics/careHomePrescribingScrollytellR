@@ -11,37 +11,37 @@ mod_03_care_home_prescribing_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h2(
-      "Estimated prescribing patterns for",
-      tippy(
-        text = "older care home patients",
-        tooltip = tooltip_text$care_home
-      )
+      "Estimated prescribing patterns for aged 65 years or over care home patients"
+      # tippy(
+      #   text = "older care home patients",
+      #   tooltip = tooltip_text$care_home
+      # )
     ),
     p(
-      "Older care home patients received an estimated", tags$b("35 million"),
-      "prescription items at a cost of", tags$b("£324 million"), "during ",
-      "2020/21."
+      "Care home patients aged 65 years or over received an estimated",
+      tags$b("35 million"), "prescription items at a cost of",
+      tags$b("£324 million"), "during 2020/21."
     ),
     p(
-      "This represents 7% of the total primary care drug spend for older ",
-      "patients during 2020/21."
+      "This represents 7% of the total primary care drug spend for ",
+      "aged 65 years or over patients during 2020/21."
     ),
     p(
       tags$b(
-        "The estimated average monthly drug cost for older care home patients ",
-        "is around twice that for older non-care home patients who received ",
+        "The estimated average monthly drug cost for aged 65 years or over care home patients ",
+        "is around twice that for aged 65 years or over non-care home patients who received ",
         "prescriptions."
       )
     ),
     p(
-      "We estimate that older care home patients receive around 1.6 times ",
-      "more prescription items and unique medicines per patient month than ",
-      "older non-care home patients who received prescriptions. At around ",
-      "twice the drug cost. These prescribing metrics vary by age, gender and ",
+      "We estimate that aged 65 years or over care home patients receive around 60% ",
+      "more prescription items and unique medicines per patient month at around ",
+      "twice the cost than aged 65 years or over non-care home patients who received ",
+      "prescriptions. These prescribing metrics vary by age, gender and ",
       "geography. The chart below allows you to explore them."
     ),
     nhs_card(
-      heading = "Estimated average prescribing metrics per patient month for older care home and non-care home patients in England by geography, age band or gender (2020/21)",
+      heading = "Estimated average prescribing metrics per patient month for aged 65 years or over care home and non-care home patients in England by geography, age band or gender (2020/21)",
       nhs_grid_2_col(
         nhs_selectInput(
           inputId = ns("breakdown"),
@@ -105,7 +105,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "provided at nursing homes to cater for patients with more complex needs."
     ),
     nhs_card(
-      heading = "Estimated average prescribing metrics per patient month for older nursing home and residential home patients in England (2020/21)",
+      heading = "Estimated average prescribing metrics per patient month for aged 65 or over years nursing home and residential home patients in England (2020/21)",
       nhs_grid_2_col(
         h4("Metric"),
         nhs_grid_2_col(
@@ -132,7 +132,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
     p(
       "Average drug costs and volumes per patient month are higher for care ",
       "home patients than non-care home patients across all age and gender ",
-      "groups except females aged 90+ years, where items per patient is ",
+      "groups except females aged 90 or over years, where items per patient is ",
       "marginally higher among non-care home patients. The greatest ",
       "differences are between younger care home and non-care home patients, ",
       "aged 65 to 69 years."
@@ -145,7 +145,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "Average monthly drug costs are highest for care home patients aged ",
         "65 to 69 years,"
       ),
-      "and over 1.5 times higher than for 90+ year care home patients.",
+      "and over 1.5 times higher than for aged 90 or years over care home patients.",
       tags$b(
         "Drug costs are also higher for male care home patients than females"
       ),
@@ -155,22 +155,22 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "The average number of prescription items, unique medicines and ",
       "percentage of patients on 10 or more medicines are broadly similar by ",
       "age and gender among care home patients, although there is a smaller ",
-      "proportion of care home patients aged 90+ years on 10 more drugs than ",
+      "proportion of care home patients aged 90 years or over on 10 more drugs than ",
       "other age groups. And this group is lowest on all four prescribing ",
       "metrics, with females being lower than males."
     ),
     p("These patterns can be seen in the charts below."),
     nhs_card(
-      heading = "Estimated average prescribing metrics per patient month for older care home and non-care home patients in England by age band and gender (2020/21)",
+      heading = "Estimated average prescribing metrics per patient month for aged 65 years or over care home and non-care home patients in England by age band and gender (2020/21)",
       nhs_selectInput(
         inputId = ns("gender_and_age_band_and_ch_flag_metric"),
         label = "Metric",
         choices = c(
-          "Drug cost" = "SDC_COST_PER_PATIENT_MONTH",
-          "Number of prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
-          "Number of unique medicines" =
+          "Drug cost (PPM)" = "SDC_COST_PER_PATIENT_MONTH",
+          "Number of prescription items (PPM)" = "SDC_ITEMS_PER_PATIENT_MONTH",
+          "Number of unique medicines (PPM)" =
             "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH",
-          "Patients on ten or more unique medicines" =
+          "Patients on ten or more unique medicines (PPM)" =
             "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH"
         ),
         full_width = FALSE
@@ -182,7 +182,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       tags$text(
         class = "highcharts-caption",
         style = "font-size: 9pt",
-        "This excludes << 1% of patients with an unknown gender."
+        "This excludes less than 1% of patients where the gender was unknown."
       ),
       mod_nhs_download_ui(
         id = ns("download_metrics_by_gender_and_age_band_and_ch_flag_chart")
@@ -199,7 +199,9 @@ mod_03_care_home_prescribing_ui <- function(id) {
     tags$ul(
       tags$li(
         "Younger age groups have a much wider spread of costs per month and ",
-        "include more outliers."
+        "include more outliers than older patients. The median drug cost per ",
+        "patient month is around 60% of the mean value for those aged ",
+        "65 to 69 years old."
       ),
       tags$li(
         "Younger care home patients seem to have more prescribing of ",
@@ -210,6 +212,10 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "Younger care home patients typically get a larger quantity than ",
         "older care home patients when prescribed comparable drugs/products."
       )
+    ),
+    p(
+      "The median drug cost per patient month and spread of costs decreases as ",
+      "age increases."
     ),
     nhs_card(
       heading = "Distribution of the estimated average drug cost per patient month for older care home patients in England (2020/21)",
@@ -229,13 +235,13 @@ mod_03_care_home_prescribing_ui <- function(id) {
     p(
       "The London region features the highest average rate per patient month ",
       "on all four prescribing metrics and South West is lowest. There is ",
-      "considerable variation per patient month by STP and local authority ",
+      "considerable variation per patient month by STP/ICS and local authority ",
       "across metrics, with high pockets in several London and some West ",
       "Midland STP's and local authorities."
     ),
     p(
       "Each of the metrics can be explored in the chart and table below by ",
-      "region, local authority and STP."
+      "region, local authority and STP/ICS."
     ),
     nhs_card(
       heading = "Estimated average prescribing metrics per patient month for older care home patients in England by geography (2020/21)",
@@ -243,18 +249,18 @@ mod_03_care_home_prescribing_ui <- function(id) {
         nhs_selectInput(
           inputId = ns("geography"),
           label = "Geography",
-          choices = c("Region", "STP", "Local Authority"),
+          choices = c("Region", "STP/ICS", "Local Authority"),
           full_width = TRUE
         ),
         nhs_selectInput(
           inputId = ns("metric"),
           label = "Metric",
           choices = c(
-            "Drug cost" = "SDC_COST_PER_PATIENT_MONTH",
-            "Number of prescription items" = "SDC_ITEMS_PER_PATIENT_MONTH",
-            "Number of unique medicines" =
+            "Drug cost (PPM)" = "SDC_COST_PER_PATIENT_MONTH",
+            "Number of prescription items (PPM)" = "SDC_ITEMS_PER_PATIENT_MONTH",
+            "Number of unique medicines (PPM)" =
               "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH",
-            "Patients on ten or more unique medicines" =
+            "Patients on ten or more unique medicines (PPM)" =
               "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH"
           ),
           full_width = TRUE
@@ -365,7 +371,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         nhs_grid_2_col(
           p(
             tippy(
-              text = "Drug cost",
+              text = "Drug cost (PPM)",
               tooltip = tooltip_text$cost
             )
           ),
@@ -389,7 +395,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         nhs_grid_2_col(
           p(
             tippy(
-              text = "Number of prescription items",
+              text = "Number of prescription items (PPM)",
               tooltip = tooltip_text$items
             )
           ),
@@ -413,7 +419,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         nhs_grid_2_col(
           p(
             tippy(
-              text = "Number of unique medicines",
+              text = "Number of unique medicines (PPM)",
               tooltip = tooltip_text$unique_medicines
             )
           ),
@@ -437,7 +443,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         nhs_grid_2_col(
           p(
             tippy(
-              text = "Patients on ten or more unique medicines",
+              text = "Patients on ten or more unique medicines (PPM)",
               tooltip = tooltip_text$ten_or_more_unique_medicines
             )
           ),
@@ -462,10 +468,10 @@ mod_03_care_home_prescribing_server <- function(id) {
           class = "highcharts-caption",
           style = "font-size: 9pt",
           switch(input$breakdown,
-            "Demographical - Gender" = "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
+            "Demographical - Gender" = "This excludes less than 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted.",
             "Where the number of patients is less than 5 the data has been redacted."
           ),
-          "The mean average has been used to calculate per patient month ",
+          "The mean average has been used to calculate per patient month (PPM) ",
           "metrics. It should be noted that the distributions are ",
           "positively skewed due to extreme high values for some patients, ",
           "and median values are lower than the mean.",
@@ -513,7 +519,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         nhs_grid_2_col(
           p(
             tippy(
-              text = "Drug cost",
+              text = "Drug cost (PPM)",
               tooltip = tooltip_text$cost
             )
           ),
@@ -543,7 +549,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         nhs_grid_2_col(
           p(
             tippy(
-              text = "Number of prescription items",
+              text = "Number of prescription items (PPM)",
               tooltip = tooltip_text$items
             )
           ),
@@ -573,7 +579,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         nhs_grid_2_col(
           p(
             tippy(
-              text = "Number of unique medicines",
+              text = "Number of unique medicines (PPM)",
               tooltip = tooltip_text$unique_medicines
             )
           ),
@@ -603,7 +609,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         nhs_grid_2_col(
           p(
             tippy(
-              text = "Patients on ten or more unique medicines",
+              text = "Patients on ten or more unique medicines (PPM)",
               tooltip = tooltip_text$ten_or_more_unique_medicines
             )
           ),
@@ -636,7 +642,7 @@ mod_03_care_home_prescribing_server <- function(id) {
           "This excludes 3% of care home patients in both a nursing and ",
           "residential home and 11% of care home patients who we were ",
           "unable to link to the CQC dataset. The mean average has been ",
-          "used to calculate per patient month metrics. It should be noted ",
+          "used to calculate per patient month (PPM) metrics. It should be noted ",
           "that the distributions are positively skewed due to extreme high ",
           "values for some patients, and median values are lower than the ",
           "mean."
@@ -689,22 +695,22 @@ mod_03_care_home_prescribing_server <- function(id) {
     # Manually define the icons
     female_ch <- fa_to_png_to_datauri(
       name = "female",
-      width = 13,
+      width = 10,
       fill = "#003087"
     )
     female_non_ch <- fa_to_png_to_datauri(
       name = "female",
-      width = 13,
+      width = 10,
       fill = "#768692"
     )
     male_ch <- fa_to_png_to_datauri(
       name = "male",
-      width = 10,
+      width = 8,
       fill = "#003087"
     )
     male_non_ch <- fa_to_png_to_datauri(
       name = "male",
-      width = 10,
+      width = 8,
       fill = "#768692"
     )
 
@@ -914,7 +920,7 @@ mod_03_care_home_prescribing_server <- function(id) {
         # Format the table
         plot_map_df_ <- plot_map_df() %>%
           dplyr::arrange(desc(.data[[input$metric]])) %>%
-          dplyr::mutate(RANK = dplyr::row_number()) %>% 
+          dplyr::mutate(RANK = dplyr::row_number()) %>%
           dplyr::select(
             "<span class='nhsuk-body-s'>Rank</span>" :=
               RANK,

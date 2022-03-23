@@ -11,16 +11,16 @@ mod_02_demographics_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h2(
-      "Demographic estimates for",
-      tippy(
-        text = "older care home patients",
-        tooltip = tooltip_text$care_home
-      ),
+      "Demographic estimates for aged 65 years or over care home patients",
+      # tippy(
+      #   text = "older care home patients",
+      #   tooltip = tooltip_text$care_home
+      # ),
       "receiving prescriptions"
     ),
-    p(tags$b("The older care home population fluctuates")),
+    p(tags$b("Care home patients aged 65 years or over population receiving prescriptions fluctuates")),
     p(
-      "We estimate", tags$b("472 thousand patients"), "aged 65+ years ",
+      "We estimate", tags$b("472 thousand patients"), "aged 65 years or over ",
       "received at least one prescription item in a care home during 2020/21 ",
       "and an average of", tags$b("289 thousand"), "in any given month. This ",
       "difference in numbers is explained by two key factors:"
@@ -37,15 +37,29 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "For this reason, when we calculate per patient estimates, we use the ",
-      "monthly average number of care home patients."
+      tippy(
+        text = "Per Patient Month.",
+        tooltip = tooltip_text$ppm
+      )
     ),
     p(
       "The chart shows the prescribing status of each of these 472 thousand ",
-      "patients by month during 2020/21. Around 3 in 10 (31%) received ",
-      "prescriptions in a care home in all 12 months."
+      "patients by month during 2020/21. All 472 thousand patients feature in ",
+      "every month, although their status may change between care home ",
+      "prescribing, non-care home prescribing and no prescribing/deceased. ",
+      "Around 3 in 10 (31%) patients received ",
+      "care home prescribing in all 12 months."
+    ),
+    p(
+      "The chart also shows that the care home patients aged 65 years or over ",
+      "population declines over ",
+      "the year, likely due to the COVID-19 pandemic, starting at 314 thousand ",
+      "in April 2020 and ending with 218 thousand patients in March 2021. ",
+      "It is anticipated that the number of care home patients will increase ",
+      "back up to April 2020 levels post pandemic."
     ),
     nhs_card(
-      heading = "Monthly prescribing status of patients aged 65+ in England who received at least one prescription item in a care home (2020/21)",
+      heading = "Monthly prescribing status of patients aged 65 years or over in England who received at least one prescription item in a care home (2020/21)",
       highcharter::highchartOutput(
         outputId = ns("patients_by_prescribing_status_chart"),
         height = "350px"
@@ -53,9 +67,9 @@ mod_02_demographics_ui <- function(id) {
       tags$text(
         class = "highcharts-caption",
         style = "font-size: 9pt;",
-        '"The "Received no prescribing" group primarily contains deceased ',
-        "patients but also includes some patients who do not recieve ",
-        "prescriptions every month (e.g patients on bimonthly prescribing ",
+        '"The "Received no prescribing/deceased" group primarily contains deceased ',
+        "patients but also includes some patients who do not receive ",
+        "prescriptions every month (for example, patients on bimonthly prescribing ",
         "regimes)."
       ),
       mod_nhs_download_ui(
@@ -65,15 +79,20 @@ mod_02_demographics_ui <- function(id) {
     br(),
     p(
       tags$b(
-        "We estimate two thirds of older care home patients are female and 6 ",
-        "in 10 are aged 85+ years"
+        "We estimate two thirds of care home patients aged 65 years or over ",
+        "are female and 6 in 10 are aged 85 years or over."
       )
     ),
     p(
       "Our estimated monthly average of",
-      tags$b("289 thousand older care home patients"), "receiving ",
-      "prescriptions, represents around", tags$b("5% of patients age 65+"),
+      tags$b("289 thousand aged 65 years or over care home patients"), "receiving ",
+      "prescriptions, represents around", tags$b("5% of patients aged 65 years or over"),
       "years receiving prescription items each month."
+    ),
+    p(
+      "Overall, there are an estimated ", tags$b("472 thousand"), "care home ",
+      "patients in 2020/21, of which ", tags$b("66%"), " are females and ",
+      tags$b("43%"), " were females aged 85 years or over."
     ),
     p(
       "The age and gender profile is broadly comparable to",
@@ -82,11 +101,11 @@ mod_02_demographics_ui <- function(id) {
         url = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/12215carehomeandnoncarehomepopulationsusedinthedeathsinvolvingcovid19inthecaresectorarticleenglandandwales"
       ),
       "The profile is shown in the chart below at an overall level and can be ",
-      "explored by region, local authority and STP (Sustainability and ",
-      "Transformation Plan area)."
+      "explored by region, local authority and Sustainability and ",
+      "Transformation Partnership area (STP)/ Integrated Care System (ICS)."
     ),
     nhs_card(
-      heading = "Age band and gender of estimated older care home patients in England (2020/21)",
+      heading = "Age band and gender of estimated care home patients aged 65 years or over in England (2020/21)",
       nhs_grid_2_col(
         nhs_selectInput(
           inputId = ns("geography"),
@@ -108,7 +127,7 @@ mod_02_demographics_ui <- function(id) {
       tags$text(
         class = "highcharts-caption",
         style = "font-size: 9pt;",
-        "This excludes << 1% of patients with an unknown gender and where the number of patients is less than 5 the data has been redacted."
+        "This excludes less than 1% of patients where the gender was unknown or where statistical disclosure control has been applied."
       ),
       mod_nhs_download_ui(
         id = ns("download_patients_by_geography_and_gender_and_age_band_chart")
@@ -117,42 +136,32 @@ mod_02_demographics_ui <- function(id) {
     br(),
     p(
       tags$b(
-        "Similar proportions of older care home patients live in ",
-        tippy(
-          text = "residential homes",
-          tooltip = tooltip_text$residential_home
-        ),
-        " and ",
-        tippy(
-          text = "nursing homes",
-          tooltip = tooltip_text$nursing_home
-        )
+        "Similar proportions of aged 65 years or over care home patients live in ",
+        "residential homes and nursing homes."
       )
     ),
     p(
-      "We estimate similar proportions of care home patients aged 65+ living ",
-      "in ",
-      tippy(
-        text = "residential homes",
-        tooltip = tooltip_text$residential_home
-      ),
-      " (41%) and ",
-      tippy(
-        text = "nursing homes",
-        tooltip = tooltip_text$nursing_home
-      ),
-      " (45%) on average each month.", "A small percentage (3%) appear in ",
+      "On average each month, we estimate similar proportions of care home ",
+      "patients aged 65 years or over living in residential homes (41%) and ",
+      "nursing homes (45%). A small percentage (3%) appear in ",
       "both settings and there are 11% who we were unable to link to the ",
       enurl(
         text = "CQC dataset",
         url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"
       ),
-      " due to incomplete address information in order to attribute this flag."
+      " in order to attribute to a residential or nursing home, due to incomplete ",
+      "address information. It should be noted that these proportions are not ",
+      "comparable to those reported by NHS Digital in the ",
+      enurl(
+        text = "Adult Social Care Activity and Finance Report, England 2020-21,",
+        url = "https://digital.nhs.uk/data-and-information/publications/statistical/adult-social-care-activity-and-finance-report/2020-21#resources"
+      ),
+      " which considers clients accessing long term support by setting."
     ),
     p(
       tags$b(
-        "There is little variation in numbers of older care home patients by ",
-        "deprivation"
+        "There is little variation in numbers of care home patients aged ",
+        "65 years or over by deprivation."
       )
     ),
     p(
@@ -161,13 +170,13 @@ mod_02_demographics_ui <- function(id) {
         text = "Index of Multiple Deprivation (IMD)",
         url = "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019"
       ),
-      " rank and associated quintile based on the area in which the care home ",
-      "is located. On average, the proportion is very close to 20% in each ",
-      tags$b("IMD quintile,"),
+      " rank and associated quintile based on the area (Lower Layer Super Output ",
+      "Area) in which the care home is located. On average, the proportion is ",
+      "very close to 20% in each ", tags$b("IMD quintile,"),
       " which suggests equal distribution and little variation."
     ),
     nhs_card(
-      heading = "Deprivation quintile of older care home patients in England (2020/21)",
+      heading = "Deprivation quintile of care home patients aged 65 years or over in England (2020/21)",
       highcharter::highchartOutput(
         outputId = ns("patients_by_imd_chart"),
         height = "250px"
@@ -451,12 +460,13 @@ mod_02_demographics_server <- function(id, export_data) {
 
         # Process annotation
         text <- paste(
-          ifelse(input$sub_geography == "Overall", "", "In"),
-          input$sub_geography, "there are an estimated", tags$b(total()),
+          ifelse(input$sub_geography == "Overall", "", "In "),
+          input$sub_geography, ", there are an estimated", tags$b(total()),
           "care home patients in 2020/21, of which",
           tags$b(paste0(percentage_female_patients(), "%")), "are females and",
           tags$b(paste0(percentage_elderly_female_patients(), "%")), "were",
-          "females aged 85 or over."
+          "females aged 85 or over.",
+          sep = ""
         )
 
         # Create the chart

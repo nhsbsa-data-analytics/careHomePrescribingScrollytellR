@@ -155,7 +155,7 @@ Electronic prescribing captures a patient address, and the rate of electronic pr
 
 <br>
 
-While paper prescription forms also have a patient address recorded, this information is not captured during scanning procedures and does not end up in the NHSBSA Data Warehouse. To attribute an address to these forms, we either need to use information from the Patient Demographic Service (PDS), or information from electronic prescription forms. After an address can be attributed to all forms, they can be cleaned and processed together, in preparation for later address matching.
+While paper prescription forms also have a patient address recorded, this information is not captured during scanning procedures and does not end up in the NHSBSA Data Warehouse. To attribute an address to these forms, we either need to use information from the Personal Demographics Service (PDS), or information from electronic prescription forms. After an address can be attributed to all forms, they can be cleaned and processed together, in preparation for later address matching.
 
 <br>
 

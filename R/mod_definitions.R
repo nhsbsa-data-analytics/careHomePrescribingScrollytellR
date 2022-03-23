@@ -11,32 +11,32 @@ mod_definitions_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h1("Definitions"),
-    p(tags$b("Older patients")),
-    p("Patients aged 65+ at the time of prescribing."),
-    p(tags$b("Older care home patients")),
+    # p(tags$b("Nursing home")),
+    # p(
+    #   "A nursing home is a care home where a qualified nurse is provided to ",
+    #   "ensure that the full needs of the person using the service are met."
+    # ),
+    # p(tags$b("Residential home")),
+    # p("A residential is a care home where a qualified nurse is not provided."),
+    p(tags$b("Per Patient Month (PPM)")),
     p(
-      "Patients aged 65+ who received their prescription whilst living in a ",
-      "care home at the time of prescribing."
+      "The Per Patient Month metrics were calculated by summing the total cost, ",
+      "number of items, and number of unique medicines for each patient across ",
+      "the period. This total was then divided by the number of months in the ",
+      "period where the patient was attributed prescribing. For example, ",
+      "if a patient receives 2 prescription items in April, 3 in May, and 4 in ",
+      "June, then their number of items per patient month metric is ",
+      "calculated as total number of items: 9 / number of observations (months): 3",
+      " = 3. The mean of these values is then taken across all patients to ",
+      "give each per patient month metric."
     ),
-    p(tags$b("Older non-care home patients")),
-    p(
-      "Patients aged 65+ who received their prescription whilst not living in ",
-      "a care home at the time of prescribing."
-    ),
-    p(tags$b("Nursing home")),
-    p(
-      "A nursing home is a care home where a qualified nurse is provided to ",
-      "ensure that the full needs of the person using the service are met."
-    ),
-    p(tags$b("Residential home")),
-    p("A residential is a care home where a qualified nurse is not provided."),
     p(tags$b("Drug cost")),
     p(
-      "Calculated as the average total price reimbursed for dispensed drugs ",
-      "per patient month. It relates solely to the cost of the drugs, in the ",
-      "quantity prescribed on a prescription form. It does not include any ",
-      "additional fees or discounts that were paid to the dispensing ",
-      "contractors."
+      "Calculated as the average amount paid for dispensed drugs ",
+      "per patient month. It relates solely to the basic price of the drugs, ",
+      "in the quantity prescribed on a prescription form. ",
+      "It does not include any additional fees or discounts that were paid to ",
+      "the dispensing contractors. Also known as Net Ingredient Cost (NIC)."
     ),
     p(tags$b("Number of prescription items")),
     p(
@@ -51,7 +51,7 @@ mod_definitions_ui <- function(id) {
     p(
       "Calculated as the average number of unique medicines per patient ",
       "month. A unique medicine is defined as a medicine prescribed with the ",
-      "same chemical substance descriptor in BNF Sections 1 to 4 and 6 to 10 ",
+      "same chemical substance descriptor in BNF Chapters 1 to 4 and 6 to 10 ",
       "whether it be different formulations (presentations) or different ",
       "strengths. Medicines with the same chemical substance descriptor would ",
       "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and ",
@@ -62,7 +62,7 @@ mod_definitions_ui <- function(id) {
       "Calculated as the average percentage of patients prescribed ten or ",
       "more unique medicines per month. A unique medicine is defined as a ",
       "medicine prescribed with the same chemical substance descriptor in BNF ",
-      "Sections 1 to 4 and 6 to 10 whether it be different formulations ",
+      "Chapters 1 to 4 and 6 to 10 whether it be different formulations ",
       "(presentations) or different strengths. Medicines with the same ",
       "chemical substance descriptor would be counted as one (single) unique ",
       "product e.g. Warfarin 1mg, 3mg and 5mg tablets."

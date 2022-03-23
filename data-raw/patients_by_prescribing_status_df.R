@@ -36,7 +36,7 @@ patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>%
 patients_by_prescribing_status_db <- patients_by_prescribing_status_db %>%
   tidyr::complete(
     YEAR_MONTH, NHS_NO,
-    fill = list(PRESCRIBING_STATUS = "Received no prescribing")
+    fill = list(PRESCRIBING_STATUS = "Received no prescribing/deceased")
   )
 
 # Aggregate to year month
@@ -51,7 +51,7 @@ patients_by_prescribing_status_df <- patients_by_prescribing_status_db %>%
   mutate(
     PRESCRIBING_STATUS = forcats::fct_relevel(
       PRESCRIBING_STATUS,
-      "Received no prescribing",
+      "Received no prescribing/deceased",
       after = Inf
     )
   )
