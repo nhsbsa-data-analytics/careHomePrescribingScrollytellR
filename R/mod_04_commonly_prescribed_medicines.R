@@ -13,21 +13,20 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
     h2("Commonly prescribed medicines"),
     p(
       tags$b(
-        "The range of medicines prescribed to care home patients aged 65 year or over",
+        "The profile of medicines prescribed to care home patients aged 65 years or over",
         "differs significantly to non-care home patients aged 65 years or over."
       )
     ),
     p(
       "Care home patients are more likely to receive",
-      tags$b("drugs for pain relief"), "than non-care home patients, in terms ",
-      "of number of prescription items and patients receiving them. Whilst",
-      tags$b("nutrition products"), "account for a greater percentage of drug ",
-      "cost."
+      tags$b("drugs for pain relief"), "than non-care home patients. ",
+      "Whilst", tags$b("nutrition products"), "account for a greater ",
+      "percentage of drug cost per patient month."
     ),
     p(
       "The chart below allows you to view and compare the 20 most common ",
       "medicines prescribed to older care home patients and older non-care ",
-      "home patients across three prescribing metrics."
+      "home patients by drug cost and number of prescription itmes per patient month."
     ),
     p(
       "Medicines have been identified using a",
@@ -37,7 +36,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
       )
     ),
     nhs_card(
-      heading = "Most common medicines prescribed to care home patients aged 65 years or over and non-care home patients in England (2020/21)",
+      heading = "Estimated average prescribing metrics per patient month for care home and non-care home patients aged 65 years or over in England by medicine group (2020/21)",
       nhs_grid_3_col(
         nhs_selectInput(
           inputId = ns("bnf"),
@@ -217,36 +216,80 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
 
       tags$text(
         class = "highcharts-caption",
-        tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), "and",
-        tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), "are the most ",
-        "commonly prescribed BNF", paste0(input$bnf, "s"),
-        switch(input$metric,
-          "COST" = "drug cost ",
-          "ITEMS" = "prescription items"
-        ),
-        " in 2020/21, accounting for ",
-        switch(input$metric,
-          "COST" = "£",
-          "ITEMS" = ""
-        ),
-        paste0(top_care_home_df[1, "SDC_PPM_CH"]), " and ",
-        switch(input$metric,
-          "COST" = "£",
-          "ITEMS" = ""
-        ),
-        paste0(top_care_home_df[1, "SDC_PPM_NON_CH"]), " of all ",
-        switch(input$metric,
-          "COST" = "drug cost to",
-          "ITEMS" = "prescription items to"
-        ),
-        " care home patients aged 65 years or over per patient month (PPM). For non-care home patients it is",
-        tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME),
-        switch(input$metric,
-          "COST" = "(£ ",
-          "ITEMS" = "("
-        ),
-        paste0(top_non_care_home_df$SDC_PPM_NON_CH, ")."),
-        sep = ""
+        # Chapter and selected metrics
+        if (input$bnf == "Chapter" & input$metric == "COST") {
+          tags$text(
+            "The highest drug costs per patient month are in the ",
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and",
+            tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " BNF Chapters, ",
+            " among care home patients aged 65 years or over. The prescribing ",
+            "rate are around four times and seven times higher respectively ",
+            "than for non-care home patients. For non-care home patients aged ",
+            "65 years or over the highest drug cost per patient month is in ",
+            "the", tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
+          )
+        } else if (input$bnf == "Chapter" & input$metric == "ITEMS") {
+          tags$text(
+            "For care home patients aged 65 years or over the ",
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " BNF Chapter ",
+            "also represents the highest number of prescription items ",
+            "per patient month. This is followed by the ",
+            tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), ", which has the ",
+            "highest number of items per patient month for non-care homes ",
+            "patients aged 65 years or over."
+          )
+        } else if (input$bnf == "Section" & input$metric == "COST") {
+          tags$text(
+            "The highest drug cost per patient month for care home patients ",
+            "aged 65 years or over is in the ",
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]),
+            " BNF Section. This is followed by ",
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), ", which has the ",
+            "highest drug cost per patient month for non-care home patients."
+          )
+        } else if (input$bnf == "Section" & input$metric == "ITEMS") {
+          tags$text(
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
+            tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " BNF Sections ",
+            "have the highest number of prescription items per patient for care ",
+            "home patients aged 65 years or over. For non-care home patients, ",
+            "the highest number of prescription items per patients is for ",
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
+          )
+        } else if (input$bnf == "Paragraph" & input$metric == "COST") {
+          tags$text(
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
+            tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " have by far ",
+            "the highest drug cost per patient month for care home patients ",
+            "aged 65 years or over. For non-care home patients it is highest in ",
+            "the ", tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), " BNF Paragraph."
+          )
+        } else if (input$bnf == "Paragraph" & input$metric == "ITEMS") {
+          tags$text(
+            "At BNF Paragraph level, ",
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
+            tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " have the highest ",
+            "number of prescription items per patient for care home patients aged ",
+            "65 years or over. For non-care home patients the rate is highest for ",
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
+          )
+        } else if (input$bnf == "Chemical substance" & input$metric == "COST") {
+          tags$text(
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " has by far the ",
+            "highest drug cost per patient month for care home patients aged ",
+            "65 years or over. For non-care home patients it is ",
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
+          )
+        } else {
+          tags$text(
+            "At Chemical Substance level, ",
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
+            tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " have the highest ",
+            "number of prescription items per patient for care home patients ",
+            "aged 65 years or over. For non-care home patients it is ",
+            tags$b(top_non_care_home_df$SUB_BNG_LEVEL_NAME), "(0.34)"
+          )
+        }
       )
     })
   })

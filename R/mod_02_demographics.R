@@ -136,15 +136,15 @@ mod_02_demographics_ui <- function(id) {
     br(),
     p(
       tags$b(
-        "Similar proportions of aged 65 years or over care home patients live in ",
-        "residential homes and nursing homes."
+        "Similar proportions of care home patients aged 65 years or over ",
+        "live in residential homes and nursing homes."
       )
     ),
     p(
       "On average each month, we estimate similar proportions of care home ",
       "patients aged 65 years or over living in residential homes (41%) and ",
       "nursing homes (45%). A small percentage (3%) appear in ",
-      "both settings and there are 11% who we were unable to link to the ",
+      "both settings each month. There are 11% who we were unable to link to the ",
       enurl(
         text = "CQC dataset",
         url = "https://anypoint.mulesoft.com/exchange/portals/care-quality-commission-5/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/"

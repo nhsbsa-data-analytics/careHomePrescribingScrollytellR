@@ -11,7 +11,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h2(
-      "Estimated prescribing patterns for aged 65 years or over care home patients"
+      "Estimated prescribing patterns for care home patients aged 65 years or over"
       # tippy(
       #   text = "older care home patients",
       #   tooltip = tooltip_text$care_home
@@ -24,24 +24,24 @@ mod_03_care_home_prescribing_ui <- function(id) {
     ),
     p(
       "This represents 7% of the total primary care drug spend for ",
-      "aged 65 years or over patients during 2020/21."
+      "patients aged 65 years or over during 2020/21."
     ),
     p(
       tags$b(
-        "The estimated average monthly drug cost for aged 65 years or over care home patients ",
-        "is around twice that for aged 65 years or over non-care home patients who received ",
-        "prescriptions."
+        "The estimated average monthly drug cost for care home patients ",
+        "aged 65 years or over is around twice that for non-care home patients ",
+        "aged 65 years or over who received prescriptions."
       )
     ),
     p(
-      "We estimate that aged 65 years or over care home patients receive around 60% ",
+      "We estimate that care home patients aged 65 years or over receive around 60% ",
       "more prescription items and unique medicines per patient month at around ",
-      "twice the cost than aged 65 years or over non-care home patients who received ",
+      "twice the cost than non-care home patients aged 65 years or over who received ",
       "prescriptions. These prescribing metrics vary by age, gender and ",
       "geography. The chart below allows you to explore them."
     ),
     nhs_card(
-      heading = "Estimated average prescribing metrics per patient month for aged 65 years or over care home and non-care home patients in England by geography, age band or gender (2020/21)",
+      heading = "Estimated average prescribing metrics per patient month for care home and non-care home patients aged 65 years or over in England by geography, age band or gender (2020/21)",
       nhs_grid_2_col(
         nhs_selectInput(
           inputId = ns("breakdown"),
@@ -105,7 +105,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "provided at nursing homes to cater for patients with more complex needs."
     ),
     nhs_card(
-      heading = "Estimated average prescribing metrics per patient month for aged 65 or over years nursing home and residential home patients in England (2020/21)",
+      heading = "Estimated average prescribing metrics per patient month for nursing home and residential home patients aged 65 or over years in England (2020/21)",
       nhs_grid_2_col(
         h4("Metric"),
         nhs_grid_2_col(
@@ -154,14 +154,14 @@ mod_03_care_home_prescribing_ui <- function(id) {
     p(
       "The average number of prescription items, unique medicines and ",
       "percentage of patients on 10 or more medicines are broadly similar by ",
-      "age and gender among care home patients, although there is a smaller ",
-      "proportion of care home patients aged 90 years or over on 10 more drugs than ",
+      "age and gender among care home patients. Although there is a smaller ",
+      "proportion of care home patients aged 90 years or over on 10 or more drugs than ",
       "other age groups. And this group is lowest on all four prescribing ",
       "metrics, with females being lower than males."
     ),
     p("These patterns can be seen in the charts below."),
     nhs_card(
-      heading = "Estimated average prescribing metrics per patient month for aged 65 years or over care home and non-care home patients in England by age band and gender (2020/21)",
+      heading = "Estimated average prescribing metrics per patient month for care home and non-care home patients aged 65 years or over in England by age band and gender (2020/21)",
       nhs_selectInput(
         inputId = ns("gender_and_age_band_and_ch_flag_metric"),
         label = "Metric",
@@ -199,8 +199,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
     tags$ul(
       tags$li(
         "Younger age groups have a much wider spread of costs per month and ",
-        "include more outliers than older patients. The median drug cost per ",
-        "patient month is around 60% of the mean value for those aged ",
+        "include more outliers than older patients. The mean drug cost per ",
+        "patient month is around 60% higher than the median value for those aged ",
         "65 to 69 years old."
       ),
       tags$li(
