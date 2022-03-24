@@ -142,7 +142,7 @@ mod_caveats_server <- function(id) {
           "Patient age was determined using a mixture of patient ",
           "information from prescription forms and ",
           enurl(
-            text = "Personal Demographic Service (PDS)",
+            text = "Personal Demographics Service (PDS)",
             url = "https://digital.nhs.uk/services/demographics "
           ),
           " Further details on ",

@@ -11,14 +11,14 @@ mod_02_demographics_ui <- function(id) {
   ns <- NS(id)
   tagList(
     h2(
-      "Demographic estimates for aged 65 years or over care home patients",
+      "Demographic estimates for care home patients aged 65 years or over receiving prescriptions",
       # tippy(
       #   text = "older care home patients",
       #   tooltip = tooltip_text$care_home
       # ),
       "receiving prescriptions"
     ),
-    p(tags$b("Care home patients aged 65 years or over population receiving prescriptions fluctuates")),
+    p(tags$b("The older care home patients population receiving prescriptions fluctuates")),
     p(
       "We estimate", tags$b("472 thousand patients"), "aged 65 years or over ",
       "received at least one prescription item in a care home during 2020/21 ",
@@ -38,7 +38,7 @@ mod_02_demographics_ui <- function(id) {
     p(
       "For this reason, when we calculate per patient estimates, we use the ",
       tippy(
-        text = "Per Patient Month.",
+        text = "Per Patient Month (PPM).",
         tooltip = tooltip_text$ppm
       )
     ),
@@ -51,7 +51,7 @@ mod_02_demographics_ui <- function(id) {
       "care home prescribing in all 12 months."
     ),
     p(
-      "The chart also shows that the care home patients aged 65 years or over ",
+      "The chart also shows that the older care home ",
       "population declines over ",
       "the year, likely due to the COVID-19 pandemic, starting at 314 thousand ",
       "in April 2020 and ending with 218 thousand patients in March 2021. ",
@@ -85,7 +85,7 @@ mod_02_demographics_ui <- function(id) {
     ),
     p(
       "Our estimated monthly average of",
-      tags$b("289 thousand aged 65 years or over care home patients"), "receiving ",
+      tags$b("289 thousand care home patients aged 65 years or over"), "receiving ",
       "prescriptions, represents around", tags$b("5% of patients aged 65 years or over"),
       "years receiving prescription items each month."
     ),
@@ -461,11 +461,11 @@ mod_02_demographics_server <- function(id, export_data) {
         # Process annotation
         text <- paste(
           ifelse(input$sub_geography == "Overall", "", "In "),
-          input$sub_geography, ", there are an estimated", tags$b(total()),
-          "care home patients in 2020/21, of which",
-          tags$b(paste0(percentage_female_patients(), "%")), "are females and",
-          tags$b(paste0(percentage_elderly_female_patients(), "%")), "were",
-          "females aged 85 or over.",
+          input$sub_geography, ", there are an estimated ", tags$b(total()),
+          " care home patients in 2020/21, of which ",
+          tags$b(paste0(percentage_female_patients(), "%")), " are females and ",
+          tags$b(paste0(percentage_elderly_female_patients(), "%")), " were",
+          " females aged 85 or over.",
           sep = ""
         )
 

@@ -32,7 +32,7 @@ mod_01_intro_ui <- function(id) {
       "2020/21."
     ),
     p(
-      "This accounts for around", tags$b("5%"), "of aged 65 years or over patients",
+      "This accounts for around", tags$b("5%"), "of patients aged 65 or over ",
       # tippy(
       #   text = "older patients",
       #   tooltip = tooltip_text$older
@@ -58,7 +58,7 @@ mod_01_intro_ui <- function(id) {
     ),
     h2(enurl(
       text = "Methodology",
-      url = "https://rpubs.com/nhsbsa-data-analytics/862168"
+      url = "https://rpubs.com/nhsbsa-data-analytics/methodology"
     )),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
@@ -97,7 +97,7 @@ mod_01_intro_ui <- function(id) {
       "care home residents aged 65 years or over ",
       tags$b("receiving prescriptions, "),
       "and are referred to as care home patients. As such the estimates are ",
-      "lower than for aged 65 years or over care home residents in general."
+      "lower than for care home residents aged 65 years or over in general."
     )
   )
 }
