@@ -273,12 +273,13 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             "65 years or over. For non-care home patients the rate is highest for ",
             tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
           )
-        } else if (input$bnf == "Chemical substance" & input$metric == "COST") {
+        } else if (input$bnf == "Chemical Substance" & input$metric == "COST") {
           tags$text(
             tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " has by far the ",
             "highest drug cost per patient month for care home patients aged ",
             "65 years or over. For non-care home patients it is ",
-            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), " at Chemical ",
+            "Substance level."
           )
         } else {
           tags$text(
@@ -287,7 +288,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " have the highest ",
             "number of prescription items per patient for care home patients ",
             "aged 65 years or over. For non-care home patients it is ",
-            tags$b(top_non_care_home_df$SUB_BNG_LEVEL_NAME), "(0.34)"
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), "(0.34)"
           )
         }
       )
