@@ -19,7 +19,7 @@ mod_01_intro_ui <- function(id) {
     p(
       "This is based on experimental data linkage work. We welcome feedback, ",
       "collaboration and refinement of the methodology to see if it can be ",
-      "used in NHSBSA information systems in the future and we can develop ",
+      "used in NHSBSA information systems in the future and how we can develop ",
       "additional analyses."
     ),
     h2("Key Findings"),
