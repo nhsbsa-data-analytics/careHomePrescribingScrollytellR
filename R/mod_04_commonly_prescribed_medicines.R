@@ -21,7 +21,7 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
       "Care home patients are more likely to receive",
       tags$b("drugs for pain relief"), "than non-care home patients. ",
       "Whilst", tags$b("nutrition products"), "account for a greater ",
-      "percentage of drug cost per patient month."
+      "percentage of drug cost."
     ),
     p(
       "The chart below allows you to view and compare the 20 most common ",
