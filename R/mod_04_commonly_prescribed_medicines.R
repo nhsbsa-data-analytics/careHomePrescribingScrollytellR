@@ -26,7 +26,8 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
     p(
       "The chart below allows you to view and compare the 20 most common ",
       "medicines prescribed to older care home patients and older non-care ",
-      "home patients by drug cost and number of prescription itmes per patient month."
+      "home patients by drug cost and number of prescription items per patient ",
+      "month and annually."
     ),
     p(
       "Medicines have been identified using a",
@@ -348,7 +349,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             ),
             " in 2020/21, accounting for ",
             paste0(top_care_home_df[1, "SDC_CH_VALUE"], "%"), " and ",
-            paste0(top_care_home_df[1, "SDC_NON_CH_VALUE"], "%"), " of all ",
+            paste0(top_care_home_df[2, "SDC_CH_VALUE"], "%"), " of all ",
             switch(input$metric,
               "COST_PERC" = "drug cost to",
               "ITEMS_PERC" = "prescription items to"

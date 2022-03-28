@@ -18,7 +18,7 @@ mod_02_demographics_ui <- function(id) {
       # ),
       "receiving prescriptions"
     ),
-    p(tags$b("The older care home patients population receiving prescriptions fluctuates")),
+    p(tags$b("The older care home population receiving prescriptions fluctuates")),
     p(
       "We estimate", tags$b("472 thousand patients"), "aged 65 years or over ",
       "received at least one prescription item in a care home during 2020/21 ",
@@ -54,7 +54,7 @@ mod_02_demographics_ui <- function(id) {
       "The chart also shows that the older care home ",
       "population declines over ",
       "the year, likely due to the COVID-19 pandemic, starting at 314 thousand ",
-      "in April 2020 and ending with 218 thousand patients in March 2021. ",
+      "in April 2020 and ending with 281 thousand patients in March 2021. ",
       "It is anticipated that the number of care home patients will increase ",
       "back up to April 2020 levels post pandemic."
     ),

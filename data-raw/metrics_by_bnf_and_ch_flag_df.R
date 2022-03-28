@@ -79,7 +79,7 @@ metrics_by_bnf_and_ch_flag_perc_db <- metrics_by_bnf_and_ch_flag_perc_db %>%
 
 # Calculate the percentages and drop the overall total column
 metrics_by_bnf_and_ch_flag_perc_db <- metrics_by_bnf_and_ch_flag_perc_db %>%
-  mutate(PCT = TOTAL / OVERALL_TOTAL * 100) %>%
+  mutate(PCT = TOTAL / OVERALL_TOTAL * 100) #%>%
   select(-OVERALL_TOTAL)
 
 # Collect
@@ -118,9 +118,9 @@ metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_df %>%
 # Pivot wider by care home flag
 metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_df %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == "Care home", "CH", "NON_CH")) %>%
-  tidyr::pivot_longer(cols = c(PCT, SDC_PCT)) %>%
+  tidyr::pivot_longer(cols = c(TOTAL, PCT, SDC_PCT)) %>%
   tidyr::pivot_wider(
-    id_cols = BNF_LEVEL:METRIC,
+    id_cols = BNF_LEVEL:CH_FLAG,
     names_from = c(name, CH_FLAG),
     values_from = value,
     values_fill = 0
@@ -138,6 +138,5 @@ metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_df %>%
 
 # Add to data-raw/
 usethis::use_data(metrics_by_bnf_and_ch_flag_perc_df, overwrite = TRUE)
-
 # Disconnect from database
 DBI::dbDisconnect(con)
