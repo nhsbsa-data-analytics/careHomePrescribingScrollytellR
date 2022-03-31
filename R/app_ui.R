@@ -68,7 +68,6 @@ app_ui <- function(request) {
     br(),
     nhs_footer()
   )
-  # test PASSWORD UID
 }
 
 #' Add external Resources to the Application
