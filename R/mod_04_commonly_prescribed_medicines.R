@@ -138,25 +138,70 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
       }
     })
 
+
     # Swap NAs for "c" for data download
     metrics_by_bnf_and_ch_flag_download_df <- reactive({
       req(input$bnf)
       req(input$metric)
       req(input$sort)
 
-      metrics_by_bnf_and_ch_flag_df() %>%
+      metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::mutate(
-          SDC_CH_VALUE = ifelse(
-            test = is.na(SDC_CH_VALUE),
-            yes = "c",
-            no = as.character(SDC_CH_VALUE)
-          ),
-          SDC_NON_CH_VALUE = ifelse(
-            test = is.na(SDC_NON_CH_VALUE),
-            yes = "c",
-            no = as.character(SDC_NON_CH_VALUE)
-          )
+          # SDC_CH_VALUE = ifelse(
+          #   test = is.na(SDC_CH_VALUE),
+          #   yes = "c",
+          #   no = as.character(SDC_CH_VALUE)
+          # ),
+          # SDC_NON_CH_VALUE = ifelse(
+          #   test = is.na(SDC_NON_CH_VALUE),
+          #   yes = "c",
+          #   no = as.character(SDC_NON_CH_VALUE)
+          # ),
+          SDC_CH_VALUE = janitor::round_half_up(SDC_CH_VALUE, 1),
+          SDC_NON_CH_VALUE = janitor::round_half_up(SDC_NON_CH_VALUE, 1)
         )
+
+      if (input$metric == "ITEMS_PERC" | input$metric == "COST_PERC") {
+        metrics_by_bnf_and_ch_flag_df %>%
+          dplyr::select(
+            BNF_LEVEL,
+            SUB_BNF_LEVEL_NAME,
+            METRIC,
+            SDC_CH_VALUE,
+            TOTAL_CH,
+            SDC_NON_CH_VALUE,
+            TOTAL_NON_CH
+          ) %>%
+          dplyr::mutate(
+            TOTAL_CH = round(TOTAL_CH, -1),
+            TOTAL_NON_CH = round(TOTAL_NON_CH, -1)
+          ) %>%
+          dplyr::rename(
+            `BNF` = BNF_LEVEL,
+            `BNF description` = SUB_BNF_LEVEL_NAME,
+            Metric = METRIC,
+            `Statistical disclosure control care home percentage` = SDC_CH_VALUE,
+            `Care home total` = TOTAL_CH,
+            `Statistical disclosure control non care home percentage` = SDC_NON_CH_VALUE,
+            `Non Care home total` = TOTAL_NON_CH
+          )
+      } else {
+        metrics_by_bnf_and_ch_flag_df %>%
+          dplyr::select(
+            BNF_LEVEL,
+            SUB_BNF_LEVEL_NAME,
+            METRIC,
+            SDC_CH_VALUE,
+            SDC_NON_CH_VALUE
+          ) %>%
+          dplyr::rename(
+            `BNF` = BNF_LEVEL,
+            `BNF description` = SUB_BNF_LEVEL_NAME,
+            Metric = METRIC,
+            `Statistical disclosure control care home ppm` = SDC_CH_VALUE,
+            `Statistical disclosure control non care home ppm` = SDC_NON_CH_VALUE,
+          )
+      }
     })
 
     # Add a download button

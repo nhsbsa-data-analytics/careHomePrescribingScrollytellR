@@ -206,6 +206,11 @@ mod_02_demographics_server <- function(id, export_data) {
             yes = "c",
             no = as.character(SDC_TOTAL_PATIENTS)
           )
+        ) %>%
+        dplyr::rename(
+          Month = YEAR_MONTH,
+          `Prescribing status` = PRESCRIBING_STATUS,
+          `Statistical disclosure control total patients` = SDC_TOTAL_PATIENTS
         )
     })
 
@@ -426,7 +431,16 @@ mod_02_demographics_server <- function(id, export_data) {
             no = as.character(SDC_PCT_PATIENTS)
           )
         ) %>%
-        dplyr::select(-c(TOTAL_PATIENTS, PCT_PATIENTS))
+        dplyr::select(-c(TOTAL_PATIENTS, PCT_PATIENTS)) %>%
+        dplyr::rename(
+          Geography = GEOGRAPHY,
+          `Sub geography` = SUB_GEOGRAPHY_CODE,
+          `Sub geography name` = SUB_GEOGRAPHY_NAME,
+          `Age band` = AGE_BAND,
+          Gender = GENDER,
+          `Statistical disclosure control total patients` = SDC_TOTAL_PATIENTS,
+          `Statistical disclosure control patients percentage` = SDC_PCT_PATIENTS
+        )
     })
 
     # Filter out unknown genders for the plot and format
@@ -570,6 +584,11 @@ mod_02_demographics_server <- function(id, export_data) {
           yes = "c",
           no = as.character(SDC_PCT_PATIENTS)
         )
+      ) %>%
+      dplyr::rename(
+        `IMD quintile` = IMD_QUINTILE,
+        `Statistical disclosure control total patients` = SDC_TOTAL_PATIENTS,
+        `Statistical disclosure control patients percentage` = SDC_PCT_PATIENTS
       )
 
     # Add a download button

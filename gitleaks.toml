@@ -30,6 +30,11 @@ title = "gitleaks config"
 #                                                                                Secret
 #
 [[rules]]
+id = "nhsnumber"
+description = "then digit NHS number check"
+regex = '''^\d{10}$'''
+
+[[rules]]
 id = "gitlab-pat"
 description = "GitLab Personal Access Token"
 regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''

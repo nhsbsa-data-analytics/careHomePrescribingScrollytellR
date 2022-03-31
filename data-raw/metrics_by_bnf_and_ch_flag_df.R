@@ -79,8 +79,8 @@ metrics_by_bnf_and_ch_flag_perc_db <- metrics_by_bnf_and_ch_flag_perc_db %>%
 
 # Calculate the percentages and drop the overall total column
 metrics_by_bnf_and_ch_flag_perc_db <- metrics_by_bnf_and_ch_flag_perc_db %>%
-  mutate(PCT = TOTAL / OVERALL_TOTAL * 100) #%>%
-  select(-OVERALL_TOTAL)
+  mutate(PCT = TOTAL / OVERALL_TOTAL * 100) # %>%
+select(-OVERALL_TOTAL)
 
 # Collect
 metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_db %>%

@@ -131,10 +131,12 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
 
 
 metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
-  rename(CH_VALUE = PPM_CH,
-         NON_CH_VALUE = PPM_NON_CH,
-         SDC_CH_VALUE = SDC_PPM_CH,
-         SDC_NON_CH_VALUE = SDC_PPM_NON_CH) %>%
+  rename(
+    CH_VALUE = PPM_CH,
+    NON_CH_VALUE = PPM_NON_CH,
+    SDC_CH_VALUE = SDC_PPM_CH,
+    SDC_NON_CH_VALUE = SDC_PPM_NON_CH
+  ) %>%
   relocate(SUB_BNF_LEVEL_NAME, .after = BNF_LEVEL)
 
 
