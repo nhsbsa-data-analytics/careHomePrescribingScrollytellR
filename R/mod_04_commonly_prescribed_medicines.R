@@ -71,11 +71,6 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         outputId = ns("metrics_by_bnf_and_ch_flag_chart"),
         height = "500px"
       ),
-      # tags$text(
-      #   class = "highcharts-caption",
-      #   style = "font-size: 9pt",
-      #   "Figures are calculated as a patient per month (PPM)."
-      # ),
       mod_nhs_download_ui(
         id = ns("download_metrics_by_bnf_and_ch_flag_chart") # need to update and fix
       )
@@ -124,7 +119,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             METRIC == input$metric
           ) %>%
           dplyr::arrange(desc(.data[[input$sort]])) %>%
-          # head(50) %>%
           dplyr::select(-c(CH_VALUE, NON_CH_VALUE))
       } else {
         careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_df %>%
@@ -133,7 +127,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             METRIC == input$metric
           ) %>%
           dplyr::arrange(desc(.data[[input$sort]])) %>%
-          # head(50) %>%
           dplyr::select(-c(CH_VALUE, NON_CH_VALUE))
       }
     })
@@ -147,16 +140,6 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
 
       metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::mutate(
-          # SDC_CH_VALUE = ifelse(
-          #   test = is.na(SDC_CH_VALUE),
-          #   yes = "c",
-          #   no = as.character(SDC_CH_VALUE)
-          # ),
-          # SDC_NON_CH_VALUE = ifelse(
-          #   test = is.na(SDC_NON_CH_VALUE),
-          #   yes = "c",
-          #   no = as.character(SDC_NON_CH_VALUE)
-          # ),
           SDC_CH_VALUE = janitor::round_half_up(SDC_CH_VALUE, 1),
           SDC_NON_CH_VALUE = janitor::round_half_up(SDC_NON_CH_VALUE, 1)
         )
