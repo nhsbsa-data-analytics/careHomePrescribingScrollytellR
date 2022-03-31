@@ -21,12 +21,13 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
       "Care home patients are more likely to receive",
       tags$b("drugs for pain relief"), "than non-care home patients. ",
       "Whilst", tags$b("nutrition products"), "account for a greater ",
-      "percentage of drug cost per patient month."
+      "percentage of drug cost."
     ),
     p(
       "The chart below allows you to view and compare the 20 most common ",
       "medicines prescribed to older care home patients and older non-care ",
-      "home patients by drug cost and number of prescription itmes per patient month."
+      "home patients by drug cost and number of prescription items per patient ",
+      "month and annually."
     ),
     p(
       "Medicines have been identified using a",
@@ -49,7 +50,9 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
           label = "Metric",
           choices = c(
             "Drug cost (PPM)" = "COST",
-            "Number of prescription items (PPM)" = "ITEMS"
+            "Number of prescription items (PPM)" = "ITEMS",
+            "% of total annual drug cost" = "COST_PERC",
+            "% of total annual number of prescription items" = "ITEMS_PERC"
           ),
           full_width = TRUE
         ),
@@ -57,8 +60,8 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
           inputId = ns("sort"),
           label = "Sort by",
           choices = c(
-            "Care home" = "PPM_CH",
-            "Non-care home" = "PPM_NON_CH"
+            "Care home" = "SDC_CH_VALUE",
+            "Non-care home" = "SDC_NON_CH_VALUE"
           ),
           full_width = TRUE
         )
@@ -68,13 +71,8 @@ mod_04_commonly_prescribed_medicines_ui <- function(id) {
         outputId = ns("metrics_by_bnf_and_ch_flag_chart"),
         height = "500px"
       ),
-      tags$text(
-        class = "highcharts-caption",
-        style = "font-size: 9pt",
-        "Figures are calculated as a patient per month (PPM)."
-      ),
       mod_nhs_download_ui(
-        id = ns("download_metrics_by_bnf_and_ch_flag_chart")
+        id = ns("download_metrics_by_bnf_and_ch_flag_chart") # need to update and fix
       )
     )
   )
@@ -87,21 +85,52 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Filter data to BNF level, metric, and sort (taking the top 50)
+
+    # Need to join PPM data and Percentage data as now we want to show 4 metrics
+
+    # Filter data to BNF level, metric, and sort (taking the top 20 for percentage)
     metrics_by_bnf_and_ch_flag_df <- reactive({
       req(input$bnf)
       req(input$metric)
       req(input$sort)
 
-      careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_df %>%
-        dplyr::filter(
-          BNF_LEVEL == input$bnf,
-          METRIC == input$metric
-        ) %>%
-        dplyr::arrange(desc(.data[[input$sort]])) %>%
-        # head(50) %>%
-        dplyr::select(-c(PPM_CH, PPM_NON_CH))
+      if (input$metric == "ITEMS_PERC") {
+        careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_perc_df %>%
+          dplyr::filter(
+            BNF_LEVEL == input$bnf,
+            METRIC == input$metric
+          ) %>%
+          dplyr::arrange(desc(.data[[input$sort]])) %>%
+          head(20) %>%
+          dplyr::select(-c(CH_VALUE, NON_CH_VALUE))
+      } else if (input$metric == "COST_PERC") {
+        careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_perc_df %>%
+          dplyr::filter(
+            BNF_LEVEL == input$bnf,
+            METRIC == input$metric
+          ) %>%
+          dplyr::arrange(desc(.data[[input$sort]])) %>%
+          head(20) %>%
+          dplyr::select(-c(CH_VALUE, NON_CH_VALUE))
+      } else if (input$metric == "ITEMS") {
+        careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_df %>%
+          dplyr::filter(
+            BNF_LEVEL == input$bnf,
+            METRIC == input$metric
+          ) %>%
+          dplyr::arrange(desc(.data[[input$sort]])) %>%
+          dplyr::select(-c(CH_VALUE, NON_CH_VALUE))
+      } else {
+        careHomePrescribingScrollytellR::metrics_by_bnf_and_ch_flag_df %>%
+          dplyr::filter(
+            BNF_LEVEL == input$bnf,
+            METRIC == input$metric
+          ) %>%
+          dplyr::arrange(desc(.data[[input$sort]])) %>%
+          dplyr::select(-c(CH_VALUE, NON_CH_VALUE))
+      }
     })
+
 
     # Swap NAs for "c" for data download
     metrics_by_bnf_and_ch_flag_download_df <- reactive({
@@ -109,19 +138,53 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
       req(input$metric)
       req(input$sort)
 
-      metrics_by_bnf_and_ch_flag_df() %>%
+      metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df() %>%
         dplyr::mutate(
-          SDC_PPM_CH = ifelse(
-            test = is.na(SDC_PPM_CH),
-            yes = "c",
-            no = as.character(SDC_PPM_CH)
-          ),
-          SDC_PCT_NON_CH = ifelse(
-            test = is.na(SDC_PPM_NON_CH),
-            yes = "c",
-            no = as.character(SDC_PPM_NON_CH)
-          )
+          SDC_CH_VALUE = janitor::round_half_up(SDC_CH_VALUE, 1),
+          SDC_NON_CH_VALUE = janitor::round_half_up(SDC_NON_CH_VALUE, 1)
         )
+
+      if (input$metric == "ITEMS_PERC" | input$metric == "COST_PERC") {
+        metrics_by_bnf_and_ch_flag_df %>%
+          dplyr::select(
+            BNF_LEVEL,
+            SUB_BNF_LEVEL_NAME,
+            METRIC,
+            SDC_CH_VALUE,
+            TOTAL_CH,
+            SDC_NON_CH_VALUE,
+            TOTAL_NON_CH
+          ) %>%
+          dplyr::mutate(
+            TOTAL_CH = round(TOTAL_CH, -1),
+            TOTAL_NON_CH = round(TOTAL_NON_CH, -1)
+          ) %>%
+          dplyr::rename(
+            `BNF` = BNF_LEVEL,
+            `BNF description` = SUB_BNF_LEVEL_NAME,
+            Metric = METRIC,
+            `Statistical disclosure control care home percentage` = SDC_CH_VALUE,
+            `Care home total` = TOTAL_CH,
+            `Statistical disclosure control non care home percentage` = SDC_NON_CH_VALUE,
+            `Non Care home total` = TOTAL_NON_CH
+          )
+      } else {
+        metrics_by_bnf_and_ch_flag_df %>%
+          dplyr::select(
+            BNF_LEVEL,
+            SUB_BNF_LEVEL_NAME,
+            METRIC,
+            SDC_CH_VALUE,
+            SDC_NON_CH_VALUE
+          ) %>%
+          dplyr::rename(
+            `BNF` = BNF_LEVEL,
+            `BNF description` = SUB_BNF_LEVEL_NAME,
+            Metric = METRIC,
+            `Statistical disclosure control care home ppm` = SDC_CH_VALUE,
+            `Statistical disclosure control non care home ppm` = SDC_NON_CH_VALUE,
+          )
+      }
     })
 
     # Add a download button
@@ -137,13 +200,15 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
       req(input$metric)
       req(input$sort)
 
+      # filter data depends on
+
       highcharter::highchart() %>%
         highcharter::hc_add_series(
           data = metrics_by_bnf_and_ch_flag_df(),
           type = "dumbbell",
           highcharter::hcaes(
-            low = SDC_PPM_NON_CH,
-            high = SDC_PPM_CH
+            low = SDC_NON_CH_VALUE,
+            high = SDC_CH_VALUE
           ),
           lowColor = "#425563",
           color = "#425563",
@@ -171,13 +236,15 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         highcharter::hc_yAxis(
           min = 0,
           max = max(
-            max(metrics_by_bnf_and_ch_flag_df()$SDC_PPM_NON_CH, na.rm = TRUE),
-            max(metrics_by_bnf_and_ch_flag_df()$SDC_PPM_CH, na.rm = TRUE)
+            max(metrics_by_bnf_and_ch_flag_df()$SDC_NON_CH_VALUE, na.rm = TRUE),
+            max(metrics_by_bnf_and_ch_flag_df()$SDC_CH_VALUE, na.rm = TRUE)
           ),
           title = list(
             text = switch(input$metric,
               "COST" = "Drug cost (PPM)",
-              "ITEMS" = "Number of prescription items (PPM)"
+              "ITEMS" = "Number of prescription items (PPM)",
+              "COST_PERC" = "% of total annual drug cost",
+              "ITEMS_PERC" = "% of total annual number of prescription items"
             )
           )
         ) %>%
@@ -187,14 +254,18 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
           formatter = htmlwidgets::JS(
             "
             function() {
-
-              outHTML =
-                '<b>' + this.point.SUB_BNF_LEVEL_NAME + '</b> <br>' +
-                'Care home patients aged 65 years or over: ' + '<b>' + Highcharts.numberFormat(this.point.high,1) +  '</b> <br>' +
-                'Non-care home patients aged 65 years or over: ' + '<b>' + Highcharts.numberFormat(this.point.low,1) + '</b>'
-
+              if(this.point.METRIC == 'ITEMS_PERC' | this.point.METRIC == 'COST_PERC'){
+                outHTML =
+                  '<b>' + this.point.SUB_BNF_LEVEL_NAME + '</b> <br>' +
+                  'Care home patients aged 65 years or over: ' + '<b>' + Highcharts.numberFormat(this.point.high,1) +  '% </b> <br>' +
+                  'Non-care home patients aged 65 years or over: ' + '<b>' + Highcharts.numberFormat(this.point.low,1) + '% </b>'
+              }else{
+                outHTML =
+                  '<b>' + this.point.SUB_BNF_LEVEL_NAME + '</b> <br>' +
+                  'Care home patients aged 65 years or over: ' + '<b>' + Highcharts.numberFormat(this.point.high,1) +  '</b> <br>' +
+                  'Non-care home patients aged 65 years or over: ' + '<b>' + Highcharts.numberFormat(this.point.low,1) + '</b>'
+              }
               return(outHTML)
-
             }
             "
           )
@@ -207,55 +278,59 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
       req(input$metric)
 
       top_care_home_df <- metrics_by_bnf_and_ch_flag_df() %>%
-        dplyr::arrange(desc(SDC_PPM_CH)) %>%
+        dplyr::arrange(desc(SDC_CH_VALUE)) %>%
         head(2)
 
       top_non_care_home_df <- metrics_by_bnf_and_ch_flag_df() %>%
-        dplyr::arrange(desc(SDC_PPM_NON_CH)) %>%
+        dplyr::arrange(desc(SDC_NON_CH_VALUE)) %>%
         head(1)
 
       tags$text(
         class = "highcharts-caption",
         # Chapter and selected metrics
         if (input$bnf == "Chapter" & input$metric == "COST") {
-          tags$text(
+          HTML(paste(
             "The highest drug costs per patient month are in the ",
-            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and",
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
             tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " BNF Chapters, ",
             " among care home patients aged 65 years or over. The prescribing ",
-            "rate are around four times and seven times higher respectively ",
+            "rates are around four times and seven times higher respectively ",
             "than for non-care home patients. For non-care home patients aged ",
             "65 years or over the highest drug cost per patient month is in ",
-            "the", tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
-          )
+            "the ", tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), ".",
+            sep = ""
+          ))
         } else if (input$bnf == "Chapter" & input$metric == "ITEMS") {
-          tags$text(
+          HTML(paste(
             "For care home patients aged 65 years or over the ",
             tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " BNF Chapter ",
             "also represents the highest number of prescription items ",
             "per patient month. This is followed by the ",
             tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), ", which has the ",
             "highest number of items per patient month for non-care homes ",
-            "patients aged 65 years or over."
-          )
+            "patients aged 65 years or over.",
+            sep = ""
+          ))
         } else if (input$bnf == "Section" & input$metric == "COST") {
-          tags$text(
+          HTML(paste(
             "The highest drug cost per patient month for care home patients ",
             "aged 65 years or over is in the ",
             tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]),
             " BNF Section. This is followed by ",
             tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), ", which has the ",
-            "highest drug cost per patient month for non-care home patients."
-          )
+            "highest drug cost per patient month for non-care home patients.",
+            sep = ""
+          ))
         } else if (input$bnf == "Section" & input$metric == "ITEMS") {
-          tags$text(
+          HTML(paste(
             tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
             tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " BNF Sections ",
             "have the highest number of prescription items per patient for care ",
             "home patients aged 65 years or over. For non-care home patients, ",
             "the highest number of prescription items per patients is for ",
-            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
-          )
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), ".",
+            sep = ""
+          ))
         } else if (input$bnf == "Paragraph" & input$metric == "COST") {
           tags$text(
             tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
@@ -265,14 +340,15 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             "the ", tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), " BNF Paragraph."
           )
         } else if (input$bnf == "Paragraph" & input$metric == "ITEMS") {
-          tags$text(
+          HTML(paste(
             "At BNF Paragraph level, ",
             tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
             tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), " have the highest ",
             "number of prescription items per patient for care home patients aged ",
             "65 years or over. For non-care home patients the rate is highest for ",
-            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME)
-          )
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), ".",
+            sep = ""
+          ))
         } else if (input$bnf == "Chemical Substance" & input$metric == "COST") {
           tags$text(
             tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " has by far the ",
@@ -281,7 +357,7 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), " at Chemical ",
             "Substance level."
           )
-        } else {
+        } else if (input$bnf == "Chemical Substance" & input$metric == "ITEMS") {
           tags$text(
             "At Chemical Substance level, ",
             tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), " and ",
@@ -289,6 +365,26 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             "number of prescription items per patient for care home patients ",
             "aged 65 years or over. For non-care home patients it is ",
             tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME), "(0.34)"
+          )
+        } else {
+          tags$text(
+            tags$b(top_care_home_df[1, "SUB_BNF_LEVEL_NAME"]), "and",
+            tags$b(top_care_home_df[2, "SUB_BNF_LEVEL_NAME"]), "are the most ",
+            "commonly prescribed BNF", paste0(input$bnf, "s"), " by percentage of ",
+            switch(input$metric,
+              "COST_PERC" = "drug cost ",
+              "ITEMS_PERC" = "prescription items"
+            ),
+            " in 2020/21, accounting for ",
+            paste0(top_care_home_df[1, "SDC_CH_VALUE"], "%"), " and ",
+            paste0(top_care_home_df[2, "SDC_CH_VALUE"], "%"), " of all ",
+            switch(input$metric,
+              "COST_PERC" = "drug cost to",
+              "ITEMS_PERC" = "prescription items to"
+            ),
+            " older care home patients. For non-care home patients it is",
+            tags$b(top_non_care_home_df$SUB_BNF_LEVEL_NAME),
+            paste0("(", top_non_care_home_df$SDC_NON_CH_VALUE, "%).")
           )
         }
       )

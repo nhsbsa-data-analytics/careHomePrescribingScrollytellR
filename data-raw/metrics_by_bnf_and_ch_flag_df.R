@@ -4,7 +4,7 @@ library(dbplyr)
 devtools::load_all()
 
 # Set up connection to DALP
-con <- nhsbsaR::con_nhsbsa(database = "DALP")
+con <- nhsbsaR::con_nhsbsa(database = "DALP") # strange as they don't work anymore....
 
 # Create a lazy table from the item level base table
 fact_db <- con %>%
@@ -37,19 +37,19 @@ for (bnf_name in names(careHomePrescribingScrollytellR::bnfs)) {
   if (bnf_name == "Chapter") {
     # On the first iteration initialise the table
 
-    metrics_by_bnf_and_ch_flag_db <- tmp_db
+    metrics_by_bnf_and_ch_flag_perc_db <- tmp_db
   } else {
     # Union results to initialised table
 
-    metrics_by_bnf_and_ch_flag_db <- union_all(
-      x = metrics_by_bnf_and_ch_flag_db,
+    metrics_by_bnf_and_ch_flag_perc_db <- union_all(
+      x = metrics_by_bnf_and_ch_flag_perc_db,
       y = tmp_db
     )
   }
 }
 
 # Pivot the data longer
-metrics_by_bnf_and_ch_flag_db <- metrics_by_bnf_and_ch_flag_db %>%
+metrics_by_bnf_and_ch_flag_perc_db <- metrics_by_bnf_and_ch_flag_perc_db %>%
   tidyr::pivot_longer(
     cols = starts_with("TOTAL_"),
     names_to = "METRIC",
@@ -58,7 +58,7 @@ metrics_by_bnf_and_ch_flag_db <- metrics_by_bnf_and_ch_flag_db %>%
   )
 
 # Join on the totals
-metrics_by_bnf_and_ch_flag_db <- metrics_by_bnf_and_ch_flag_db %>%
+metrics_by_bnf_and_ch_flag_perc_db <- metrics_by_bnf_and_ch_flag_perc_db %>%
   inner_join(
     y = fact_db %>%
       group_by(CH_FLAG) %>%
@@ -78,16 +78,16 @@ metrics_by_bnf_and_ch_flag_db <- metrics_by_bnf_and_ch_flag_db %>%
   )
 
 # Calculate the percentages and drop the overall total column
-metrics_by_bnf_and_ch_flag_db <- metrics_by_bnf_and_ch_flag_db %>%
-  mutate(PCT = TOTAL / OVERALL_TOTAL * 100) %>%
-  select(-OVERALL_TOTAL)
+metrics_by_bnf_and_ch_flag_perc_db <- metrics_by_bnf_and_ch_flag_perc_db %>%
+  mutate(PCT = TOTAL / OVERALL_TOTAL * 100) # %>%
+select(-OVERALL_TOTAL)
 
 # Collect
-metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_db %>%
+metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_db %>%
   collect()
 
 # Get all the possible combinations
-metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
+metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_df %>%
   tidyr::complete(
     # Only BNF names that already exist
     tidyr::nesting(BNF_LEVEL, SUB_BNF_LEVEL_NAME),
@@ -101,7 +101,7 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
   )
 
 # Apply SDC to the metrics based on the total patients
-metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
+metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_df %>%
   group_by(BNF_LEVEL, SUB_BNF_LEVEL_NAME, CH_FLAG) %>%
   mutate(
     SDC = max(ifelse(METRIC == "PATIENTS" & TOTAL %in% c(1, 2, 3, 4), 1, 0))
@@ -116,18 +116,27 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
   select(-SDC)
 
 # Pivot wider by care home flag
-metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
+metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_df %>%
   mutate(CH_FLAG = ifelse(CH_FLAG == "Care home", "CH", "NON_CH")) %>%
-  tidyr::pivot_longer(cols = c(PCT, SDC_PCT)) %>%
+  tidyr::pivot_longer(cols = c(TOTAL, PCT, SDC_PCT)) %>%
   tidyr::pivot_wider(
-    id_cols = BNF_LEVEL:METRIC,
+    id_cols = BNF_LEVEL:CH_FLAG,
     names_from = c(name, CH_FLAG),
     values_from = value,
     values_fill = 0
   )
 
-# Add to data-raw/
-usethis::use_data(metrics_by_bnf_and_ch_flag_df, overwrite = TRUE)
+metrics_by_bnf_and_ch_flag_perc_df <- metrics_by_bnf_and_ch_flag_perc_df %>%
+  mutate(METRIC = recode(METRIC, "COST" = "COST_PERC", "ITEMS" = "ITEMS_PERC")) %>%
+  rename(
+    CH_VALUE = PCT_CH,
+    SDC_CH_VALUE = SDC_PCT_CH,
+    NON_CH_VALUE = PCT_NON_CH,
+    SDC_NON_CH_VALUE = SDC_PCT_NON_CH
+  ) %>%
+  relocate(SDC_CH_VALUE, .after = NON_CH_VALUE) # later this requires to slice to max 20
 
+# Add to data-raw/
+usethis::use_data(metrics_by_bnf_and_ch_flag_perc_df, overwrite = TRUE)
 # Disconnect from database
 DBI::dbDisconnect(con)

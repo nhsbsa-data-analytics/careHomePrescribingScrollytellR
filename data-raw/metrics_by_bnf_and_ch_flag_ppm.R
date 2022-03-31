@@ -121,13 +121,23 @@ metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
     values_from = VALUE
   ) %>%
   rename(
-    PPM_CH = `Care home`,
-    PPM_NON_CH = `Non-care home`
+    CH_VALUE = `Care home`,
+    NON_CH_VALUE = `Non-care home`
   ) %>%
   mutate(
-    SDC_PPM_CH = janitor::round_half_up(PPM_CH, 2),
-    SDC_PPM_NON_CH = janitor::round_half_up(PPM_NON_CH, 2)
+    SDC_CH_VALUE = janitor::round_half_up(CH_VALUE, 2),
+    SDC_NON_CH_VALUE = janitor::round_half_up(NON_CH_VALUE, 2)
   )
+
+
+metrics_by_bnf_and_ch_flag_df <- metrics_by_bnf_and_ch_flag_df %>%
+  rename(
+    CH_VALUE = PPM_CH,
+    NON_CH_VALUE = PPM_NON_CH,
+    SDC_CH_VALUE = SDC_PPM_CH,
+    SDC_NON_CH_VALUE = SDC_PPM_NON_CH
+  ) %>%
+  relocate(SUB_BNF_LEVEL_NAME, .after = BNF_LEVEL)
 
 
 # Use this

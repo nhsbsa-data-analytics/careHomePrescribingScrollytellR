@@ -669,6 +669,14 @@ mod_03_care_home_prescribing_server <- function(id) {
     metrics_by_gender_and_age_band_and_ch_flag_download_df <- reactive({
       req(input$gender_and_age_band_and_ch_flag_metric)
 
+
+      nice_metric_name <- switch(input$gender_and_age_band_and_ch_flag_metric,
+        "SDC_COST_PER_PATIENT_MONTH" = "Drug cost ppm",
+        "SDC_ITEMS_PER_PATIENT_MONTH" = "Number of prescription items ppm",
+        "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" = "Number of unique medicines ppm",
+        "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" =
+          "Patients on ten or more unique medicines ppm"
+      )
       metrics_by_gender_and_age_band_and_ch_flag_df_() %>%
         dplyr::mutate(
           "{input$gender_and_age_band_and_ch_flag_metric}" := ifelse(
@@ -677,11 +685,17 @@ mod_03_care_home_prescribing_server <- function(id) {
             no = as.character(.data[[input$gender_and_age_band_and_ch_flag_metric]])
           )
         ) %>%
+        dplyr::rename(
+          Gender = GENDER,
+          `Age band` = AGE_BAND,
+          `Care home flag` = CH_FLAG,
+          {{ nice_metric_name }} := input$gender_and_age_band_and_ch_flag_metric
+        ) %>%
         dplyr::select(
-          GENDER,
-          AGE_BAND,
-          CH_FLAG,
-          .data[[input$gender_and_age_band_and_ch_flag_metric]]
+          Gender,
+          `Age band`,
+          `Care home flag`,
+          {{ nice_metric_name }}
         )
     })
 
@@ -957,6 +971,14 @@ mod_03_care_home_prescribing_server <- function(id) {
       req(input$geography)
       req(input$metric)
 
+      nice_metric_name <- switch(input$metric,
+        "SDC_COST_PER_PATIENT_MONTH" = "Drug cost ppm",
+        "SDC_ITEMS_PER_PATIENT_MONTH" = "Number of prescription items ppm",
+        "SDC_UNIQUE_MEDICINES_PER_PATIENT_MONTH" = "Number of unique medicines ppm",
+        "SDC_PCT_PATIENTS_TEN_OR_MORE_PER_PATIENT_MONTH" =
+          "Patients on ten or more unique medicines ppm"
+      )
+
       plot_map_df() %>%
         dplyr::mutate(
           "{input$metric}" := ifelse(
@@ -965,7 +987,13 @@ mod_03_care_home_prescribing_server <- function(id) {
             no = as.character(.data[[input$metric]])
           )
         ) %>%
-        dplyr::select(-TOTAL_PATIENTS)
+        dplyr::select(-TOTAL_PATIENTS) %>%
+        dplyr::rename(
+          Geography = GEOGRAPHY,
+          `Sub geography name` = SUB_GEOGRAPHY_NAME,
+          `Sub geography code` = SUB_GEOGRAPHY_CODE,
+          {{ nice_metric_name }} := input$metric
+        )
     })
 
     # Add a download button

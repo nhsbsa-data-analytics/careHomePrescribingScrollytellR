@@ -30,6 +30,18 @@ title = "gitleaks config"
 #                                                                                Secret
 #
 [[rules]]
+id = "nhsnumber"
+description = "ten digit NHS number check"
+regex = '''^\d{10}$'''
+
+
+[[rules]]
+id = "OracleDB"
+description = "anything contains UID,PWD, USERNAME, PASSWORD "
+regex = '''uid|UID|Uid|PWD|pwd|Pwd|PASSWORD|password|Password'''
+
+
+[[rules]]
 id = "gitlab-pat"
 description = "GitLab Personal Access Token"
 regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''
@@ -531,13 +543,6 @@ id = "typeform-api-token"
 description = "Typeform API token"
 regex = '''(?i)(typeform[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}(tfp_[a-z0-9\-_\.=]{59})'''
 secretGroup = 3
-
-[[rules]]
-id = "generic-api-key"
-description = "Generic API Key"
-regex = '''(?i)((key|api[^Version]|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
-entropy = 3.7
-secretGroup = 4
 
 
 [allowlist]
