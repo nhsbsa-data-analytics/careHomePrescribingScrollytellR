@@ -11,7 +11,7 @@ geography_db <- con %>%
 
 # Create a lazy table from the postcode data table
 postcode_db <- con %>%
-  tbl(from = in_schema("DIM", sql("ONS_POSTCODE_DATA_DIM@dwcpb")))
+  tbl(from = in_schema("DIM", sql("ONS_POSTCODE_DATA_DIM")))
 
 # Create a lazy table for IMD data
 imd_db <- con %>%
