@@ -31,7 +31,7 @@ if (exists_dalp_eps_payload) {
 
 # Create a lazy table from SCD2 payload message table
 eps_payload_messages_db <- con_dalp %>%
-  tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@dwcpb")))
+  tbl(from = in_schema("SCD2", sql("SCD2_ETP_DY_PAYLOAD_MSG_DATA@DWCP.WORLD")))
 
 # Create the single line address and subset columns
 eps_payload_messages_db <- eps_payload_messages_db %>%
