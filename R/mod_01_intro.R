@@ -33,16 +33,8 @@ mod_01_intro_ui <- function(id) {
     ),
     p(
       "This accounts for around", tags$b("5%"), "of patients aged 65 or over ",
-      # tippy(
-      #   text = "older patients",
-      #   tooltip = tooltip_text$older
-      # ),
       "receiving prescription items each month and", tags$b("7%"), "of the ",
       "total primary care drug spend for aged 65 years or over patients",
-      # tippy(
-      #   text = "older patients",
-      #   tooltip = tooltip_text$older
-      # ),
       "during 2020/21."
     ),
     p(
