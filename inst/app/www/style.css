@@ -33,3 +33,16 @@ and prevent them fading in / out) */
 .tippy-backdrop {
   background-color: #f0f4f5;
 }
+
+/* Tweak CSS for navpanel to make it sticky when scrolling page */
+.col-sm-2 {
+  position: -webkit-sticky; /* Safari */
+  position:sticky;
+  left:0;
+  top:0;
+}
+@media (max-width:800px){
+    .col-sm-2 {
+      position:inherit;
+}
+}

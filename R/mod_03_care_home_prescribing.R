@@ -12,10 +12,6 @@ mod_03_care_home_prescribing_ui <- function(id) {
   tagList(
     h2(
       "Estimated prescribing patterns for care home patients aged 65 years or over"
-      # tippy(
-      #   text = "older care home patients",
-      #   tooltip = tooltip_text$care_home
-      # )
     ),
     p(
       "Care home patients aged 65 years or over received an estimated",
