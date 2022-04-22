@@ -61,14 +61,15 @@ app_ui <- function(request) {
           tabPanel(
             title = "Caveats",
             mod_caveats_ui("caveats_ui_1")
-          ),
-          tags$script(" $(document).ready(function () {
-         $('#maincontent a[data-toggle=\"tab\"]').on('click', function (e) {
-          window.scrollTo(0, 0)
-               });
-               });")
-        )
-      )
+          )
+      ),
+       tags$script(" $(document).ready(function () {
+      $('#maincontent a[data-toggle=\"tab\"]').on('click', function (e) {
+         window.scrollTo(0, 0)
+            });
+            });"
+         )
+       )
     ),
     br(),
     nhs_footer()
