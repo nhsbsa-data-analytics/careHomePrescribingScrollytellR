@@ -62,14 +62,13 @@ app_ui <- function(request) {
             title = "Caveats",
             mod_caveats_ui("caveats_ui_1")
           )
-      ),
-       tags$script(" $(document).ready(function () {
+        ),
+        tags$script(" $(document).ready(function () {
       $('#maincontent a[data-toggle=\"tab\"]').on('click', function (e) {
          window.scrollTo(0, 0)
             });
-            });"
-         )
-       )
+            });")
+      )
     ),
     br(),
     nhs_footer()
@@ -93,7 +92,7 @@ golem_add_external_resources <- function() {
     favicon(),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "careHomePrescribingScrollytellR"
+      app_title = "Estimated prescribing patterns for care home patients aged 65 years or over"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
