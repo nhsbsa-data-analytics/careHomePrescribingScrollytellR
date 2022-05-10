@@ -27,7 +27,7 @@ mod_05_final_thoughts_ui <- function(id) {
       "We welcome your views and input on the ",
       enurl(
         text = "methodology ",
-        url = "https://rpubs.com/nhsbsa-data-analytics/methodology"
+        url = "https://rpubs.com/nhsbsa-data-analytics/address-matching-methodology"
       ),
       "and ",
       enurl(
