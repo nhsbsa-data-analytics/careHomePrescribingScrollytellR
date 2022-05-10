@@ -74,9 +74,9 @@ my_colour_kable <- function(table_name){
 
 <br>
 
-This R-notebook describes the workflow and methodology that enabled primary care prescription forms from the 2020/21 Financial Year for English residents, to be labelled as being for an older patient in a care home or otherwise. An older patient is defined as aged 65 or above at the time of prescribing.
+This R-notebook describes the workflow and methodology that enabled primary care prescribing for older care home residents, aged 65 or above, to be identified for the financial year 2020/21 in England. This is the first time that this has been possible for English prescribing data
 
-Key to this process, is matching patient address details against a comprehensive list of addresses with a care home identifier. The Ordnance Survey AddressBase product is used to do this, supplemented with CQC data. Aside from address matching, other key features of patient records were used to identify care home address locations. These were the number of older patients receiving prescribing from the same address in a month during the 2020/21 Financial Year, and whether certain keywords were contained within the patient address text. 
+Key to this process is matching patient address details, as described on electronic and paper prescription forms and held in Personal Demographic Service (PDS) data, against a comprehensive list of addresses with a care home identifier. The Ordnance Survey AddressBase product is used to do this, supplemented with Care Quality Commission (CQC) data. Aside from address matching, other key features derived from patient information were used to identify care home address locations. These were the number of older patients receiving prescribing from the same address in a month during the 2020/21 Financial Year, and whether certain keywords were contained within the patient address text. 
 
 <br>
 
@@ -84,7 +84,7 @@ Key to this process, is matching patient address details against a comprehensive
 
 <br>
 
-The workflow creates a single flat table with a flag to signify which prescription forms were believed to be for an older patient living in a care home. The workflow and methodology can be summarised by the following:
+The workflow creates a single flat table with a flag to signify which prescription forms, and thereby which prescription items, were believed to be for an older patient living in a care home. The workflow and methodology can be summarised by the following:
 
 <br>
 
@@ -147,7 +147,7 @@ The NHSBSA is the most comprehensive source of data relating to NHS prescription
 
 <br>
 
-Electronic prescribing captures a patient address, and the rate of electronic prescribing has increased year on year. Overall, electronic prescribing accounted for around 85% of prescribing in the 2020/21 financial year. In the context of patients aged 65 or above, electronic prescribing accounted for around 89% of prescribing in the 2020/21 financial year. This meant we readily had addresses available for the majority of prescription forms. 
+Electronic prescribing captures a patient's address, and the rate of electronic prescribing has increased year on year. Overall, electronic prescribing accounted for around 85% of prescribing in the 2020/21 financial year. In the context of patients aged 65 or above, electronic prescribing accounted for around 89% of prescribing in the 2020/21 financial year. This meant we readily had addresses available for the majority of prescription forms. 
 
 <br>
 
@@ -155,7 +155,7 @@ Electronic prescribing captures a patient address, and the rate of electronic pr
 
 <br>
 
-While paper prescription forms also have a patient address recorded, this information is not captured during scanning procedures and does not end up in the NHSBSA Data Warehouse. To attribute an address to these forms, we either need to use information from the Personal Demographics Service (PDS), or information from electronic prescription forms. After an address can be attributed to all forms, they can be cleaned and processed together, in preparation for later address matching.
+While paper prescription forms also have a patient address recorded, this information is not captured during scanning procedures. To attribute an address to these forms, we either need to use information from PDS, or information from electronic prescription forms. After an address can be attributed to all forms, they can be cleaned and processed together, in preparation for later address matching.
 
 <br>
 
@@ -163,11 +163,11 @@ While paper prescription forms also have a patient address recorded, this inform
 
 <br>
 
-PDS is the national electronic database of NHS patient demographic data, including information such as name, address and date of birth linked to each NHS number.  NHSBSA receives data from PDS monthly to supplement patient information for all NHS numbers identified from the processed NHS prescription data.
+PDS is the national electronic database of NHS patient demographic data, including information such as name, address and date of birth linked to each NHS number.  NHSBSA receives data from PDS monthly to supplement patient information for all NHS numbers identified from the processed NHS prescription data. more information about PDS can be found here: https://digital.nhs.uk/services/demographics
 
-Within the NHSBSA Data Warehouse, each monthly response file from PDS is retained in a staging area prior to ETL processes being applied, to prepare the data to be available for analysis. This response data enables us to track the patient information related to a NHS number across each of the request/response cycles.
+Within the NHSBSA Data Warehouse, each monthly response file from PDS is retained in a staging area prior to ETL processes being applied, to prepare the data to be available for analysis. This response data enables us to track the patient information related to an NHS number across each of the request/response cycles.
 
-There is a notable lag, largely unavoidable for paper prescribing, in the time between a prescription being issued to a patient and the prescription data being available within the NHSBSA Data Warehouse. This time lag is extended when requesting data from PDS, as requests are only made once a patient can be identified in the processed prescription data. An example of this timeline is described below:
+There is a notable lag, largely unavoidable for paper prescribing, in the time between a prescription being issued to a patient and the prescription data being available within the NHSBSA Data Warehouse. This time lag is extended when requesting data from PDS, as requests are only made once a patient can be identified in the processed prescription data. An example of this timeline is:
 
 <br>
 
@@ -267,14 +267,14 @@ table %>%
 
 <br>
 
-The end result, is now being able to attribute an address to the vast majority of paper forms which initially did not have an address recorded. For the 2020/21 Financial Year, patient addresses could be allocated for 99.7% of paper prescription forms where the patient’s NHS number could be identified, and the patient was aged 65+. 
+The end result is now being able to attribute an address to the vast majority of paper forms which initially did not have an address recorded. For the 2020/21 Financial Year, patient addresses could be allocated for 99.7% of paper prescription forms where the patient’s NHS number could be identified, and the patient was aged 65+. 
 
 The code for the complex process is shown below. 
 
 <br>
 
-````
-```{r}`r''`
+
+```{r, eval=FALSE}
 library(dplyr)
 library(dbplyr)
 
@@ -703,7 +703,6 @@ fact_db %>%
 # Disconnect from database
 DBI::dbDisconnect(con_dalp)
 ```
-````
 
 <br>
 
@@ -711,24 +710,18 @@ DBI::dbDisconnect(con_dalp)
 
 <br>
 
-After PDS and ETP data is used to attribute an address to paper prescription forms, this could then be combined with the electronic prescribing data. Each of these data were first joined back to the prescription FACT table, which is a prescription item-level base table in the NHSBSA Data Warehouse. This was so filters and exclusions could be uniformly applied. 
-
-The prescription item-level FACT table includes data relating to each prescription item, including patient identifiers and age calculated at the time of prescribing.
-
-The data at this point was aggregated to a prescription form-level, rather than item-level, as patient information is consistent across a prescription form and item information could be retrieved at a later point using the Prescription Form ID. 
-
-After joining to this item-level FACT table the following filters were applied:
+After PDS and ETP data is used to attribute an address to paper prescription forms, this could then be combined with the electronic prescribing data. Additional information was sourced from the Data Warehouse for this combined data, such as what items a patient received and a patient's age at the time of prescribing. The data at this point was aggregated at a prescription-form level. A set of filters were then applied to the data, which were:
 
 <br>
 
 ```{r, echo=FALSE}
 table <- data.frame(
   Filter = c(1:5),
-  Description = c('Only prescription forms for patients with an NHS number aged 65 or over.',
+  Description = c('Only prescription forms for patients with an NHS number aged 65 or over at the time of prescribing.',
                   'Only prescription forms within the 2020/21 Financial Year.',
                   'Only prescriptions based on drugs that were reimbursed by the NHSBSA.',
-                  'Not including prescription forms with a known non-english address.',
-                  'Not including items not dispensed, disallowed and returned for clarification.')
+                  'Only prescription forms with a known English postcode.',
+                  'Not including items not dispensed, disallowed or returned for clarification.')
 )
 
 my_kable(table)
@@ -776,11 +769,11 @@ my_kable(table)
 
 <br>
 
-The following code was used within this function. As mentioned in the introduction, this code was configured to work with an Oracle database. Different databases may require different commands to be used. This function is contained with the NHSBSA `{addressMatchR}` package, developed as a result of this initiative.
+The following code was used within this function. As mentioned in the introduction, this code was configured to work with an Oracle database. Different databases may require different commands to be used. This function is contained within the NHSBSA `{addressMatchR}` package, developed for this initiative.
 
 <br>
 
-```{r, eval=F, attr.source='.numberLines'}
+```{r}
 #' Tidy a postcode
 #'
 #' Tidy a postcode so it is ready for joining.
@@ -827,7 +820,7 @@ my_kable(table)
 
 <br>
 
-A seperate function was created to carry out the above cleaning steps.
+A separate function was created to carry out the above cleaning steps.
 This function is also contained with the NHSBSA `{addressMatchR}` package.
 
 <br>
@@ -873,9 +866,7 @@ tidy_single_line_address <- function(df, col, remove_postcode = FALSE) {
 
 <br>
 
-The runtime of the later address matching methodology can be quite long when applied to a large number of records. This is due to the methodology using the Jaro-Winkler algorithm extensively. As 100 records each with the same exact address would receive the same matching outcome, only one record from this group would need to be matched. The same result would then apply to all such records. As said, the address cleaning helped group the patient addresses into as few groups as possible. 
-
-By grouping the cleaned address records, the 257M forms each with an address, could be condensed into around 8M distinct address-level records. An arbitrary ID was attributed to each record to aid the later processing of the data. This combined and cleaned set of patient prescription forms was now ready to be address matched against a list of different (or 'look up') addresses. This was to flag which records were related to prescribing from a care home. The Ordnance Survey AddressBase Product was used to do this, as it has a care home identifier within its building classification type field. 
+By grouping the cleaned address records, the 257M forms each with an address, could be condensed into around 8M distinct address-level records. An arbitrary ID was attributed to each record to aid the later processing of the data. This combined and cleaned set of patient prescription forms was now ready to be address  matched against the Ordnance Survey AddressBase product by their building classification type.”
 
 <br>
 <br>
@@ -907,7 +898,7 @@ my_kable(table)
 
 <br>
 
-The property classifications within AB were crucial to the matching methodology. These classifications described different levels of property detail. Examples of 'Primary', 'Secondary' and 'Tertiary' property classifications are given below. The corresponding property classification code is described beside the the property classification descriptions. As can be seen, the Tertiary classification haas the most detailed property classification descriptions and codes.
+The property classifications within AB were crucial to the matching methodology. These classifications described different levels of property detail. Examples of 'Primary', 'Secondary' and 'Tertiary' property classifications are given below. The corresponding property classification code is described beside the property classification descriptions. As can be seen, the Tertiary classification has the most detailed property classification descriptions and codes.
 
 <br>
 
@@ -966,7 +957,7 @@ my_kable(table)
 
 <br>
 
-As a result, only AB addresses were used for matching if they appeared within a postcode where a care home was present.
+As a result, only AB addresses were used for matching if they appeared within a postcode where a care home was present, according to the tertiary classification.
 
 <br>
 
@@ -974,7 +965,7 @@ As a result, only AB addresses were used for matching if they appeared within a 
 
 <br>
 
-AB Plus is released every 6 weeks. The epoch closest to the end of the analysis time period was chosen, which was March 15th 2021. AB products are in state of continual refinement and address information validation, meaning the epoch closest to the end of the analysis time-period was the most up to date. Aside from the release date, the following filters were also applied to the AB Plus data:
+AB Plus is released every 6 weeks. The closest release to the end of the analysis time period was chosen, which was 15th March 2021. The following filters were also applied to the AB Plus data:
 
 <br>
 
@@ -1415,8 +1406,7 @@ While AB Plus was the foundation for the matching process, it was decided to bol
 
 <br>
 
-````
-```{r, echo=F}`r''`
+```{r, eval=FALSE}
 library(dplyr)
 
 # Connections and Existing Table check
@@ -1525,7 +1515,6 @@ con %>%
 # Disconnect connection to database
 DBI::dbDisconnect(con)
 ```
-````
 
 <br>
 
@@ -1557,14 +1546,13 @@ As all addresses were required for postcodes where there was a care home, AB inf
 
 <br>
 
-These various SLA could then be stacked, ready for later matching, each accompanied by their UPRN or CQC-ID. While all care home information was distinct at this point, non-care home information still had a few exceptions, where two UPRN might share the same postcode and address. Non-care home data was processed so that every postcode-address combination was distinct. This prevented  with a handful of UPRN dropped as a result. Properties now had up to four SLA variations if they were a care home, and up to three if they were not a care home. An arbitrary unique identifier was generated to distinguish the SLA variations within a single property. 
+These various SLA could then be stacked, ready for later matching, each accompanied by their UPRN or CQC-ID. While all care home information was distinct at this point, non-care home information still had a few exceptions, where two UPRN might share the same postcode and address. Non-care home data was processed so that every postcode-address combination was distinct. Properties now had up to four SLA variations if they were a care home, and up to three if they were not a care home. An arbitrary unique identifier was generated to distinguish the SLA variations within a single property. 
 
 As can be seen, the script to stack the Ab and CQC data, uses the functions `tidy_postcode`, `tidy_single_line_address`, `calc_addresssbase_plus_dpa_single_line_address` and `calc_addresssbase_plus_geo_single_line_address` from the `{addressMatchR}` package, along with the `oracle_merge_strings` function from the `{nhsbsaR}` package. 
 
 <br>
 
-````
-```{r}`r'''`
+```{r, eval=FALSE}
 library(dplyr)
 library(dbplyr)
 
@@ -1754,7 +1742,6 @@ addressbase_plus_cqc_db %>%
 # Disconnect from database
 DBI::dbDisconnect(con)
 ```
-````
 
 <br>
 
@@ -1766,7 +1753,7 @@ There are two functions from the `{nhbsaR}` package, called `connect_nhsbsa` and
 
 <br>
 
-The following fllow chart summarises the workflow and methodology up until this point, namely all of the data processing and preparation before any matching has taken place.
+The following flow chart summarises the workflow and methodology up until this point, namely all of the data processing and preparation before any matching has taken place.
 
 <br>
 
@@ -1832,7 +1819,7 @@ my_kable(table)
 
 <br>
 
-Each cleaned patient address record was matched against each cleaned AB-CQC record that shared the same postcode. When these two strings exactly matched, this was classified as an Exact Match. Of address records matched to a care home, around 9% were an Exact Match. Exact matches had two benefits:
+Each cleaned patient address record was matched against each cleaned AB-CQC record that shared the same postcode. When these two strings exactly matched, this was classified as an Exact Match. Of address records matched to a care home, around 24% were an Exact Match. Exact matches had two benefits:
 
 <br>
 
@@ -1967,7 +1954,7 @@ add %>%
        borderColor = "black"
        ) %>% 
   hc_legend(enabled = F) %>% 
-  hc_xAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_xAxis(title = list(text = "Look-up Address (AB-CQC)")) %>% 
   hc_yAxis(title = list(text = "Primary Address (Patient)")) %>% 
   hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
   hc_legend(enabled = F) %>% 
@@ -2020,7 +2007,7 @@ add %>%
        borderColor = "black"
        ) %>% 
   hc_legend(enabled = F) %>% 
-  hc_xAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_xAxis(title = list(text = "Look-up Address (AB-CQC)")) %>% 
   hc_yAxis(title = list(text = "Primary Address (Patient)")) %>% 
   hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
   hc_legend(enabled = F) %>% 
@@ -2039,7 +2026,7 @@ A final point to note is that the decision to attribute a score of 4 or 0 to num
 
 <br>
 
-Character tokens were likewise only matched against character tokens. If '34 KING ROAD SOMERTON'’ was matched against '33 CORNER SHOP KINGS ROAD SOMEPLACE', then 'KINGS', 'ROAD' and 'SOMERTON' would each be matched against the 5 tokens, 'CORNER', 'SHOP', 'KING', 'ROAD' and 'SOMEPLACE'. The scoring and logic or character token matches was as follows:
+Character tokens were likewise only matched against character tokens. If '34 KING ROAD SOMERTON'’ was matched against '33 CORNER SHOP KINGS ROAD SOMEPLACE', then 'KINGS', 'ROAD' and 'SOMERTON' would each be matched against the 5 tokens, 'CORNER', 'SHOP', 'KING', 'ROAD' and 'SOMEPLACE'. The scoring and logic of character token matches was as follows:
 
 <br>
 
@@ -2122,7 +2109,7 @@ add %>%
        borderColor = "black"
        ) %>% 
   hc_legend(enabled = F) %>% 
-  hc_yAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_yAxis(title = list(text = "Look-up Address (AB-CQC)")) %>% 
   hc_xAxis(title = list(text = "Primary Address (Patient)")) %>% 
   hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
   hc_legend(enabled = F) %>% 
@@ -2167,7 +2154,7 @@ add %>%
        borderColor = "black"
        ) %>% 
   hc_legend(enabled = F) %>% 
-  hc_xAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_xAxis(title = list(text = "Look-up Address (AB-CQC)")) %>% 
   hc_yAxis(title = list(text = "Primary Address (Patient)")) %>% 
   hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
   hc_legend(enabled = F) %>% 
@@ -2212,7 +2199,7 @@ add %>%
        borderColor = "black"
        ) %>% 
   hc_legend(enabled = F) %>% 
-  hc_xAxis(title = list(text = "Loook-up Address (AB-CQC)")) %>% 
+  hc_xAxis(title = list(text = "Look-up Address (AB-CQC)")) %>% 
   hc_yAxis(title = list(text = "Primary Address (Patient)")) %>% 
   hc_add_theme(hc_theme(chart = list(style = list(fontFamily = 'Arial', fontWeight = 'bold')))) %>% 
   hc_legend(enabled = F) %>% 
@@ -2443,7 +2430,7 @@ calc_match_addresses <- function(
 
 <br>
 
-When using this function, there will be instances where multiple look-up addresses have the same top score for a JW match. Each of these joint top scoring matches will be retained. These can then be dealt with by the user, depending on the use case. Finally, three simple pre-processing steps must be carried out on *both* the list of primary and look-up addresses before the function is performed. These are described below:
+When using this function, there will be instances where multiple look-up addresses have the same top score for a JW match. Each of these joint top scoring matches will be retained. These can then be dealt with by the user, depending on the use case. Finally, three simple pre-processing steps must be carried out on **both** the list of primary and look-up addresses before the function is performed. These are described below:
 
 <br>
 
@@ -2469,7 +2456,7 @@ kable(table, align = "l", escape = F) %>%
 
 <br>
 
-Some simple rules were applied to resolve instances where there were several AB-CQC addresses with a joint top match score. These rules need to be considered in the context of the analysis, which required determining a care home flag, rather than identifying specific properties or care homes.
+Some simple rules were applied to resolve instances where there were several AB-CQC addresses with a joint top match score. These rules need to be considered in the context of the analysis, which required determining if a patient was resident within a care home, rather than identifying specific care homes or properties.
 
 <br>
 
@@ -2478,7 +2465,7 @@ table <- data.frame(
   Rule = c(1:3),
   Description = c(
     'If all joint top matches were care homes, a care home classification was given, knowing that the various SLA related to the same UPRN or property.',
-    'If one of more of the joint top matches were care homes, while one or more of the joint top matches was also for a non-care home, then a non-care home classification was given.',
+    'If one or more of the joint top matches were care homes, while one or more of the joint top matches was also for a non-care home, then a non-care home classification was given.',
     'If all joint top matches were non-care homes, then a non-care home classification was given.'
     ),
   check.names = F
@@ -2489,7 +2476,7 @@ my_kable(table)
 
 <br>
 
-The second of these rules was to err on the side of caution regarding labelling a patient address record as a care home, as the address record still had the possibility of being labelled as such through later steps. After resolving these drawed scores, every patient address record at a postcode where there is a care home would either be Exact matched or JW matched to a single AB-CQC address record. A proportion of those would have a care home flag. Patient address records at a postcode without a care home had not yet been considered. 
+The second of these rules was to err on the side of caution regarding labelling a patient address record as a care home, as the address record still had the possibility of being labelled as such through later steps. After resolving joint-top scores, every patient address record at a postcode where there is a care home would either be Exact matched or JW matched to a single AB-CQC address record. A proportion of those would have a care home flag. Patient address records at a postcode without a care home had not yet been considered. 
 
 <br>
 
@@ -2527,7 +2514,7 @@ The Exact matches and JW matches were supplemented by two extra steps that helpe
 table <- data.frame(
   Step = c(1,2),
   Description = c(
-    "The number of patients aged 65 or above at an address receiving prescriptions per month within the 2020/21 Financial Year. This was caalled as a 'Patient Count' match",
+    "The number of patients aged 65 or above at an address receiving prescriptions per month within the 2020/21 Financial Year. This was called a 'Patient Count' match",
     "The presence of keywords within the patient address record string, or a 'Keyword' match"
     )
   )
@@ -2591,7 +2578,7 @@ This rule was not applied to patient address records at a postcode where there w
 
 <br>
 
-Keyword inclusion terms were offset by keyword exclusion terms, to filter edge-cases that, for example, while having ‘CARE HOME’ in the name were not actually care homes. For a patient address record to be classified as a care home using keywords, it had to meet the following criteria:
+Keyword inclusion terms were combined with keyword exclusion terms to filter out edge-cases. For example, where an address might have ‘CARE HOME’ in its name but not actually be a care home. For a patient address record to be classified as a care home using keywords, it had to meet the following criteria:
 
 <br>
 
@@ -2599,8 +2586,8 @@ Keyword inclusion terms were offset by keyword exclusion terms, to filter edge-c
 table <- data.frame(
   Criteria = c(1:3),
   Description = c(
-    'The patient address record had at that point had to be matched to a non-care home, either from an Exact Match, JW Match, or Patient Count. Or alternatively, the patient address record had a postcode without a care home.',
-    'In contrast to the Patient Count match, the Keyword smatch was applied to all addresses, irrespective of their postcode.',
+    'The patient address record at that point had to be matched to a non-care home, either from an Exact Match, JW Match, or Patient Count. Or alternatively, the patient address record had a postcode without a care home.',
+    'In contrast to the Patient Count match, the Keyword match was applied to all addresses, irrespective of their postcode.',
     'If the patient address record had a ‘keyword inclusion’ term and not a ‘keyword exclusion’ term, then the address record was classified as being a care home.'
     )
   )
@@ -2654,7 +2641,7 @@ For example, ‘THE CHILDRENS CARE HOME HOSPITAL’ would not be classified as a
 
 <br>
 
-After applying the keyword exclusion terms within the Keyword match, it was also decided to apply a similar, albeit far smaller, set of keyword exclusion terms to the Exact matches, JW matches and Patient Count matches that were classified as a care home. These instances were mostly due to errors within AB Plus, where ‘THE GREEN PARK CARAVAN SITE’ was mistakenly classified as a care home. The only global keyword exclusion term not associated with an error in AB Plus care home classification, was ‘CHILDREN’, as the analysis was only interested in elderly prescribing. These global keyword exclusion terms were:
+After applying the keyword exclusion terms within the Keyword match, it was also decided to apply a similar, albeit far smaller, set of keyword exclusion terms to the Exact matches, JW matches and Patient Count matches that were classified as a care home. These instances were mostly due to errors within AB Plus, for example where ‘THE GREEN PARK CARAVAN SITE’ was mistakenly classified as a care home. The NHSBSA periodically informs Ordnance Survey of such errors. The only global keyword exclusion term not associated with an error in AB Plus care home classification, was ‘CHILDREN’, as the analysis was only interested in elderly prescribing. These global keyword exclusion terms were:
 
 <br>
 
@@ -2749,7 +2736,7 @@ highchart() %>%
 
 <br>
 
-The hierarchy and ordering of matches, along with number of patient address records categorised by each step, is summarised by the following table. Percentages are presented in the context of each patient address record type, depending whether or not they were at a postcode where there was a care home:
+The hierarchy and ordering of matches, along with number of patient address records categorised by each step, is summarised by the following table. Percentages are presented in the context of each patient address record type, depending on whether or not they were at a postcode where there was a care home:
 
 <br>
 
@@ -2758,7 +2745,7 @@ table <- data.frame(
   'Step Order' = c(1:5),
   'Step Name' = c('Exact Match', 'JW Match', 'Patient Count', 'Keyword Search', 'Non-Match'),
   'Address Records at a Postcode with a care home' = c('35k  (13.1%)', '231 k  (85.6%)', '1k  (0.2%)', '3k  (1.1%)', '0.01k  (0.0%)'),
-  'Address Records at a Postcode without a care home' = c('', '', '', '3k  (0.04%)', '7,796k  (99.96%)'),
+  'Address Records at a Postcode without a care home' = c('N/A', 'N/A', 'N/A', '3k  (0.04%)', '7,796k  (99.96%)'),
   check.names = F
   )
 
@@ -2774,8 +2761,7 @@ The entire code, starting from creating a distinct list of primary and look up a
 
 <br>
 
-````
-```{r}`r''`
+```{r, eval=FALSE}
 library(dplyr)
 library(dbplyr)
 
@@ -2941,7 +2927,6 @@ patient_address_match_db %>%
 # Disconnect from database
 DBI::dbDisconnect(con)
 ```
-````
 
 <br>
 <br>
@@ -2955,12 +2940,11 @@ DBI::dbDisconnect(con)
 
 <br>
 
-Matching was performed on a distinct patient address record-level. All the prescription forms associated with each record were then classified as being a care home prescription form or otherwise. This utilised the output from the previous code block. These prescription form IDs were re-joined to the item-level FACT to create a final results table. Note, this FACT table was for all items irrespective of postcode, meaning it described all prescriptions for patients aged 65 or over in the 2020/21 Financial Year. The same filters were applied to the item-level FACT table as described in the *Processing Patient Address Information* section towards the beginning of the report. The following code block describes how this final results table was generated:
+Matching was performed on a distinct patient address record-level. All the prescription forms associated with each record were then classified as being a care home prescription form or otherwise. The corresponding patient information for these forms was then gained from the Data Warehouse. The same filters were then applied as described in section 2.4, 'Processing Patient Address Information'. The following code block describes how this final results table was generated:
 
 <br>
 
-````
-```{r}`''`
+```{r, eval=FALSE}
 library(dplyr)
 library(dbplyr)
 
@@ -3135,7 +3119,6 @@ item_fact_db %>%
 # Disconnect from database
 DBI::dbDisconnect(con)
 ```
-````
 
 <br>
 
@@ -3143,7 +3126,7 @@ DBI::dbDisconnect(con)
 
 <br>
 
-With this final item-level results table, calculations could easily be made such as the number of monthly care home items versus the number of monthly non-care home items, for patients aged 65 or over in England in the 2020/21 Financial Year. It was sufficient for this analysis to determine whether an address was *a* care home, as opposed to a specific care home. All results aggregations were therefore only grouped by a care home or non-care home binary classification, rather than grouped at a speific care home-level. 
+With this final item-level results table, calculations could easily be made such as the number of monthly care home items versus the number of monthly non-care home items, for patients aged 65 or over in England in the 2020/21 Financial Year. It was sufficient for this analysis to determine whether an address was **a** care home, as opposed to a specific care home. All results aggregations were therefore only grouped by a care home or non-care home binary classification, rather than grouped at a specific care home-level. 
 
 <br>
 
@@ -3151,7 +3134,7 @@ With this final item-level results table, calculations could easily be made such
 
 <br>
 
-The output from this analysis is on a prescription form-level. This means we are only aware of a patient address, and therefore if they were a care home resident at that moment in time, for the months in which they received prescribing. The below high-level summary shows that around 314k patients received a prescription in a care home in April 2020. Naturally, the number of care home residents may be greater than this, as they may not have received prescribing in that month. Looking at the same cohort in May 2020, it can be seen that some of that group either didn't receive prescribing, or received a non-care home prescribing in the following month. Some of these instances of moving into non-prescribing will be where a care home patient has passed away. The important thing to note, is that the output is ultimately within the context of patient address details at the time of prescribing, for the months in which they received prescribing.
+The output from this analysis is on a prescription form-level. This means we are only aware of a patient address, and therefore if they were a care home resident at that moment in time, for the months in which they received prescribing. The below high-level summary shows that around 314k patients received a prescription in a care home in April 2020. Naturally, the number of care home residents may be greater than this, as they may not have received prescribing in that month. Looking at the same cohort in May 2020, some of that group either didn't receive prescribing or received non-care home prescribing in the following month. Some of these instances of moving into non-prescribing will be where a care home patient has passed away. The important thing to note, is that the output is ultimately within the context of patient address details at the time of prescribing, for the months in which they received prescribing.
 
 <br>
 
@@ -3185,7 +3168,7 @@ highchart() %>%
 
 <br>
 
-The analysis used both AB and CQC address lookup data. AB data was essential in order to identify records that were *not* a care home, in addition to identifying records that were a care home. CQC data was used to supplement the care home address information found in AB. This was to provide additional SLA for care homes within AB, and to provide entirely new SLA for care homes outside AB. There were many instances where the care home address information in AB and CQC were identical. The below table shows the proportion of exact matches made by AB addresses, CQC addresses, and addresses that appeared in both AB and CQC. Around 70% of the prescription forms exact matched to a care home address used a CQC address. Around 60% of the prescription forms JW matched to a care home address used a CQC address.
+The analysis used both AB and CQC address lookup data. AB data was essential in order to identify records that were **not** a care home, in addition to identifying records that were a care home. CQC data was used to supplement the care home address information found in AB. This was to provide additional SLA for care homes within AB, and to provide entirely new SLA for care homes outside AB. There were many instances where the care home address information in AB and CQC were identical. The below table shows the proportion of exact matches made by AB addresses, CQC addresses, and addresses that appeared in both AB and CQC. Around 70% of the prescription forms exact matched to a care home address used a CQC address. Around 60% of the prescription forms JW matched to a care home address used a CQC address.
 
 <br>
 
@@ -3202,7 +3185,7 @@ my_kable(table)
 
 <br>
 
-Supplementing AB with CQC care home address information proved to be effective. It enabled exact matches not possible otherwise, and offered more possibilities of providing the best match for JW matches.
+Supplementing AB with CQC care home address information proved to be effective. It enabled exact matches not possible otherwise and offered more possibilities of providing the best match for JW matches.
 
 <br>
 
@@ -3210,11 +3193,11 @@ Supplementing AB with CQC care home address information proved to be effective. 
 
 <br>
 
-Result validation was carried out to to gauge the accuracy of each matching step, and in turn of the whole process. This validation was carried out manually, which meant cross-referencing matched addresses against patient addresses to see if they were the same. Internet searches were used to do this. In rare cases, even after multiple internet searches, it was still difficult to discern with absolute certainty whether an address was a care home, as opposed to a elderly residential facility of some kind. The key criteria used to define whether an address was a care home, was whether it had care staff present on a 24/7 basis.
+Result validation was carried out to to gauge the accuracy of each matching step, and in turn of the whole process. This validation was carried out manually, which meant cross-referencing matched addresses against patient addresses to see if they were the same. Internet searches were used to do this. In rare cases, even after multiple internet searches, it was still difficult to discern with absolute certainty whether an address was a care home, as opposed to an elderly residential facility of some kind. The key criteria used to define whether an address was a care home, was whether it had care staff present on a 24/7 basis.
 
 When a patient address record was considered to be care home due a Keyword or Patient Count match, there was not a matched record to cross-reference the patient address record against. In such instances the patient address record alone was used as a basis for an internet search.
 
-Also, non-care home matches were not considered for validation. The accuracy of matches between non-care home address records to other non-care home address records had no bearing on the final output to the initiative. If a non-care home patient address was correctly categorised as a non-care home, this was sufficient. Trying to reduce the number of false-negatives was a goal of later steps within th methodlogy (i.e. care homes not picked up as being care homes), which the additional Keyword and Patient Count matching steps aimed to offset. In addition, Exact matches were also not validated. Being an Exact match, the building classification of the matched AB-CQC record was taken as being correct. It was therefore care home matches for the three matching types (aside from exact matches), that were considered for validation.
+Also, non-care home matches were not considered for validation. The accuracy of matches between non-care home address records to other non-care home address records had no bearing on the final output to the initiative. If a non-care home patient address was correctly categorised as a non-care home, this was sufficient. Trying to reduce the number of false-negatives was a goal of later steps within the methodlogy (i.e. care homes not picked up as being care homes), which the additional Keyword and Patient Count matching steps aimed to offset. In addition, Exact matches were also not validated. Being an Exact match, the building classification of the matched AB-CQC record was taken as being correct. It was therefore care home matches for the three matching types (aside from exact matches), that were considered for validation.
 
 The validation was scored on a prescription form-level, rather than address record-level. This meant the accuracy was weighted, depending on how many prescription forms were associated with an address record. This accuracy only took true-positives and false-positives into account. The below table displays the accuracy of 500 prescription forms against three dummy address records
 
@@ -3296,7 +3279,7 @@ table <- data.frame(
   'Records' = 2000,
   'Total Forms' = 222681,
   'Incorrect Forms' = 567,
-  'Corrrect Forms' = 222114,
+  'Correct Forms' = 222114,
   'Accuracy' = '99.7%',
   check.names = F
   )
@@ -3307,7 +3290,7 @@ kable(table, format.args = list(big.mark = ",", align = c("lrrrr"))) %>%
 
 <br>
 
-If a user plans on using the `calc_match_addresses` function for an address matching task, there are a few things things they must consider. Firstly, they must consider how to deal with joint top scoring matches. Secondly, they must decide whether or not to use a JW match score threshold to filter the results. Both of these depend upon the use case. An example of using this threshold, would be to remove any matches with a score less than 0.5. Indeed, this threshold was used in a previous non-care home NHSBSA initiative. In this instance, due to the already very high accuracy rate, a threshold was unnecessary. In addition, there was also no convenient overall match score threshold (different to the token-level JW threshold) that would retain correct matches whilst removing the bulk of incorrect matches. This relationship is displayed in the below chart.
+If a user plans on using the `calc_match_addresses` function for an address matching task, there are a few things they must consider. Firstly, they must consider how to deal with joint top scoring matches. Secondly, they must decide whether or not to use a JW match score threshold to filter the results. Both of these depend upon the use case. An example of using this threshold, would be to remove any matches with a score less than 0.5. Indeed, this threshold was used in a previous non-care home NHSBSA initiative. In this instance, due to the already very high accuracy rate, a threshold was unnecessary. In addition, there was also no convenient overall match score threshold (different to the token-level JW threshold) that would retain correct matches whilst removing the bulk of incorrect matches. This relationship is displayed in the below chart.
 
 <br>
 
@@ -3344,7 +3327,7 @@ highchart() %>%
 
 As can be seen, many incorrect matches, despite not being correct, still had a decent match score. A lower threshold of 0.3 could be applied within future care home analyses, although this would be to sacrifice a number of correct matches, in order for minimal gains on what is already a very high form-level accuracy. Overall, this step had the highest accuracy of the three matching steps.
 
-It is *highly* recommended that future use cases of the `calc_match_addresses` function manual validate a sample of matched results. This is to see what (if any) threshold should be applied, and to explore the relationship between this threshold value and their matched record count.
+It is **highly** recommended that future use cases of the `calc_match_addresses` function manual validate a sample of matched results. This is to see what (if any) threshold should be applied, and to explore the relationship between this threshold value and their matched record count.
 
 <br>
 
@@ -3352,7 +3335,7 @@ It is *highly* recommended that future use cases of the `calc_match_addresses` f
 
 <br>
 
-Only 325 Patient-Count matches were performed. This equated about two thirds of the total number of Patient Count matches (483). How many prescription forms this represented and how many of those were correctly matched are described in the below table:
+Only 325 Patient-Count match vallidations were performed. This equated about two thirds of the total number of Patient Count matches (483). How many prescription forms this represented and how many of those were correctly matched are described in the below table:
 
 <br>
 
@@ -3362,7 +3345,7 @@ table <- data.frame(
   'Records' = 325,
   'Total Forms' = 176891,
   'Incorrect Forms' = 5925,
-  'Corrrect Forms' = 170939,
+  'Correct Forms' = 170939,
   'Accuracy' = '96.6%',
   check.names = F
   )
@@ -3373,13 +3356,17 @@ kable(table, format.args = list(big.mark = ",", align = c("lrrrrr"))) %>%
 
 <br>
 
-As mentioned earlier, Patient Count matches were applied at postcodes with a care home, with five or more patients aged 65 or above receiving a prescription in a given month. Through initial exploratory analysis the threshold of five patients was seen to be effective, and considerably more accurate than four patients. Future iterations of the logic and code could of course develop this. With this five patient threshold in place, a feature was generated to describe *how many* months within the year had five or more patients aged 65 or above receiving a prescription. After validation, this parameter was changed (from the default value of one) to see if/how changes in this parameter affected the accuracy and form count. This relationship is displayed in the below chart:
+As mentioned earlier, Patient Count matches were applied at postcodes with a care home, with five or more patients aged 65 or above receiving a prescription in a given month. Through initial exploratory analysis the threshold of five patients was seen to be effective, and considerably more accurate than four patients. Future iterations of the logic and code could of course develop this. With this five patient threshold in place, a feature was generated to describe **how many** months within the year had five or more patients aged 65 or above receiving a prescription. After validation, this parameter was changed (from the default value of one) to see if/how changes in this parameter affected the accuracy and form count. This relationship is displayed in the below chart:
 
 <br>
 
 ```{r, echo=FALSE}
 accuracy_vec = c(96.64, 96.67, 96.94, 97.30, 97.26, 97.21, 97.17, 97.14, 97.19, 97.15, 97.05, 97.21)
 forms_vec = c(176891, 174168, 171148, 167602, 164623, 161688, 159906, 158147, 155166, 152631, 138756, 131187)
+
+hcoptslang = getOption("highcharter.lang")
+hcoptslang$thousandsSep = ","
+options(highcharter.lang = hcoptslang)
 
 highchart() %>%
   hc_xAxis(categories = c(1:12), title = list(text = "Number of Months with 5 or more Patients Aged 65+")) %>% 
@@ -3408,7 +3395,7 @@ highchart() %>%
 
 <br>
 
-After inspecting the chart, it an be inferred that the Patient Count matching logic *could* be tweaked, so that address records required five or more patients aged 65 to receive prescribing in *four or more* months (as opposed to just one). This would marginally improve accuracy, although at the cost of losing some correctly labelled care home prescription forms. However, the marginal increase in accuracy, was even more marginal in relation to overall accuracy, with Patient Count matches a small proportion of overall matches. In addition, the goal of the project was to maximise the potential number of prescription forms that could be classified as being from a care home. For these reasons the Patient Count match logic was not changed, so that address records required five or more patients aged 65 to receive prescribing in only one month of the financial year, in order to be classified as such.
+After inspecting the chart, it can be inferred that the Patient Count matching logic **could** be tweaked, so that address records required five or more patients aged 65 to receive prescribing in **four or more** months (as opposed to just one). This would marginally improve accuracy, although at the cost of losing some correctly labelled care home prescription forms. However, the marginal increase in accuracy, was even more marginal in relation to overall accuracy, with Patient Count matches a small proportion of overall matches. In addition, the goal of the project was to maximise the potential number of prescription forms that could be classified as being from a care home. For these reasons, the Patient Count match logic was not changed, so that address records required five or more patients aged 65 to receive prescribing in only one month of the financial year, in order to be classified as such.
 
 <br>
 
@@ -3426,7 +3413,7 @@ table <- data.frame(
   'Records' = c(100,100,100,100),
   'Total Forms' = c(6047, 5365, 4772, 4376),
   'Incorrect Forms' = c(0, 1, 39, 124),
-  'Corrrect Forms' = c(6047, 5364, 4733, 4252),
+  'Correct Forms' = c(6047, 5364, 4733, 4252),
   'Accuracy' = c('100%', '99.9%', '99.2%', '97.2%'),
   check.names = F
   )
@@ -3488,7 +3475,16 @@ data = data.frame(
   check.names = F
 )
 
-hchart(data, "column", hcaes(`Keyword Type`, `Form Accuracy (%)`, color = col), name = 'Keyword Type Accuracy (%)') %>% 
+hchart(
+  data,
+  "column",
+  hcaes(`Keyword Type`, `Form Accuracy (%)`, color = col),
+  name = 'Keyword Type Accuracy (%)',
+  dataLabels = list(
+    enabled = T,
+    format = "{point.y} %",
+    inside = T)
+  ) %>% 
   hc_yAxis(max = 100, min = 90) %>% 
   hc_title(text = "<b>Form Accuracy by Keyword Type for Keyword Matches</b>", margin = 50) %>% 
   hc_size(width = 370, height = 350) %>% 
@@ -3505,7 +3501,7 @@ hchart(data, "column", hcaes(`Keyword Type`, `Form Accuracy (%)`, color = col), 
 
 <br>
 
-Using the above estimated accuracies, a final accuracy could be calculated. This was taking into account the number of forms identified by each match type. As mentioned earlier, exact matches were taken as being correct, as they shared the exact details of a AB-CQC address classified as a care home. As a result, the accuracy of these matches was taken as 100%.
+Using the above estimated accuracies, a final accuracy could be calculated. This was taking into account the number of forms identified by each match type. As mentioned earlier, exact matches were taken as being correct, as they shared the exact details of an AB-CQC address classified as a care home. As a result, the accuracy of these matches was taken as 100%.
 
 <br>
 
@@ -3583,7 +3579,7 @@ hchart(table, "item", hcaes(name = Type, y = Forms),
 
 For future use cases, an important takeaway from the above validation is that the relationship between JW match scores and manually validated correct/incorrect results should be explored. This can then inform what, if any, JW match score threshold should be applied.
 
-In this analysis an ensemble approach was taken, where the JW match performed by the `calc_match_addresses` function was supplemented by custom steps specific to this particular use case. These were the Patient Count and Keyword match steps. It is also recommended that manual validation is performed on any custom steps used within an analysis, likewise used to supplement the matches found using the `calc_match_addresses` function.
+If an ensemble approach is taken, as with this analysis, with custom steps to supplement the JW match performed by the `calc_match_addresses` function, these custom steps will likewise require validation.
 
 <br>
 <br>
@@ -3597,7 +3593,7 @@ In this analysis an ensemble approach was taken, where the JW match performed by
 
 <br>
 
-The code used within this project can be accessed several way. Firstly, code chunks can be copied directly from this notebook. Alternatively, all of the individual scripts that contributed to this notebook can be found at the NHSBSA github page: https://github.com/nhsbsa-data-analytics/careHomePrescribingScrollytellR
+The code used within this project can be accessed several ways. Firstly, code chunks can be copied directly from this notebook. Alternatively, all of the individual scripts that contributed to this notebook can be found at the NHSBSA GitHub page: https://github.com/nhsbsa-data-analytics/careHomePrescribingScrollytellR
 
 The code for the functions specific to address matching can be found at the following NHSBSA GitHub page: https://github.com/nhsbsa-data-analytics/addressMatchR/tree/master/R
 
@@ -3607,13 +3603,12 @@ Both of the `{addressMatchR}` and `{nhsbsaR}` packages can be installed using th
 
 <br>
 
-````
-```{r}`r''`
+```{r, eval=FALSE}
 #install.packages("devtools")
 devtools::install_github("nhsbsa-data-analytics/addressMatchR")
 devtools::install_github("nhsbsa-data-analytics/nhsbsaR")
 ```
-````
+
 
 <br>
 
@@ -3625,11 +3620,11 @@ Although mentioned earlier, an important point to remember is that the code and 
 
 <br>
 
-As stated at the beginning of this notebook, this is the first time a years worth of prescription forms have been labelled as being from a care home or otherwise. Using this labelled data, care home demographics and prescribing can be better understood. A publicly available analysis, that utilises this output to better understand care home demographics and prescribing, has been created by the NHSBSA. This is in the form of an interactive scrolly-telling analysis, which can be found here: https://miteam.shinyapps.io/carehome_test/
+As stated at the beginning of this notebook, this is the first time a years' worth of prescription forms have been labelled as being from a care home or otherwise. Using this labelled data, care home demographics and prescribing can be better understood. A publicly available analysis, that utilises this output to better understand care home demographics and prescribing, has been created by the NHSBSA. This is in the form of an interactive scrolly-telling analysis, which can be found here: https://miteam.shinyapps.io/careHomePrescribingScrollytellR/
 
-With this labelled dataset, the NHSBSA will continue to mine insights about care home demographics and prescribing, that previously would not have been possible. It is expected there will be various use cases for how this data could be utilised, both internally and externally. With the workflow to generate this output now in place, the generation of future datasets can also be productionised. The labelling of prescription forms as being from a care home or otherwise will be productionised either on an annual or monthly-level. This information can then be incorporated into various regular reporting. If you are viewing this notebook externally and would like to discuss access to a cut or regular feed of this data, please get in touch through by following email address: nhsbsa.datalab@nhs.net
+With this labelled dataset, the NHSBSA will continue to mine insights about care home demographics and prescribing, that previously would not have been possible. It is expected there will be various use cases for how this data could be utilised, both internally and externally. With the workflow to generate this output now in place, the generation of future datasets can also be productionised. The labelling of prescription forms as being from a care home or otherwise will be productionised either on an annual or monthly level. This information can then be incorporated into various regular reporting. If you are viewing this notebook externally and would like to discuss access to a cut or regular feed of this data, please get in touch through by following email address: nhsbsa.datalab@nhs.net
 
-Unfortunately, due to the lower levels of ETP prescribing in the past, the workflow cannot be applied to datasets prioir to the 2020/21 Financial Year. The extent of ETP prescribing determines the proportion of paper prescription forms that need to have their address derived through the method described in Section Two: 'Processing Patient Address Information'. With the accuracy of patient address details being critical to the whole process, it has been decided that any time periods prior to the 2020/21 Financial Year would have too great a proportion of non-ETP prescribing.
+Unfortunately, due to the lower levels of ETP prescribing in the past, the workflow cannot be applied to datasets prior to the 2020/21 Financial Year. The extent of ETP prescribing determines the proportion of paper prescription forms that need to have their address derived through the method described in Section Two: 'Processing Patient Address Information'. With the accuracy of patient address details being critical to the whole process, it has been decided that any time periods prior to the 2020/21 Financial Year would have too great a proportion of non-ETP prescribing.
 
 <br>
 
@@ -3664,6 +3659,6 @@ The last of the above points is particularly interesting. This would in effect b
 
 <br>
 
-For any queries relating to this notebook and it's contents, please contact: nhsbsa.datalab@nhs.net
+For any queries relating to this notebook and its contents, please contact: nhsbsa.datalab@nhs.net
 
 <br>
