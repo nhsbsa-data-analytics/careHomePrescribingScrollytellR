@@ -2940,12 +2940,11 @@ DBI::dbDisconnect(con)
 
 <br>
 
-Matching was performed on a distinct patient address record-level. All the prescription forms associated with each record were then classified as being a care home prescription form or otherwise. This utilised the output from the previous code block. These prescription form IDs were re-joined to the item-level FACT to create a final results table. Note, this FACT table was for all items irrespective of postcode, meaning it described all prescriptions for patients aged 65 or over in the 2020/21 Financial Year. The same filters were applied to the item-level FACT table as described in the *Processing Patient Address Information* section towards the beginning of the report. The following code block describes how this final results table was generated:
+Matching was performed on a distinct patient address record-level. All the prescription forms associated with each record were then classified as being a care home prescription form or otherwise. The corresponding patient information for these forms was then gained from the Data Warehouse. The same filters were then applied as described in section 2.4, 'Processing Patient Address Information'. The following code block describes how this final results table was generated:
 
 <br>
 
-````
-```{r}`''`
+```{r, echo=FALSE, eval=FALSE}
 library(dplyr)
 library(dbplyr)
 
@@ -3120,7 +3119,6 @@ item_fact_db %>%
 # Disconnect from database
 DBI::dbDisconnect(con)
 ```
-````
 
 <br>
 
@@ -3128,7 +3126,7 @@ DBI::dbDisconnect(con)
 
 <br>
 
-With this final item-level results table, calculations could easily be made such as the number of monthly care home items versus the number of monthly non-care home items, for patients aged 65 or over in England in the 2020/21 Financial Year. It was sufficient for this analysis to determine whether an address was *a* care home, as opposed to a specific care home. All results aggregations were therefore only grouped by a care home or non-care home binary classification, rather than grouped at a speific care home-level. 
+With this final item-level results table, calculations could easily be made such as the number of monthly care home items versus the number of monthly non-care home items, for patients aged 65 or over in England in the 2020/21 Financial Year. It was sufficient for this analysis to determine whether an address was **a** care home, as opposed to a specific care home. All results aggregations were therefore only grouped by a care home or non-care home binary classification, rather than grouped at a specific care home-level. 
 
 <br>
 
@@ -3136,7 +3134,7 @@ With this final item-level results table, calculations could easily be made such
 
 <br>
 
-The output from this analysis is on a prescription form-level. This means we are only aware of a patient address, and therefore if they were a care home resident at that moment in time, for the months in which they received prescribing. The below high-level summary shows that around 314k patients received a prescription in a care home in April 2020. Naturally, the number of care home residents may be greater than this, as they may not have received prescribing in that month. Looking at the same cohort in May 2020, it can be seen that some of that group either didn't receive prescribing, or received a non-care home prescribing in the following month. Some of these instances of moving into non-prescribing will be where a care home patient has passed away. The important thing to note, is that the output is ultimately within the context of patient address details at the time of prescribing, for the months in which they received prescribing.
+The output from this analysis is on a prescription form-level. This means we are only aware of a patient address, and therefore if they were a care home resident at that moment in time, for the months in which they received prescribing. The below high-level summary shows that around 314k patients received a prescription in a care home in April 2020. Naturally, the number of care home residents may be greater than this, as they may not have received prescribing in that month. Looking at the same cohort in May 2020, some of that group either didn't receive prescribing or received non-care home prescribing in the following month. Some of these instances of moving into non-prescribing will be where a care home patient has passed away. The important thing to note, is that the output is ultimately within the context of patient address details at the time of prescribing, for the months in which they received prescribing.
 
 <br>
 
@@ -3170,7 +3168,7 @@ highchart() %>%
 
 <br>
 
-The analysis used both AB and CQC address lookup data. AB data was essential in order to identify records that were *not* a care home, in addition to identifying records that were a care home. CQC data was used to supplement the care home address information found in AB. This was to provide additional SLA for care homes within AB, and to provide entirely new SLA for care homes outside AB. There were many instances where the care home address information in AB and CQC were identical. The below table shows the proportion of exact matches made by AB addresses, CQC addresses, and addresses that appeared in both AB and CQC. Around 70% of the prescription forms exact matched to a care home address used a CQC address. Around 60% of the prescription forms JW matched to a care home address used a CQC address.
+The analysis used both AB and CQC address lookup data. AB data was essential in order to identify records that were **not** a care home, in addition to identifying records that were a care home. CQC data was used to supplement the care home address information found in AB. This was to provide additional SLA for care homes within AB, and to provide entirely new SLA for care homes outside AB. There were many instances where the care home address information in AB and CQC were identical. The below table shows the proportion of exact matches made by AB addresses, CQC addresses, and addresses that appeared in both AB and CQC. Around 70% of the prescription forms exact matched to a care home address used a CQC address. Around 60% of the prescription forms JW matched to a care home address used a CQC address.
 
 <br>
 
@@ -3187,7 +3185,7 @@ my_kable(table)
 
 <br>
 
-Supplementing AB with CQC care home address information proved to be effective. It enabled exact matches not possible otherwise, and offered more possibilities of providing the best match for JW matches.
+Supplementing AB with CQC care home address information proved to be effective. It enabled exact matches not possible otherwise and offered more possibilities of providing the best match for JW matches.
 
 <br>
 
@@ -3195,7 +3193,7 @@ Supplementing AB with CQC care home address information proved to be effective. 
 
 <br>
 
-Result validation was carried out to to gauge the accuracy of each matching step, and in turn of the whole process. This validation was carried out manually, which meant cross-referencing matched addresses against patient addresses to see if they were the same. Internet searches were used to do this. In rare cases, even after multiple internet searches, it was still difficult to discern with absolute certainty whether an address was a care home, as opposed to a elderly residential facility of some kind. The key criteria used to define whether an address was a care home, was whether it had care staff present on a 24/7 basis.
+Result validation was carried out to to gauge the accuracy of each matching step, and in turn of the whole process. This validation was carried out manually, which meant cross-referencing matched addresses against patient addresses to see if they were the same. Internet searches were used to do this. In rare cases, even after multiple internet searches, it was still difficult to discern with absolute certainty whether an address was a care home, as opposed to an elderly residential facility of some kind. The key criteria used to define whether an address was a care home, was whether it had care staff present on a 24/7 basis.
 
 When a patient address record was considered to be care home due a Keyword or Patient Count match, there was not a matched record to cross-reference the patient address record against. In such instances the patient address record alone was used as a basis for an internet search.
 
