@@ -35,7 +35,7 @@ mod_05_final_thoughts_ui <- function(id) {
         url = "https://github.com/nhsbsa-data-analytics/careHomePrescribingScrollytellR"
       ),
       " if and how the insight can be used and how our work can be developed ",
-      "further. You can contact us and using the link at the end of this article."
+      "further. You can contact us using the link at the end of this article."
     )
   )
 }
