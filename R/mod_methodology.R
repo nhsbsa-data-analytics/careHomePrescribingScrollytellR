@@ -14,7 +14,7 @@ mod_methodology_ui <- function(id) {
     p(
       enurl(
         text = "Here",
-        url = "https://rpubs.com/nhsbsa-data-analytics/address-matching-methodology"
+        url = "https://rpubs.com/nhsbsa-data-analytics/methodology"
       ),
       " is a link to methodology described in full."
     )
