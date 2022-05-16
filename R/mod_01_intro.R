@@ -50,7 +50,7 @@ mod_01_intro_ui <- function(id) {
     ),
     h2(enurl(
       text = "Methodology",
-      url = "https://rpubs.com/nhsbsa-data-analytics/address-matching-methodology"
+      url = "https://rpubs.com/nhsbsa-data-analytics/methodology"
     )),
     p(
       "Prescribing estimates are based on a sophisticated methodology which ",
