@@ -36,6 +36,46 @@ mod_05_final_thoughts_ui <- function(id) {
       ),
       " if and how the insight can be used and how our work can be developed ",
       "further. You can contact us using the link at the end of this article."
+    ),
+    br(),
+    tags$div(
+      class = "rating rating2",
+      p("Please rate this report out of 5 stars"),
+      tags$a(
+        id = "star5",
+        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
+        title = "Give 5 stars",
+        target = "_blank",
+        tags$img("★")
+      ),
+      tags$a(
+        id = "star4",
+        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
+        title = "Give 4 stars",
+        target = "_blank",
+        tags$img("★")
+      ),
+      tags$a(
+        id = "star3",
+        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
+        title = "Give 3 stars",
+        target = "_blank",
+        tags$img("★")
+      ),
+      tags$a(
+        id = "star2",
+        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
+        title = "Give 2 stars",
+        target = "_blank",
+        tags$img("★")
+      ),
+      tags$a(
+        id = "star1",
+        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
+        title = "Give 1 star",
+        target = "_blank",
+        tags$img("★")
+      )
     )
   )
 }

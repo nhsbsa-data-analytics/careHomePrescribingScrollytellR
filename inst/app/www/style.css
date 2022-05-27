@@ -46,3 +46,41 @@ and prevent them fading in / out) */
       position:inherit;
 }
 }
+
+/* Survey related */
+.rating {
+  width: 350px;
+  margin: 0 auto 1em;
+  font-size: 45px;
+  overflow:hidden;
+  border: 1px solid #000;
+  text-align: center;
+}
+
+.rating a {
+  float:right;
+  color: #888888;
+  text-decoration: none;
+  -webkit-transition: color .4s;
+  -moz-transition: color .4s;
+  -o-transition: color .4s;
+  transition: color .4s;
+}
+
+.rating h4{
+ font-weight: bold;
+ font-size: 12pt;
+}
+
+ .rating a:hover, .rating a:hover ~ a,	.rating a:focus, .rating a:focus ~ a {
+  color: orange;
+  cursor: pointer;
+}
+
+.rating2 {
+  direction: rtl;
+}
+
+.rating2 a {
+  float:none
+}
