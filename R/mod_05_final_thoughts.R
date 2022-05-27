@@ -41,10 +41,10 @@ mod_05_final_thoughts_ui <- function(id) {
     p(
       "Please take a moment to fill out the ",
       enurl(
-        text = "survey",
+        text = "survey.",
         url = "https://online1.snapsurveys.com/bsareport?rpt=2"
       ),
-      "and your input will be value to our report."
+      "Your input will be value to our report."
     )
   )
 }
