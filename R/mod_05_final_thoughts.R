@@ -38,44 +38,13 @@ mod_05_final_thoughts_ui <- function(id) {
       "further. You can contact us using the link at the end of this article."
     ),
     br(),
-    tags$div(
-      class = "rating rating2",
-      p("Please rate this report out of 5 stars"),
-      tags$a(
-        id = "star5",
-        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
-        title = "Give 5 stars",
-        target = "_blank",
-        tags$img("★")
+    p(
+      "Please take a moment to fill out the ",
+      enurl(
+        text = "survey",
+        url = "https://online1.snapsurveys.com/bsareport?rpt=2"
       ),
-      tags$a(
-        id = "star4",
-        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
-        title = "Give 4 stars",
-        target = "_blank",
-        tags$img("★")
-      ),
-      tags$a(
-        id = "star3",
-        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
-        title = "Give 3 stars",
-        target = "_blank",
-        tags$img("★")
-      ),
-      tags$a(
-        id = "star2",
-        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
-        title = "Give 2 stars",
-        target = "_blank",
-        tags$img("★")
-      ),
-      tags$a(
-        id = "star1",
-        href = paste("https://online1.snapsurveys.com/bsareport?rpt=2&strr=1&url=",id),
-        title = "Give 1 star",
-        target = "_blank",
-        tags$img("★")
-      )
+      "and your input will be value to our report."
     )
   )
 }
