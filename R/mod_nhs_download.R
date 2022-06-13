@@ -63,7 +63,8 @@ mod_nhs_download_server <- function(id, filename, export_data) {
         )
         write.table("", file = file, append = TRUE, sep = ",", row.names = FALSE, col.names = FALSE)
         write.table("Footnote: Figures are calculated based on statistical disclosure control methods",
-                    file = file, append = TRUE, sep = ",", row.names = FALSE, col.names = FALSE)
+          file = file, append = TRUE, sep = ",", row.names = FALSE, col.names = FALSE
+        )
       }
     )
   })
