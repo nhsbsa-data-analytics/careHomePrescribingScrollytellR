@@ -36,6 +36,15 @@ mod_05_final_thoughts_ui <- function(id) {
       ),
       " if and how the insight can be used and how our work can be developed ",
       "further. You can contact us using the link at the end of this article."
+    ),
+    br(),
+    p(
+      "Please take a moment to fill out the ",
+      enurl(
+        text = "survey.",
+        url = "https://online1.snapsurveys.com/bsareport?rpt=2"
+      ),
+      "Your input will be value to our report."
     )
   )
 }
