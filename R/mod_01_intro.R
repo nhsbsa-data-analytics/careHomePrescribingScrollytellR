@@ -34,7 +34,7 @@ mod_01_intro_ui <- function(id) {
     p(
       "This accounts for around", tags$b("5%"), "of patients aged 65 or over ",
       "receiving prescription items each month and", tags$b("7%"), "of the ",
-      "total primary care drug spend for aged 65 years or over patients",
+      "total primary care drug spend for patients aged 65 years or over during 2020/21.",
       "during 2020/21."
     ),
     p(

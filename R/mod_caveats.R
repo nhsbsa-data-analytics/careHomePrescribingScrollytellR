@@ -205,7 +205,7 @@ mod_caveats_server <- function(id) {
           "Address information was not captured directly from ",
           "paper prescriptions and therefore a process was ",
           "derived to generate these addresses using a mix of information ",
-          "from the Patient Demographic Service (PDS) and electronic ",
+          "from the Personal Demographic Service (PDS) and electronic ",
           "prescriptions across a range of months This is described ",
           "in Section 2.3 of the Methodology. Although accurate, ",
           "this is not as robust as directly sourced patient address ",

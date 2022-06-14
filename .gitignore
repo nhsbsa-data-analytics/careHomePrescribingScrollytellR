@@ -8,3 +8,4 @@
 !/data/.gitkeep
 .Renviron
 rsconnect/
+temp_*
