@@ -68,7 +68,7 @@ app_ui <- function(request) {
          window.scrollTo(0, 0)
             });
             });"),
-        tags$head(tags$script(src="survey.js"))
+        tags$head(tags$script(src = "survey.js"))
       )
     ),
     br(),
