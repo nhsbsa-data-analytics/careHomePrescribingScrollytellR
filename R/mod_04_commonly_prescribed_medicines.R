@@ -142,7 +142,9 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
         dplyr::mutate(
           SDC_CH_VALUE = janitor::round_half_up(SDC_CH_VALUE, 1),
           SDC_NON_CH_VALUE = janitor::round_half_up(SDC_NON_CH_VALUE, 1)
-        )
+        ) %>%
+        dplyr::mutate(SUB_BNF_LEVEL_NAME = gsub(",", "", SUB_BNF_LEVEL_NAME))
+
 
       if (input$metric == "ITEMS_PERC" | input$metric == "COST_PERC") {
         metrics_by_bnf_and_ch_flag_df %>%
@@ -163,9 +165,9 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             `BNF` = BNF_LEVEL,
             `BNF description` = SUB_BNF_LEVEL_NAME,
             Metric = METRIC,
-            `Statistical disclosure control care home percentage` = SDC_CH_VALUE,
+            `Care home percentage` = SDC_CH_VALUE,
             `Care home total` = TOTAL_CH,
-            `Statistical disclosure control non care home percentage` = SDC_NON_CH_VALUE,
+            `Non care home percentage` = SDC_NON_CH_VALUE,
             `Non Care home total` = TOTAL_NON_CH
           )
       } else {
@@ -181,8 +183,8 @@ mod_04_commonly_prescribed_medicines_server <- function(id) {
             `BNF` = BNF_LEVEL,
             `BNF description` = SUB_BNF_LEVEL_NAME,
             Metric = METRIC,
-            `Statistical disclosure control care home ppm` = SDC_CH_VALUE,
-            `Statistical disclosure control non care home ppm` = SDC_NON_CH_VALUE,
+            `Care home ppm` = SDC_CH_VALUE,
+            `Non care home ppm` = SDC_NON_CH_VALUE,
           )
       }
     })
