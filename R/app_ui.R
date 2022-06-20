@@ -67,7 +67,8 @@ app_ui <- function(request) {
       $('#maincontent a[data-toggle=\"tab\"]').on('click', function (e) {
          window.scrollTo(0, 0)
             });
-            });")
+            });"),
+        tags$head(tags$script(src = "survey.js"))
       )
     ),
     br(),
