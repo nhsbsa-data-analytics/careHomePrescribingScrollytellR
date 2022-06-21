@@ -49,15 +49,21 @@ mod_nhs_download_ui <- function(id) {
 mod_nhs_download_server <- function(id, filename, export_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     output$download <- downloadHandler(
       filename = filename,
       content = function(file) {
-        write.csv(
+        write.table(
           # Handle possibility of reactive input
           x = if (is.data.frame(export_data)) export_data else export_data(),
           file = file,
-          row.names = FALSE
+          row.names = FALSE,
+          quote = FALSE,
+          sep = ","
+        )
+        write.table("", file = file, append = TRUE, sep = ",", row.names = FALSE, col.names = FALSE)
+        write.table("Footnote: Figures are calculated based on statistical disclosure control methods",
+                    file = file, append = TRUE, sep = ",", row.names = FALSE, col.names = FALSE
         )
       }
     )
