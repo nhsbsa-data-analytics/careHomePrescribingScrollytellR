@@ -206,7 +206,7 @@ mod_02_demographics_server <- function(id, export_data) {
         dplyr::rename(
           Month = YEAR_MONTH,
           `Prescribing status` = PRESCRIBING_STATUS,
-          `Statistical disclosure control total patients` = SDC_TOTAL_PATIENTS
+          `Number of patients` = SDC_TOTAL_PATIENTS
         )
     })
 
@@ -434,8 +434,8 @@ mod_02_demographics_server <- function(id, export_data) {
           `Sub geography name` = SUB_GEOGRAPHY_NAME,
           `Age band` = AGE_BAND,
           Gender = GENDER,
-          `Statistical disclosure control total patients` = SDC_TOTAL_PATIENTS,
-          `Statistical disclosure control patients percentage` = SDC_PCT_PATIENTS
+          `Number of patients` = SDC_TOTAL_PATIENTS,
+          `Percentage of patients` = SDC_PCT_PATIENTS
         )
     })
 
@@ -583,8 +583,8 @@ mod_02_demographics_server <- function(id, export_data) {
       ) %>%
       dplyr::rename(
         `IMD quintile` = IMD_QUINTILE,
-        `Statistical disclosure control total patients` = SDC_TOTAL_PATIENTS,
-        `Statistical disclosure control patients percentage` = SDC_PCT_PATIENTS
+        `Number of patients` = SDC_TOTAL_PATIENTS,
+        `Percentage of patients` = SDC_PCT_PATIENTS
       )
 
     # Add a download button
