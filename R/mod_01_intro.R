@@ -71,7 +71,8 @@ mod_01_intro_ui <- function(id) {
         text = "R package",
         url = "https://github.com/nhsbsa-data-analytics/addressMatchR"
       ),
-      " and the methodology is published online."
+      " and the methodology is published online. Throughout the project the NHSBSA ",
+      "ensured data was protected and secure and adhered to the Cardicott guardian principles."
     ),
     p(
       "These estimates address a key gap in knowledge and give valuable ",
