@@ -76,7 +76,7 @@ mod_02_demographics_ui <- function(id) {
     p(
       tags$b(
         "We estimate two thirds of care home patients aged 65 years or over ",
-        "are female and 6 in 10 are aged 85 years or over."
+        "are female and of these 6 in 10 are aged 85 years or over."
       )
     ),
     p(
@@ -154,6 +154,9 @@ mod_02_demographics_ui <- function(id) {
       ),
       " which considers clients accessing long term support by setting."
     ),
+    # I'm not sure from this, even after scanning the linked Summary, why they
+    # are not comparable? How do I find the number of Care Home or Nursing Home
+    # residents from the SALT dataset?
     p(
       tags$b(
         "There is little variation in numbers of care home patients aged ",
@@ -171,6 +174,9 @@ mod_02_demographics_ui <- function(id) {
       "very close to 20% in each ", tags$b("IMD quintile,"),
       " which suggests equal distribution and little variation."
     ),
+    # Is it worth analysing relationship of rx's and IMD in more detail? E.g.
+    # raw numbers may be equally spread, but specific drug groups may differ by
+    # IMD rank.
     nhs_card(
       heading = "Deprivation quintile of care home patients aged 65 years or over in England (2020/21)",
       highcharter::highchartOutput(
