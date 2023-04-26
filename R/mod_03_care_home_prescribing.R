@@ -156,6 +156,23 @@ mod_03_care_home_prescribing_ui <- function(id) {
       "metrics, with females being lower than males."
     ),
     p("These patterns can be seen in the charts below."),
+    # I find the results of comparing age and gender in CH and non-CH settings
+    # particularly interesting. In general, all metrics follow the same pattern.
+    # In CH settings metrics decrease with age, while in non-CH settings metrics
+    # increase with age. In addition, the metrics tend to meet or become very
+    # close to each other as age increases.
+    # 
+    # Some questions that might lead to identified savings:
+    # - Is there any evidence of unnecessary prescribing in CH settings? E.g. for
+    # economic benefit to prescribers who may have a (hidden) stake in a CH.
+    # - Can we identify a small number of groups that CHs fit into around
+    # prescribing behaviour? If so, can we use patient mortality data and
+    # compare this across the different groups? This could allow us to link
+    # efficacy of prescribing patterns to outcomes.
+    #
+    # Another approach is to ask for some UR with prescribers and/or care home
+    # staff, to try to understand why the pattern shown in the data is inverted
+    # for CH settings vs non-CH.
     nhs_card(
       heading = "Estimated average prescribing metrics per patient month for care home and non-care home patients aged 65 years or over in England by age band and gender (2020/21)",
       nhs_selectInput(
@@ -199,6 +216,7 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "patient month is around 60% higher than the median value for those aged ",
         "65 to 69 years old."
       ),
+      # Is it worth removing the outliers and doing some deeper analysis?
       tags$li(
         "Younger care home patients seem to have more prescribing of ",
         "appliances and a larger spend on nutrition products and less ",
@@ -208,6 +226,8 @@ mod_03_care_home_prescribing_ui <- function(id) {
         "Younger care home patients typically get a larger quantity than ",
         "older care home patients when prescribed comparable drugs/products."
       )
+      # Do we know why this is? To me this is counter-intuitive. Could UR help
+      # get some insights?
     ),
     p(
       "The median drug cost per patient month and spread of costs decreases as ",

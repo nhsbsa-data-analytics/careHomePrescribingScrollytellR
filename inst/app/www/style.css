@@ -5,6 +5,10 @@
 
 /* Fix accessibility issue with scrolly contrast (increase gap between sections 
 and prevent them fading in / out) */
+/* This sets the spacing between sections to almost the height of the browser
+   window. To me it seems too much - I think setting it to somewhere between 
+   25vh-50vh would address the accessibility concerns while preserving cohesion 
+   of the content */
 .scrolly-section {
   margin-bottom: 0px;
   margin-top: 75vh;

@@ -38,6 +38,8 @@ mod_definitions_ui <- function(id) {
       "It does not include any additional fees or discounts that were paid to ",
       "the dispensing contractors. Also known as Net Ingredient Cost (NIC)."
     ),
+    # Worth pointing out that as we are looking at age 65+, no prescription
+    # charges would be collected due to age exemption?
     p(tags$b("Number of prescription items")),
     p(
       "Calculated as the average number of prescription items per patient ",
@@ -45,7 +47,7 @@ mod_definitions_ui <- function(id) {
       "appliance, appears on a prescription form. It does not account for ",
       "dosage or quantity prescribed. For example, a patient could receive ",
       "100 x 50mg tablets as an item and another could receive 7 x 5 mg ",
-      "tablets as an item. Both would be counted as 1 item"
+      "tablets as an item. Both would be counted as a single item for each patient."
     ),
     p(tags$b("Number of unique medicines")),
     p(
@@ -57,6 +59,12 @@ mod_definitions_ui <- function(id) {
       "be counted as one (single) unique product e.g. Warfarin 1mg, 3mg and ",
       "5mg tablets."
     ),
+    # The definition is not as clear as it could be to me - using the word
+    # "same" needs to compare against something else. Possible clearer
+    # definition (if I have understood correctly...):
+    # Number of unique medicines is a count of distinct chemical substance
+    # descriptors, as defined in BNF Chapters 1 to 4 and 6 to 10, of medicines
+    # prescribed to each patient, averaged over patient months.
     p(tags$b("Patients on ten or more unique medicines")),
     p(
       "Calculated as the average percentage of patients prescribed ten or ",
@@ -67,6 +75,15 @@ mod_definitions_ui <- function(id) {
       "chemical substance descriptor would be counted as one (single) unique ",
       "product e.g. Warfarin 1mg, 3mg and 5mg tablets."
     ),
+    # Mihail highlighted the calculation of this is not according to the
+    # definition here.
+    
+    # Based on the first sentence, I am not sure if this is measured in patient
+    # months or not? Assuming it is, am I right that it could be more simply
+    # (and without repeating the unique medication definition) stated as:
+      
+    # Calculated as the percentage of patient months with ten or more unique
+    # medicines.
     p(tags$b("BNF code")),
     p(
       "A BNF code is a fifteen character hierarchical code used to identify ",

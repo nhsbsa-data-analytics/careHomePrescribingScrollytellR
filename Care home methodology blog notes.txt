@@ -1,0 +1,107 @@
+=============
+=METHODOLOGY=
+=============
+
+NHSBSA receives data from PDS monthly...
+
+-- In a previous role I worked on products that actively used PDS thru the API. I'm guessing due to volume of prescriptions using API is not feasible?
+
+====
+
+2.3.1: In steps table, step 2 mentions Jan-21 data, but step 6 mentions Feb-21 prescription data. Are these in fact equivalent months? Or does the prescence of "prescription" before data in the 2nd mention qualify a different data than the "data" in 1st mention?
+
+====
+
+2.3.1: ...data requested from January prescriptions would be received during March and therefore most closely match the patient address for prescribing issued in March
+
+-- Has any analysis been done on proportion of addresses given back by PDS that are outdated due to the lag? Not sure this is actually possible currently, since being able to do so would imply we could actually get the de facto addresses!? Altho we could look at historical number of changes of address in a sliding 2 month window to get an rough idea...
+
+====
+
+2.3.2: If a patient receives multiple ETP prescriptions within a month, with multiple addresses recorded, this raises the question of whether any of these could be considered as the most appropriate address to attribute to paper prescriptions.
+
+-- Not sure if "any" is to be taken as meaning "can we just pick one" or "can we even use one of the addresses due to the uncertainty"?
+
+-- Based on comment in the Priority Guide plot (2.3.3) seems to be the latter, i.e. if multiple ETP addresses in same month, use PDS?
+
+====
+
+2.3.2: As with assigning data from PDS, ETP data from additional months around the same time period could also be considered where time periods cannot be exactly aligned.
+
+-- E.g.
+
+Jan		Feb		Mar
+ETP		Paper		ETP
+AddressA	NA		AddressA
+
+Since Feb is sandwiched between 2 months with same address, can assign that address to Feb rx. so in this case we just short-circuit, i.e. avoid PDS checking?
+
+But what about below case?
+Jan		Feb		Mar
+ETP		Paper		ETP
+AddressA	NA		AddressB
+
+In this case we use the additional checking, as unsure which side of the sandwich is applicable in the middle?
+
+====
+
+2.3.3: In the code block, # Bring back ETP data from -the- +2 + month+s+ previous until 2 months after...
+
+-- I thought the range of dates for FY 2020-21 would be
+
+2020-04-01 to 2021-03-31
+
+So expected the first first PART_DATE to be
+
+PART_DATE >= 20200301L, not 20200201L?
+
+-- Based on Priority Guide, I see now that we need 2 months prior, so think the comment needs amended?
+
+What is the reason for the +10 days on end of range?
+
+====
+
+2.3.3: In code block, # Filter to successful traces in the period of interest
+
+-- What is RECORD_TYPE_R? Why is the PART_MONTH range used from Dec 2019?
+
+====
+
+2.3.3: In code block, # Keep the latest record for each year month and nhs number
+
+-- Does this not eliminate possibility of there being multiple addresses for a px in single month?
+
+-- Realised this is for paper rx only, so makes sense now!
+
+====
+
+2.3.3: In code block, # Join the year month details (shift by 1 month from part month)
+
+-- I don't quite get why this is done. The PDS data is joined to YM data, month is shifted up 1, then joined again to YM data. It is the 2nd join I am not understanding reason for.
+
+====
+
+2.3.3: In code block, 
+# Subset the EPS forms (buffer the period so that we can search for addresses for paper forms from more months of EPS forms) to elderly patients in 20/21 and join on their addresses
+
+-- I see we are taking 2 months either side, for address matching purposes. Why no + 10 days on end of range, as was used at beginning?
+
+====
+
+2.5: I don't recall the addressMatchR being used in the first script of the data workflow...
+
+====
+
+3.1: I noticed that AB has ~32M addresses, yet the data up to now ran to 8M distinct addresses, or 25% of AB. I'm guessing AB would have a single address  per CH, which accounts for this? E.g. in our cleaned data we may have
+
+Room 1, The Care Home, ...
+Room 2, The Care Home, ...
+Room 3, The Care Home, ...
+
+While in AB
+
+The Care Home, ...
+
+====
+
+3.2: As a result, -only- AB addresses were used for matching +only+ if they appeared within a postcode where a care home was present, according to the tertiary classification.

@@ -31,6 +31,9 @@ mod_01_intro_ui <- function(id) {
       "prescription items", tags$b("at a cost of £324 million"), "during ",
       "2020/21."
     ),
+    # Above possibly not as clear as it could be. First sentence is about per
+    # month, but second sentence is about total for year. Could add estimated
+    # prescriptions per month?
     p(
       "This accounts for around", tags$b("5%"), "of patients aged 65 or over ",
       "receiving prescription items each month and", tags$b("7%"), "of the ",
@@ -47,6 +50,34 @@ mod_01_intro_ui <- function(id) {
       "Average monthly prescribing costs and volumes per care home patient ",
       "vary by age, gender, care home type and geography."
     ),
+    # When reading the Key Findings, the figures suggested to me that spend on
+    # drugs for CH px's was ~7:5 (since 7% of total spend is on 5% of the
+    # population of 65+ px's) = 1.4x compared to non-CH px's. To check my
+    # understanding, from the report I see:
+    #
+    # "KEY FINDINGS We estimate that there was an average of 289 thousand care
+    # home patients aged 65 years or over receiving prescriptions each month in
+    # 2020/21. They received an estimated 35 million prescription items at a
+    # cost of £324 million during 2020/21.
+    #
+    # This accounts for around 5% of patients aged 65 or over receiving
+    # prescription items each month and 7% of the total primary care drug spend
+    # for patients aged 65 years or over during 2020/21."
+    #
+    # => spend per CH px = (324M / 289k)/12 =~ £93, agreeing with figure in
+    # first prescribing metrics value breakdown
+    #
+    # => 5491k non-CH px 65+ receiving. rx per month &  £4304M spend per year on
+    # non-CH px rx's => £359M spend per month on non-CH px rx's
+    #
+    # => £65 spend per month per non-CH px, does not agree with figure in first
+    # prescribing metrics value breakdown
+    #
+    # "The estimated average monthly drug cost for care home patients aged 65
+    # years or over is around twice that for non-care home patients aged 65
+    # years or over who received prescriptions." (L27-29 in mod_03_care_home_prescribing)
+    #
+    # -- So I do not see how the spend per px is ~2x? I must be missing something!
     h2(enurl(
       text = "Methodology",
       url = "https://rpubs.com/nhsbsa-data-analytics/methodology"
@@ -91,6 +122,12 @@ mod_01_intro_ui <- function(id) {
       "and are referred to as care home patients. As such the estimates are ",
       "lower than for care home residents aged 65 years or over in general."
     )
+    # I did not find this clear, until Adnan had explained it.
+    # My notes when reading were:
+    # I don't fully understand what this is saying, as the estimates are for
+    # those receiving prescriptions how can they be lower than for the group of
+    # care home residents NOT receiving prescriptions?* are lower than for care
+    # home residents aged 65 years or over in general.
   )
 }
 
