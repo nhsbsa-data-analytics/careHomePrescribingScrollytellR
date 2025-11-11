@@ -3633,6 +3633,6 @@ Unfortunately, due to the lower levels of ETP prescribing in the past, the workf
 
 <br>
 
-For any queries relating to this notebook and its contents, please contact: nhsbsa.datalab@nhs.net
+For any queries relating to this notebook and its contents, please contact: dall@nhsbsa.nhs.uk
 
 <br>
