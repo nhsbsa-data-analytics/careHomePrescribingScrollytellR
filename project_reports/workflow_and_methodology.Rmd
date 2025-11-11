@@ -3629,33 +3629,6 @@ Unfortunately, due to the lower levels of ETP prescribing in the past, the workf
 
 <br>
 
-## Future Workflow Iterations
-
-<br>
-
-As the workflow is productionised, it will naturally in time be iterated and improved. Potential ways in which the workflow could be iterated in the future are described below:
-
-<br>
-
-```{r, echo=FALSE}
-table <- data.frame(
-  Iteration = c(1:5),
-  Description = c('The Keyword match, being more accurate, could be performed before the Patient Count match.',
-           'Either the AB or CQC lookup data could be processed or stacked differently.',
-           'Any of the threshold values could be tweaked, such as the 0.8 minimum token-level score within the JW match.',
-           'A new rule could be added altogether, such as a drug-level rule, that looks at address-level prescribing patterns.',
-           'Being the least accurate rule and accounting for only 1.7% of matched care home forms, the Patient Count rule could be replaced entirely by a more effective and accurate drug-level rule.')
-  )
-
-my_kable(table)
-```
-
-<br>
-
-The last of the above points is particularly interesting. This would in effect be using the output from this analysis to inform future matching methodologies, now that an extensive prescription form-level dataset was available that had a reliable care home classification.
-
-<br>
-
 ## Contact Details
 
 <br>
